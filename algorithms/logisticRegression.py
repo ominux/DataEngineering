@@ -1,3 +1,4 @@
+# TODO: Implement this
 class LogisticRegression(object):
   """Multi-class Logistic Regression Class
     Classification is done by projecting data points onto a set of hyperplanes, the distance is used to determine
