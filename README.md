@@ -1,8 +1,7 @@
 # DataEngineering
 My personal repository for working with data. 
 
-## Scraping 
-- Scraping data from the web.
+## Scraping - Collection and Storing - Scraping data from the web.
     - Downloading into compressed
     - Uncompress files
 
@@ -25,11 +24,25 @@ My personal repository for working with data.
 
 ## Statistics
 - Understanding the mean, variance, size of data. 
-  - This allows further analysis into which algorithm would be suitable
+  - This allows further analysis
+    - Which algorithm would be suitable
+    - The metric for the scoring function and loss function
+    - Establish a baseline score by using the simplest model,
+      this shows if task is too easy or errors in data
+      if baseline doesn't meet expectation.
+- Check if dataset is skewed 
+   - e.g. Too many examples for a class in a Classification task
+   - If it is skewed,
+       use F-score instead of Accuracy = (numCorrect/numPredict)
 
 ## Algorithms
 - Code for the various machine learning algorithms
 
 ## Visualization
 - Display output from algorithm and accuracy.
-  - D3.js
+- Visualize data and errors.
+- Analyze how hyperparameters affect performance
+- Hyperparamters:
+  - Size of training data
+  - Number of weights, hidden layers
+- D3.js
