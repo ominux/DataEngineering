@@ -35,6 +35,10 @@ My personal repository for working with data.
    - If it is skewed,
        use F-score instead of Accuracy = (numCorrect/numPredict)
 
+precision = (truePositive)/(truePositive + falsePositive)
+recall = (truePositive)/(truePositive + falseNegative)
+F-score = 2*(precision*recall)/(precision+recall)
+
 ## Algorithms
 - Code for the various machine learning algorithms
 
@@ -46,3 +50,7 @@ My personal repository for working with data.
   - Size of training data
   - Number of weights, hidden layers
 - D3.js
+
+## Library
+- Tutorials on how to work with a particular library 
+###  Tensorflow
