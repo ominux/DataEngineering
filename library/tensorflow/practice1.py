@@ -1,14 +1,19 @@
-# Book: Hello-Tensorflow Oreilly
-
 import tensorflow as tf
 
 # The Default Graph has been initialized when you imported tensorflow
 graph = tf.get_default_graph()
 print graph # point to a memory address
 
-# Nodes of the graphs are the operations
+# Tf.Tensors = Data that flows between oeprations
+# TF.Operations = Nodes of the graphs 
 operations = graph.get_operations() # points to an empty graph, gets a copy, NOT reference
 print operations
+
+# All operations works on the default graph until it is overriden
+ownGraph = tf.Graph() # define a new graph
+with ownGraph.as_default(): # All operations now work on ownGraph temporarily
+    tf.constant(30.0)
+ownGraph.finalize() # Finalize the state of the graph, making it read-only
 
 # Put a constant node of value 1
 inputX = tf.constant(1.0)
@@ -22,6 +27,7 @@ print session.run(inputX) # A session evaluates a given computational graph
 print operations # It is a copy of the operations  that was empty
 operations = graph.get_operations() # points to an empty graph
 print operations # now it points to a memory address of the first node
+
 print "Printing first node's definition"
 print operations[0].node_def # Print's it in Google's Protocol Buffer format
 
@@ -37,15 +43,15 @@ for currOperation in graph.get_operations():
 predictedOutputY = tf.mul(weight, inputX)
 
 print "Latest Operation and Inputs"
-operations = graph.get_operations()[-1] # Gets lastest operation`
-print operations.name
-for inputsForLastOperation in operations.inputs:
+lastOperation = graph.get_operations()[-1] # Gets lastest operation`
+print lastOperation.name
+for inputsForLastOperation in lastOperation.inputs:
     print inputsForLastOperation
 
 print "Learning"
 # To train it to learn, define the supervised labeled output
 correctOutputY = tf.constant(0.0)
-squaredLossFunction = (predictedOutputY - correctOutputY)**2
+squaredLossFunction = tf.pow(predictedOutputY - correctOutputY, 2)
 
 # Optimize using gradient descent
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.025)
@@ -55,37 +61,47 @@ optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.025)
 # via back propagation 
 gradientAndVariable = optimizer.compute_gradients(squaredLossFunction)
 
-print gradientAndVariable
+print gradientAndVariable # Points to a memory address
 
 session.run(tf.initialize_all_variables())
+print session.run(gradientAndVariable)
 
-session.run(gradientAndVariable[1][0])
-print session
+# Outputs (gradientForWeight, weightValue)
+print session.run(gradientAndVariable[0])
 
 # Apply the gradients to the entire network.
 session.run(optimizer.apply_gradients(gradientAndVariable))
 
 # Check the new values of the weights after learning a single iteration
-session.run(weight)
+print session.run(weight)
 
+# Can define a function to compute gradient for the loss function using minimize()
+trainStepFunction = tf.train.GradientDescentOptimizer(0.025).minimize(squaredLossFunction)
+# Keep applying the same function
+for eachTrainStep in range(10):
+    session.run(trainStepFunction)
+    # Should approach 0
+    print session.run(predictedOutputY)
+
+# Plot the output using TensorBoard below, and visualize under Events
+summaryPlot = tf.scalar_summary('predictedOutput', predictedOutputY)
 
 # It's hard to keep track of your computational graph
 # Therefore, can use TensorBoard, which is a visualization tool.
-print "Visualizing Outputs"
+print "Visualizing Outputs and Computational Graph"
 # Creates a directory called logSimpleGraph to store the current graph
-tf.train.SummaryWriter('logSimpleGraph', session.graph)
+summaryWriter = tf.train.SummaryWriter('logSimpleGraph', session.graph)
+
+# Reset all the variables to initial values
+session.run(tf.initialize_all_variables())
+for i in range(100):
+    summaryStr = session.run(summaryPlot)
+    summaryWriter.add_summary(summaryStr, i)
+    session.run(trainStepFunction)
+
 print "To visualize Tensorboard, execute on commandline:"
 # It will execute the visualization tool as a webserver for a browser
 print ">> tensorboard --logdir=logSimpleGraph"
-
-
-
-
-
-
-
-
-
 
 
 
