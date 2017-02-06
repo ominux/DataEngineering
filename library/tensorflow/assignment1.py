@@ -54,12 +54,12 @@ def ChooseNearestNeighbours(D, K):
     # validation MSE loss
     # test MSE loss
 # Choose best k using validation error = 50
-def PredictKnn(inputData, testData, inputTarget,  testTarget, K):
+def PredictKnn(trainData , testData, trainTarget,  testTarget, K):
     """
     input:
-        inputData
+        trainData
         testData
-        inputTarget
+        trainTarget
         testTarget
     output:
         loss
@@ -102,7 +102,6 @@ if __name__ == "__main__":
     # and existing training input
     topK, indices = ChooseNearestNeighbours(D, K)
     # Prediction
-    K = 5 # number of nearest neighbours
     np.random.seed(521)
     Data = np.linspace(1.0 , 10.0 , num =100) [:, np.newaxis]
     Target = np.sin( Data ) + 0.1 * np.power( Data , 2) + 0.5 * np.random.randn(100 , 1)
@@ -135,11 +134,9 @@ if __name__ == "__main__":
     init = tf.global_variables_initializer()
     with tf.Session() as sess:
         sess.run(init)
-        predicted = sess.run(predictedValues)
-        plt.plot(x, predicted)
         plt.scatter(sess.run(trainData), sess.run(trainTarget))
+        plt.plot(sess.run(xTensor), sess.run(predictedValues))
         plt.savefig('haha.png')
-
     '''
     init = tf.global_variables_initializer()
     with tf.Session() as sess:
