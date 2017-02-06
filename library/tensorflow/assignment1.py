@@ -107,6 +107,11 @@ def buildGraph():
     train = optimizer.minimize(loss=meanSquaredError)
     return W, b, X, y_target, y_predicted, meanSquaredError, train
 
+
+def ShuffleBatches(trainData, trainTarget):
+    # TODO: implement shuffle
+    return trainData, trainTarget
+
 def LinearRegression(trainData, trainTarget, testData, testTarget):
     # Build computation graph
     W, b, X, y_target, y_predicted, meanSquaredError, train = buildGraph()
@@ -120,15 +125,25 @@ def LinearRegression(trainData, trainTarget, testData, testTarget):
     print "Initial weights: %s, initial bias: %.2f", initialW, initialb
     # Training model
     wList = []
-    for step in xrange(0,201):
-        _, err, currentW, currentb, yhat = sess.run([train, meanSquaredError, W, b, y_predicted], feed_dict={X: trainData, y_target: trainTarget})
-        wList.append(currentW)
-        if not (step % 50) or step < 10:        
-            print "Iter: %3d, MSE-train: %4.2f, weights: %s, bias: %.2f", step, err, currentW.T, currentb
 
-    # Testing model
-    errTest = sess.run(meanSquaredError, feed_dict={X: testData, y_target: testTarget})
-    print "Final testing MSE: ", errTest
+    numEpoch = 10
+    miniBatchSize = 10
+    currEpoch = 0
+    while currEpoch <= numEpoch:
+        # Shuffle the batches and return
+        trainData, trainTarget = ShuffleBatches(trainData, trainTarget)
+        step = 0
+        # Full batch
+        while step*miniBatchSize < 700:
+            _, err, currentW, currentb, yhat = sess.run([train, meanSquaredError, W, b, y_predicted], feed_dict={X: trainData[step*miniBatchSize:(step+1)*miniBatchSize], y_target: trainTarget[step*miniBatchSize:(step+1)*miniBatchSize]})
+            wList.append(currentW)
+            if not (step*miniBatchSize % 50):
+                print "Iter: %3d, MSE-train: %4.2f, weights: %s, bias: %.2f", step, err, currentW.T, currentb
+            step = step + 1
+        # Testing model
+        errTest = sess.run(meanSquaredError, feed_dict={X: testData, y_target: testTarget})
+        print "Final testing MSE: ", errTest
+        currEpoch += 1
     return
 
 if __name__ == "__main__":
