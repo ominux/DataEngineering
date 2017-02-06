@@ -48,12 +48,12 @@ def ChooseNearestNeighbours(D, K):
     return topK, indices
 
 # 1.3.2 Prediction
-# TODO: Compute the k-NN prediction with K = {1, 3, 5, 50}
+# Compute the k-NN prediction with K = {1, 3, 5, 50}
 # For each value of K, compute and report:
     # training MSE loss
     # validation MSE loss
     # test MSE loss
-# Choose best k using validation error
+# Choose best k using validation error = 50
 def PredictKnn(inputData, testData, inputTarget,  testTarget, K):
     """
     input:
@@ -70,30 +70,19 @@ def PredictKnn(inputData, testData, inputTarget,  testTarget, K):
     trainTargetSelectedAveraged = tf.reduce_mean(tf.gather(trainTarget, indices), 1)
     # Calculate the loss from the actual values
     loss = tf.reduce_mean(tf.square(tf.sub(trainTargetSelectedAveraged, testTarget)))
-    #loss = tf.square(tf.sub(trainTargetSelectedAveraged, testTarget))
-
-    init = tf.global_variables_initializer()
-    with tf.Session() as sess:
-        sess.run(init)
-        opTopK = sess.run(topK)
-        opIndices = sess.run(indices)
-        opTrainTar = sess.run(trainTargetSelectedAveraged)
-        opLoss = sess.run(loss)
-        print 'indices are'
-        print opIndices
-        print 'trainTarSelectedAveraged are'
-        print opTrainTar
-        print 'Loss is'
-        print opLoss
-        # Don't use topK as it's just the calculated distances
-        # you need to use opIndices to index into the numpyMatrices
-        print 'topK are'
-        print opTopK
-        # Get all the values for the nearest k target and sum them up
-        # trainTarget[indices]
     return loss
 
-
+# TODO: Plot the prediction function for x = [0, 11]
+def PlotPredictedValues(x, trainData, trainTarget, K):
+    """
+    Plot the predicted values
+    input:
+        x = test target to plot and predict
+    """
+    D = PairwiseDistances(x, trainData)
+    topK, indices = ChooseNearestNeighbours(D, K)
+    predictedValues = tf.reduce_mean(tf.gather(trainTarget, indices), 1)
+    return
 
 if __name__ == "__main__":
     print 'helloworld'
@@ -113,7 +102,7 @@ if __name__ == "__main__":
     # and existing training input
     topK, indices = ChooseNearestNeighbours(D, K)
     # Prediction
-    K = 3 # number of nearest neighbours
+    K = 50 # number of nearest neighbours
     np.random.seed(521)
     Data = np.linspace(1.0 , 10.0 , num =100) [:, np.newaxis]
     Target = np.sin( Data ) + 0.1 * np.power( Data , 2) + 0.5 * np.random.randn(100 , 1)
@@ -130,9 +119,18 @@ if __name__ == "__main__":
     validtarget = tf.pack(validTarget)
     testTarget = tf.pack(testTarget)
     trainMseLoss = PredictKnn(trainData, trainData, trainTarget, trainTarget, K)
-    # validationMseLoss = PredictKnn(trainData, validData, trainTarget, validTarget, K)
-    # testMseLoss = PredictKnn(trainData, testData, trainTarget, testTarget, K)
-
+    validationMseLoss = PredictKnn(trainData, validData, trainTarget, validTarget, K)
+    testMseLoss = PredictKnn(trainData, testData, trainTarget, testTarget, K)
+    init = tf.global_variables_initializer()
+    with tf.Session() as sess:
+        sess.run(init)
+        print sess.run(trainMseLoss)
+        print sess.run(validationMseLoss)
+        print sess.run(testMseLoss)
+    # Plot the prediction for the x below
+    x = np.linspace(0.0, 11.0, num=1000)[:, np.newaxis]
+    xTensor = tf.pack(x)
+    PlotPredictedValues(xTensor, trainData, trainTarget, K)
     '''
     init = tf.global_variables_initializer()
     with tf.Session() as sess:
@@ -162,14 +160,28 @@ if __name__ == "__main__":
         print opTopK
         print indices
         print opIndices
+        # Calculating loss
+        sess.run(init)
+        opTopK = sess.run(topK)
+        opIndices = sess.run(indices)
+        opTrainTar = sess.run(trainTargetSelectedAveraged)
+        opLoss = sess.run(loss)
+        print 'indices are'
+        print opIndices
+        print 'trainTarSelectedAveraged are'
+        print opTrainTar
+        print 'Loss is'
+        print opLoss
+        # Don't use topK as it's just the calculated distances
+        # you need to use opIndices to index into the numpyMatrices
+        print 'topK are'
+        print opTopK
+        # Get all the values for the nearest k target and sum them up
+        # trainTarget[indices]
     '''
 
 
 '''
-
-# TODO: Plot the prediction function for x = [0, 11]
-# Basically use the x below as the test input
-x = np.linspace(0,0, 11.0, num=1000)[:, np.newaxis]
 
 # 1.4 Soft-Knn & Gaussian Processes
 # 1.4.1.1 Soft Decisions
