@@ -29,17 +29,61 @@ def PairwiseDistances(X, Z):
     D = tf.reduce_sum(tf.square(tf.sub(X, Z)), 2)
     return D
 
+# 1.3 Making Predictions
+# 1.3.1 Choosing nearest neighbours
+# TODO: Write a vectorized Tensorflow Python function that takes a pairwise distance matrix
+# and returns the responsibilities of the training examples to a new test data point. 
+# It should not contain loops.
+# Use tf.nn.top_k
+def ChooseNearestNeighbours(D, K):
+    """
+    input:
+        D is a matrix of size (B x C)
+        K is the top K responsibilities for each test input
+    """
+    topK, indices = tf.nn.top_k(D, K)
+    return topK, indices
+
 if __name__ == "__main__":
-    B = 2 
-    C = 3 
-    N = 2 
-    X = tf.constant([1, 2, 3, 4], shape=[2, 2])
-    Z = tf.constant([21, 22, 31, 32, 41, 42], shape=[3, 2])
-    # FIXME: May not be working on random_uniform although it works on hard-coded
+    print 'hello'
+    # 1.
+    N = 2 # number of dimensions
+    B = 3 # number of test inputs (To get the predictions for all these inputs
+    C = 2 # number of training inputs (Pick closest k from this C)
+    K = 1 # number of nearest neighbours
+    X = tf.constant([1, 2, 3, 4, 5, 6], shape=[3, 2])
+    Z = tf.constant([21, 22, 31, 32], shape=[2, 2])
+    #FIXME: May not be working on random_uniform although it works on hard-coded
     #X = tf.random_uniform([B, N])*30
     #Z = tf.random_uniform([C, N])*30
     D = PairwiseDistances(X, Z)
-    init = tf.initialize_all_variables()
+    # You calculate all the pairwise distances between each test input
+    # and existing training input
+    # 2.
+    topK, indices = ChooseNearestNeighbours(D, K)
+    init = tf.global_variables_initializer()
+    with tf.Session() as sess:
+        sess.run(init)
+        opD = sess.run(D)
+        opTopK = sess.run(topK)
+        opIndices = sess.run(indices)
+        print D
+        print opD
+        print topK
+        print opTopK
+        print indices
+        print opIndices
+    np.random.seed(521)
+    Data = np.linspace(1.0 , 10.0 , num =100) [:, np.newaxis]
+    Target = np.sin( Data ) + 0.1 * np.power( Data , 2) + 0.5 * np.random.randn(100 , 1)
+    randIdx = np.arange(100)
+    np.random.shuffle(randIdx)
+    trainData, trainTarget  = Data[randIdx[:80]], Target[randIdx[:80]]
+    validData, validTarget = Data[randIdx[80:90]], Target[randIdx[80:90]]
+    testData, testTarget = Data[randIdx[90:100]], Target[randIdx[90:100]]
+
+    '''
+    init = tf.global_variables_initializer()
     with tf.Session() as sess:
         sess.run(init)
         opX = sess.run(X)
@@ -57,15 +101,10 @@ if __name__ == "__main__":
         print opZ
         print 'D'
         print opD
+    '''
+
 
 '''
-# 1.3 Making Predictions
-# 1.3.1 Choosing nearest neighbours
-# TODO: Write a vectorized Tensorflow Python function that takes a pairwise distance matrix
-# and returns the responsibilities of the training examples to a new test data point. 
-# It should not contain loops.
-# Use tf.nn.top_k
-
 # 1.3.2 Prediction
 # TODO: Compute the k-NN prediction with K = {1, 3, 5, 50}
 # For each value of K, compute and report:
@@ -75,15 +114,6 @@ if __name__ == "__main__":
 # Choose best k using validation error
 # TODO: Plot the prediction function for x = [0, 11]
 x = np.linspace(0,0, 11.0, num=1000)[:, np.newaxis]
-
-np.random.seed(521)
-Data = np.linspace(1.0 , 10.0 , num =100) [:, np. newaxis]
-Target = np.sin( Data ) + 0.1 * np.power( Data , 2) + 0.5 * np.random.randn(100 , 1)
-randIdx = np.arange(100)
-np.random.shuffle(randIdx)
-trainData, trainTarget  = Data[randIdx[:80]], Target[randIdx[:80]]
-validData, validTarget = Data[randIdx[80:90]], Target[randIdx[80:90]]
-testData, testTarget = Data[randIdx[90:100]], Target[randIdx[90:100]]
 
 # 1.4 Soft-Knn & Gaussian Processes
 # 1.4.1.1 Soft Decisions
