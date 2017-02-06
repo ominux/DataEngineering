@@ -126,11 +126,12 @@ def LinearRegression(trainData, trainTarget, testData, testTarget):
     # Training model
     wList = []
 
-    numEpoch = 2
-    miniBatchSize = 50
+    numEpoch = 20
+    miniBatchSize = 10
     currEpoch = 0
     xAxis = []
     yAxis = []
+    numUpdate = 0
     while currEpoch <= numEpoch:
         # Shuffle the batches and return
         trainData, trainTarget = ShuffleBatches(trainData, trainTarget)
@@ -142,7 +143,8 @@ def LinearRegression(trainData, trainTarget, testData, testTarget):
             if not (step*miniBatchSize % 50):
                 print "Iter: %3d, MSE-train: %4.2f, weights: %s, bias: %.2f", step, err, currentW.T, currentb
             step = step + 1
-            xAxis.append((700*currEpoch) + (step*miniBatchSize))
+            xAxis.append(numUpdate)
+            numUpdate += 1
             yAxis.append(err)
         # Testing model
         errTest = sess.run(meanSquaredError, feed_dict={X: testData, y_target: testTarget})
