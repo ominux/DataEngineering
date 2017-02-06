@@ -86,7 +86,7 @@ def PredictedValues(x, trainData, trainTarget, K):
 
 # 2 Linear and Logistic Regression
 # 2.2 Stochastic Gradient Descent
-# TODO: Implement linear regression and stochastic gradient descent algorithm 
+# Implement linear regression and stochastic gradient descent algorithm 
 # with mini-batch size B = 50.
 def buildGraph():
     # Variable creation
@@ -126,13 +126,15 @@ def LinearRegression(trainData, trainTarget, testData, testTarget):
     # Training model
     wList = []
 
-    numEpoch = 10
-    miniBatchSize = 10
+    numEpoch = 2
+    miniBatchSize = 50
     currEpoch = 0
+    xAxis = []
+    yAxis = []
     while currEpoch <= numEpoch:
         # Shuffle the batches and return
         trainData, trainTarget = ShuffleBatches(trainData, trainTarget)
-        step = 0
+        step =  1
         # Full batch
         while step*miniBatchSize < 700:
             _, err, currentW, currentb, yhat = sess.run([train, meanSquaredError, W, b, y_predicted], feed_dict={X: trainData[step*miniBatchSize:(step+1)*miniBatchSize], y_target: trainTarget[step*miniBatchSize:(step+1)*miniBatchSize]})
@@ -140,10 +142,19 @@ def LinearRegression(trainData, trainTarget, testData, testTarget):
             if not (step*miniBatchSize % 50):
                 print "Iter: %3d, MSE-train: %4.2f, weights: %s, bias: %.2f", step, err, currentW.T, currentb
             step = step + 1
+            xAxis.append((700*currEpoch) + (step*miniBatchSize))
+            yAxis.append(err)
         # Testing model
         errTest = sess.run(meanSquaredError, feed_dict={X: testData, y_target: testTarget})
         print "Final testing MSE: ", errTest
         currEpoch += 1
+    import matplotlib.pyplot as plt
+    plt.figure(1)
+    print "Axes are"
+    print np.array(xAxis)
+    print np.array(yAxis)
+    plt.plot(np.array(xAxis), np.array(yAxis))
+    plt.savefig('trainEpoch.png')
     return
 
 if __name__ == "__main__":
@@ -193,6 +204,7 @@ if __name__ == "__main__":
     xTensor = tf.pack(x)
     predictedValues = PredictedValues(xTensor, trainData, trainTarget, K)
     import matplotlib.pyplot as plt
+    plt.figure(0)
     init = tf.global_variables_initializer()
     with tf.Session() as sess:
         sess.run(init)
