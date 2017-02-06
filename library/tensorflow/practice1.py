@@ -102,7 +102,3 @@ for i in range(100):
 print "To visualize Tensorboard, execute on commandline:"
 # It will execute the visualization tool as a webserver for a browser
 print ">> tensorboard --logdir=logSimpleGraph"
-
-
-
-
