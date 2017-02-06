@@ -94,13 +94,17 @@ def buildGraph():
     b = tf.Variable(0.0, name='biases')
     X = tf.placeholder(tf.float32, [None, 64], name='input_x')
     y_target = tf.placeholder(tf.float32, [None,1], name='target_y')
+    weightDecay = tf.div(tf.constant(1.0),tf.constant(2.0))
     # Graph definition
-    y_predicted = tf.matmul(X,W) + b
+    y_predicted = tf.matmul(X,W) + b 
     # Error definition
     meanSquaredError = tf.reduce_mean(tf.reduce_mean(tf.square(y_predicted - y_target), 
                                                 reduction_indices=1, 
                                                 name='squared_error'), 
                                   name='mean_squared_error')
+    weightDecayMeanSquareError = tf.reduce_mean(tf.reduce_mean(tf.square(weightDecay)))
+    weightDecayTerm = tf.multiply(weightDecay, weightDecayMeanSquareError)
+    meanSquaredError = tf.add(meanSquaredError,weightDecayTerm)
 
     # Training mechanism
     optimizer = tf.train.GradientDescentOptimizer(learning_rate = 0.01)
