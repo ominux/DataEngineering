@@ -31,7 +31,7 @@ def PairwiseDistances(X, Z):
 
 # 1.3 Making Predictions
 # 1.3.1 Choosing nearest neighbours
-# TODO: Write a vectorized Tensorflow Python function that takes a pairwise distance matrix
+# Write a vectorized Tensorflow Python function that takes a pairwise distance matrix
 # and returns the responsibilities of the training examples to a new test data point. 
 # It should not contain loops.
 # Use tf.nn.top_k
@@ -40,39 +40,80 @@ def ChooseNearestNeighbours(D, K):
     input:
         D is a matrix of size (B x C)
         K is the top K responsibilities for each test input
+    output:
+        topK are the value of the squared distances for the topK
+        indices are the index of the location of these squared distances
     """
     topK, indices = tf.nn.top_k(D, K)
     return topK, indices
 
-if __name__ == "__main__":
-    print 'hello'
-    # 1.
-    N = 2 # number of dimensions
-    B = 3 # number of test inputs (To get the predictions for all these inputs
-    C = 2 # number of training inputs (Pick closest k from this C)
-    K = 1 # number of nearest neighbours
-    X = tf.constant([1, 2, 3, 4, 5, 6], shape=[3, 2])
-    Z = tf.constant([21, 22, 31, 32], shape=[2, 2])
-    #FIXME: May not be working on random_uniform although it works on hard-coded
-    #X = tf.random_uniform([B, N])*30
-    #Z = tf.random_uniform([C, N])*30
-    D = PairwiseDistances(X, Z)
-    # You calculate all the pairwise distances between each test input
-    # and existing training input
-    # 2.
+# 1.3.2 Prediction
+# TODO: Compute the k-NN prediction with K = {1, 3, 5, 50}
+# For each value of K, compute and report:
+    # training MSE loss
+    # validation MSE loss
+    # test MSE loss
+# Choose best k using validation error
+def PredictKnn(inputData, testData, inputTarget,  testTarget, K):
+    """
+    input:
+        inputData
+        testData
+        inputTarget
+        testTarget
+    output:
+        loss
+    """
+    D = PairwiseDistances(testData, trainData)
     topK, indices = ChooseNearestNeighbours(D, K)
+    # Select the proper outputs to be averaged from the target values and average them
+    trainTargetSelectedAveraged = tf.reduce_mean(tf.gather(trainTarget, indices), 1)
+    # Calculate the loss from the actual values
+    loss = tf.reduce_mean(tf.square(tf.sub(trainTargetSelectedAveraged, testTarget)))
+    #loss = tf.square(tf.sub(trainTargetSelectedAveraged, testTarget))
+
     init = tf.global_variables_initializer()
     with tf.Session() as sess:
         sess.run(init)
-        opD = sess.run(D)
         opTopK = sess.run(topK)
         opIndices = sess.run(indices)
-        print D
-        print opD
-        print topK
-        print opTopK
-        print indices
+        opTrainTar = sess.run(trainTargetSelectedAveraged)
+        opLoss = sess.run(loss)
+        print 'indices are'
         print opIndices
+        print 'trainTarSelectedAveraged are'
+        print opTrainTar
+        print 'Loss is'
+        print opLoss
+        # Don't use topK as it's just the calculated distances
+        # you need to use opIndices to index into the numpyMatrices
+        print 'topK are'
+        print opTopK
+        # Get all the values for the nearest k target and sum them up
+        # trainTarget[indices]
+    return loss
+
+
+
+if __name__ == "__main__":
+    print 'helloworld'
+    N = 2 # number of dimensions
+    B = 3 # number of test inputs (To get the predictions for all these inputs
+    C = 2 # number of training inputs (Pick closest k from this C)
+    X = tf.constant([1, 2, 3, 4, 5, 6], shape=[3, 2])
+    Z = tf.constant([21, 22, 31, 32], shape=[2, 2])
+    # Need to put seed so random_uniform doesn't generate new random values
+    # each time you evaluate when you print, so then the values would be 
+    # inconsistent as to what you would have used or checked
+    #X = tf.random_uniform([B, N], seed=111)*30
+    #Z = tf.random_uniform([C, N], seed=112)*30
+    D = PairwiseDistances(X, Z)
+    K = 1 # number of nearest neighbours
+    # You calculate all the pairwise distances between each test input
+    # and existing training input
+    topK, indices = ChooseNearestNeighbours(D, K)
+    # Prediction
+    K = 3 # number of nearest neighbours
     np.random.seed(521)
     Data = np.linspace(1.0 , 10.0 , num =100) [:, np.newaxis]
     Target = np.sin( Data ) + 0.1 * np.power( Data , 2) + 0.5 * np.random.randn(100 , 1)
@@ -81,6 +122,16 @@ if __name__ == "__main__":
     trainData, trainTarget  = Data[randIdx[:80]], Target[randIdx[:80]]
     validData, validTarget = Data[randIdx[80:90]], Target[randIdx[80:90]]
     testData, testTarget = Data[randIdx[90:100]], Target[randIdx[90:100]]
+    # Convert to tensors from numpy
+    trainData = tf.pack(trainData)
+    validData = tf.pack(validData)
+    testData = tf.pack(testData)
+    trainTarget = tf.pack(trainTarget)
+    validtarget = tf.pack(validTarget)
+    testTarget = tf.pack(testTarget)
+    trainMseLoss = PredictKnn(trainData, trainData, trainTarget, trainTarget, K)
+    # validationMseLoss = PredictKnn(trainData, validData, trainTarget, validTarget, K)
+    # testMseLoss = PredictKnn(trainData, testData, trainTarget, testTarget, K)
 
     '''
     init = tf.global_variables_initializer()
@@ -101,18 +152,23 @@ if __name__ == "__main__":
         print opZ
         print 'D'
         print opD
+        sess.run(init)
+        opD = sess.run(D)
+        opTopK = sess.run(topK)
+        opIndices = sess.run(indices)
+        print D
+        print opD
+        print topK
+        print opTopK
+        print indices
+        print opIndices
     '''
 
 
 '''
-# 1.3.2 Prediction
-# TODO: Compute the k-NN prediction with K = {1, 3, 5, 50}
-# For each value of K, compute and report:
-    # training MSE loss
-    # validation MSE loss
-    # test MSE loss
-# Choose best k using validation error
+
 # TODO: Plot the prediction function for x = [0, 11]
+# Basically use the x below as the test input
 x = np.linspace(0,0, 11.0, num=1000)[:, np.newaxis]
 
 # 1.4 Soft-Knn & Gaussian Processes
