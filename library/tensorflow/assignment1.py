@@ -44,7 +44,7 @@ def ChooseNearestNeighbours(D, K):
         topK are the value of the squared distances for the topK
         indices are the index of the location of these squared distances
     """
-    topK, indices = tf.nn.top_k(D, K)
+    topK, indices = tf.nn.top_k(tf.neg(D), K)
     return topK, indices
 
 # 1.3.2 Prediction
