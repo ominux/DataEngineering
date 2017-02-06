@@ -9,10 +9,56 @@ import numpy as np
 
 # 1.2 Euclidean Distance Function 
 # 1.2.2 Pairwise Distances
-# TODO: Write a vectorized Tensorflow Python function that implements
+# Write a vectorized Tensorflow Python function that implements
 # the pairwise squared Euclidean distance function for two input matrices.
-# No Loops and makes used of Tensorflow broadcasting.
+# No Loops and makes use of Tensorflow broadcasting.
+def PairwiseDistances(X, Z):
+    """
+    input:
+        X is a matrix of size (B x N)
+        Z is a matrix of size (C x N)
+    output:
+        D = matrix of size (B x C) containing the pairwise Euclidean distances
+    """
+    B = X.get_shape().as_list()[0]
+    N = X.get_shape().as_list()[1]
+    C = Z.get_shape().as_list()[0]
+    assert  N == Z.get_shape().as_list()[1]
+    X = tf.reshape(X, [B, 1, N])
+    Z = tf.reshape(Z, [1, C, N])
+    D = tf.reduce_sum(tf.square(tf.sub(X, Z)), 2)
+    return D
 
+if __name__ == "__main__":
+    B = 2 
+    C = 3 
+    N = 2 
+    X = tf.constant([1, 2, 3, 4], shape=[2, 2])
+    Z = tf.constant([21, 22, 31, 32, 41, 42], shape=[3, 2])
+    # FIXME: May not be working on random_uniform although it works on hard-coded
+    #X = tf.random_uniform([B, N])*30
+    #Z = tf.random_uniform([C, N])*30
+    D = PairwiseDistances(X, Z)
+    init = tf.initialize_all_variables()
+    with tf.Session() as sess:
+        sess.run(init)
+        opX = sess.run(X)
+        opZ = sess.run(Z)
+        opD = sess.run(D)
+        print 'X'
+        print X
+        print 'Z'
+        print Z
+        print 'D'
+        print D
+        print 'X'
+        print opX
+        print 'Z'
+        print opZ
+        print 'D'
+        print opD
+
+'''
 # 1.3 Making Predictions
 # 1.3.1 Choosing nearest neighbours
 # TODO: Write a vectorized Tensorflow Python function that takes a pairwise distance matrix
@@ -76,3 +122,4 @@ with np.load ("tinymnist.npz") as data :
 # from weightDecay = {0., 0.0001, 0.001, 0.01, 0.1, 1.}
 
 # TODO: Plot weightDecay vs test set accuracy. 
+'''
