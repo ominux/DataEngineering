@@ -72,7 +72,7 @@ def PredictKnn(trainData , testData, trainTarget,  testTarget, K):
     loss = tf.reduce_mean(tf.square(tf.sub(trainTargetSelectedAveraged, testTarget)))
     return loss
 
-# TODO: Plot the prediction function for x = [0, 11]
+# Plot the prediction function for x = [0, 11]
 def PredictedValues(x, trainData, trainTarget, K):
     """
     Plot the predicted values
@@ -83,6 +83,53 @@ def PredictedValues(x, trainData, trainTarget, K):
     topK, indices = ChooseNearestNeighbours(D, K)
     predictedValues = tf.reduce_mean(tf.gather(trainTarget, indices), 1)
     return predictedValues
+
+# 2 Linear and Logistic Regression
+# 2.2 Stochastic Gradient Descent
+# TODO: Implement linear regression and stochastic gradient descent algorithm 
+# with mini-batch size B = 50.
+def buildGraph():
+    # Variable creation
+    W = tf.Variable(tf.truncated_normal(shape=[64, 1], stddev=0.5), name='weights')
+    b = tf.Variable(0.0, name='biases')
+    X = tf.placeholder(tf.float32, [None, 64], name='input_x')
+    y_target = tf.placeholder(tf.float32, [None,1], name='target_y')
+    # Graph definition
+    y_predicted = tf.matmul(X,W) + b
+    # Error definition
+    meanSquaredError = tf.reduce_mean(tf.reduce_mean(tf.square(y_predicted - y_target), 
+                                                reduction_indices=1, 
+                                                name='squared_error'), 
+                                  name='mean_squared_error')
+
+    # Training mechanism
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate = 0.01)
+    train = optimizer.minimize(loss=meanSquaredError)
+    return W, b, X, y_target, y_predicted, meanSquaredError, train
+
+def LinearRegression(trainData, trainTarget, testData, testTarget):
+    # Build computation graph
+    W, b, X, y_target, y_predicted, meanSquaredError, train = buildGraph()
+    # Initialize session
+    init = tf.global_variables_initializer()
+    sess = tf.InteractiveSession()
+    sess.run(init)
+    initialW = sess.run(W)  
+    initialb = sess.run(b)
+
+    print "Initial weights: %s, initial bias: %.2f", initialW, initialb
+    # Training model
+    wList = []
+    for step in xrange(0,201):
+        _, err, currentW, currentb, yhat = sess.run([train, meanSquaredError, W, b, y_predicted], feed_dict={X: trainData, y_target: trainTarget})
+        wList.append(currentW)
+        if not (step % 50) or step < 10:        
+            print "Iter: %3d, MSE-train: %4.2f, weights: %s, bias: %.2f", step, err, currentW.T, currentb
+
+    # Testing model
+    errTest = sess.run(meanSquaredError, feed_dict={X: testData, y_target: testTarget})
+    print "Final testing MSE: ", errTest
+    return
 
 if __name__ == "__main__":
     print 'helloworld'
@@ -137,56 +184,12 @@ if __name__ == "__main__":
         plt.scatter(sess.run(trainData), sess.run(trainTarget))
         plt.plot(sess.run(xTensor), sess.run(predictedValues))
         plt.savefig('haha.png')
-    '''
-    init = tf.global_variables_initializer()
-    with tf.Session() as sess:
-        sess.run(init)
-        opX = sess.run(X)
-        opZ = sess.run(Z)
-        opD = sess.run(D)
-        print 'X'
-        print X
-        print 'Z'
-        print Z
-        print 'D'
-        print D
-        print 'X'
-        print opX
-        print 'Z'
-        print opZ
-        print 'D'
-        print opD
-        sess.run(init)
-        opD = sess.run(D)
-        opTopK = sess.run(topK)
-        opIndices = sess.run(indices)
-        print D
-        print opD
-        print topK
-        print opTopK
-        print indices
-        print opIndices
-        # Calculating loss
-        sess.run(init)
-        opTopK = sess.run(topK)
-        opIndices = sess.run(indices)
-        opTrainTar = sess.run(trainTargetSelectedAveraged)
-        opLoss = sess.run(loss)
-        print 'indices are'
-        print opIndices
-        print 'trainTarSelectedAveraged are'
-        print opTrainTar
-        print 'Loss is'
-        print opLoss
-        # Don't use topK as it's just the calculated distances
-        # you need to use opIndices to index into the numpyMatrices
-        print 'topK are'
-        print opTopK
-        # Get all the values for the nearest k target and sum them up
-        # trainTarget[indices]
-    '''
-
-
+    # Part 2
+    with np.load ("tinymnist.npz") as data :
+        trainData, trainTarget = data ["x"], data["y"]
+        validData, validTarget = data ["x_valid"], data ["y_valid"]
+        testData, testTarget = data ["x_test"], data ["y_test"]
+        LinearRegression(trainData, trainTarget, testData, testTarget)
 '''
 
 # 1.4 Soft-Knn & Gaussian Processes
@@ -197,18 +200,6 @@ if __name__ == "__main__":
 # 1.4.1.1 Gaussian Processes
 # TODO: Repeat for the Gaussian Processes Regression Model
 # Comment on the difference you observe between two programs
-
-
-# 2 Linear and Logistic Regression
-# 2.2 Stochastic Gradient Descent
-
-# TODO: Implement linear regression and stochastic gradient descent algorithm 
-# with mini-batch size B = 50.
-
-with np.load ("tinymnist.npz") as data :
-    trainData, trainTarget = data ["x"], data["y"]
-    validData, validTarget = data ["x_valid"], data ["y_valid"]
-    testData, testTarget = data ["x_test"], data ["y_test"]
 
 # 2.2.1 Tuning the learning rate
 # Train the linear regression model on the tiny MNIST dataset using SGD
