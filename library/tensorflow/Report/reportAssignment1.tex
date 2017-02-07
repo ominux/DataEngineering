@@ -258,6 +258,30 @@ lim_{N\to\infty} (\frac{2}{N}) = 0
 %-----------------------------------------------------
 \subsection{Euclidean Distance Function}
 \subsubsection{Inner Product}
+
+All input vectors have same magnitude in the training set. 
+$||x^{(1)}||_{2}^{2} = ... = ||x^{(M)}||_{2}^{2}$
+
+Need show that in order to find nearest neighbor of a test point $x^{*}$ among the training set, it is sufficient to just compare and rank the negative inner product between the training and the test data, $x^{(M)^{T}}x^{*}$. 
+
+Think of a 2-Dimensional case, if all input vectors have the same magnitude, that defines a circle in the training set. Taking the inner product between two vectors, $x^{(M)^{T}}x^{*}$ would simply be calculating the angle between the two vectors. This is similar to performing a cosine similarity calculation. Therefore, ranking based on negative inner product would be looking for the smallest angle between any 2 input vectors. 
+
+Now, extending this intuition to a M-Dimensional case. It is a hypersphere where all the vectors extend to the surface of the hypersphere as they have the same magnitude. Taking the negative inner product, $x^{(M)^{T}}x^{*}$ and ranking them would be finding the minimum angle between any of the 2 points on the surface, which is its nearest neighbor. 
+
+This can be illustrated below in equation \ref{equation:Hypersphere}. 
+$R$ is the radius of the hypersphere and all vectors have a magnitude equal to this radius. 
+\begin{equation}
+\label{equation:Hypersphere}
+\begin{split}
+||x^{(*)}||_{2}^{2} = \sum_{n=1}^{N} (x^{(*)}_{n})^{2} = R^{2} \\
+||x^{(1)}||_{2}^{2} = \sum_{n=1}^{N} (x^{(1)}_{n})^{2} = R^{2} \\
+. \\
+. \\
+. \\
+||x^{(M)}||_{2}^{2} = \sum_{n=1}^{N} (x^{(M)}_{n})^{2} = R^{2}
+\end{split}
+\end{equation}
+
 \subsubsection{Pairwise Distances}
 \begin{minted}{python}
 # 1.2 Euclidean Distance Function 
@@ -371,9 +395,10 @@ K & Training MSE Loss & Validation MSE Loss & Test MSE Loss \\ [0.5ex]
 \subsection{Soft kNN and Gaussian Processes}
 %--------------------------------
 \subsubsection{Soft Decisions}
+TODO: 
 %--------------------------------
 \subsubsection{Conditional Distribution of a Gaussian}
-
+TODO:
 %------------------------------------------------------------------
 \section{Linear and Logistic Regression}
 %-----------------------------------------------------
