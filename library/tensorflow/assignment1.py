@@ -94,26 +94,35 @@ def PredictedValues(x, trainData, trainTarget, K):
 # 1.4.1.1 Soft Decisions
 # TODO: Write a Tensorflow python program based on the soft k-NN model to compute 
 # predictions on the data1D.npy dataset. 
-# Set lambda = 0.1 NOT 10 as given in assignment handout
+# Set lambda = 100 NOT 10 as given in assignment handout
 # and plot the test-set prediction of the model. 
 
-def SoftDecisions(hyperParameter = 0.1): 
-    # K = exponentiated negative pairwise distances
-    # K = exp(-hyperParameter*PairwiseDistances(testData, trainData))
-    # r = K/(tf.reducesumK(x,x) # Sum it downwards, should be a scalar and normalizing constant.
-    r = 0 #temp
-    return r
+# Predict values using soft decision
+def PredictedValuesSoftDecision(x, trainData, trainTarget):
+    hyperParam = 100
+    D1 = PairwiseDistances(x, trainData)
+    K1 =  tf.exp(-hyperParam*D1)
+    sum1 = tf.reduce_sum(tf.transpose(K1), axis=0)
+    N = sum1.get_shape().as_list()[0]
+    sum1 = tf.reshape(sum1, [N,1])
+    rStar = tf.div(K1, sum1)
+    predictedValues = tf.matmul(rStar,trainTarget)
+    return predictedValues
 
-def GaussianProcessRegression(hyperParameter = 0.1):
-    # k1 = exp(-hyperparameter*pairwisedistances(testdata, traindata))
-    # k2 = exp(-hyperparameter*pairwisedistances(traindata, traindata))
-    # r = tf.inverse(k2)matmultiply(k1)
-    r = 0 #temp
-    return r
-
+# Predict values using Gaussian
 # 1.4.1.1 Gaussian Processes
-# TODO: Repeat for the Gaussian Processes Regression Model
+def PredictedValuesGaussianProcesses(x, trainData, trainTarget):
+    hyperParam = 100
+    D1 = PairwiseDistances(x, trainData)
+    K1 =  tf.exp(-hyperParam*D1)
+    D2 = PairwiseDistances(trainData, trainData)
+    K2 =  tf.matrix_inverse(tf.exp(-hyperParam*D2))
+    rStar = tf.matmul(K1, K2)
+    predictedValues = tf.matmul(rStar,trainTarget)
+    return predictedValues
+
 # Comment on the difference you observe between two programs
+# Gaussian has higher loss. 
 
 # 2 Linear and Logistic Regression
 # 2.2 Stochastic Gradient Descent
@@ -231,6 +240,14 @@ def LinearRegression(trainData, trainTarget, validData, validTarget, testData, t
             plt.savefig("TestLossLearnRate" + str(learningRate) + "Batch" + str(miniBatchSize) + '.png')
     return
 
+def SortData(inputVal, outputVal):
+        p = np.argsort(inputVal, axis=0)
+        inputVal = np.array(inputVal)[p]
+        outputVal = np.array(outputVal)[p]
+        inputVal = inputVal[:, :,0]
+        outputVal = outputVal[:, :,0]
+        return inputVal, outputVal
+
 if __name__ == "__main__":
     print 'helloworld'
     N = 2 # number of dimensions
@@ -249,15 +266,25 @@ if __name__ == "__main__":
     # and existing training input
     topK, indices = ChooseNearestNeighbours(D, K)
     # Prediction
-    for K in [1, 3, 5, 50]:
+    #for K in [1, 3, 5, 50]:
+    for K in [1]:
         np.random.seed(521)
         Data = np.linspace(1.0 , 10.0 , num =100) [:, np.newaxis]
         Target = np.sin( Data ) + 0.1 * np.power( Data , 2) + 0.5 * np.random.randn(100 , 1)
         randIdx = np.arange(100)
         np.random.shuffle(randIdx)
+        # data1D.npy
+        trainData, trainTarget  = Data[randIdx[:5]], Target[randIdx[:5]]
         trainData, trainTarget  = Data[randIdx[:80]], Target[randIdx[:80]]
         validData, validTarget = Data[randIdx[80:90]], Target[randIdx[80:90]]
+        testData, testTarget = Data[randIdx[90:93]], Target[randIdx[90:93]]
         testData, testTarget = Data[randIdx[90:100]], Target[randIdx[90:100]]
+
+        #trainData, trainTarget = SortData(trainData, trainTarget)
+        #validData, validTarget = SortData(validData, validTarget)
+        testData, testTarget = SortData(testData, testTarget)
+
+
         # Convert to tensors from numpy
         trainData = tf.pack(trainData)
         validData = tf.pack(validData)
@@ -269,20 +296,25 @@ if __name__ == "__main__":
         validationMseLoss = PredictKnn(trainData, validData, trainTarget, validTarget, K)
         testMseLoss = PredictKnn(trainData, testData, trainTarget, testTarget, K)
         init = tf.global_variables_initializer()
+        '''
         with tf.Session() as sess:
             sess.run(init)
-            print 'K'
-            print K
+            print 'K ' + str(K)
             print 'trainMseLoss'
             print sess.run(trainMseLoss)
             print 'validationMseLoss'
             print sess.run(validationMseLoss)
             print 'testMseLoss'
             print sess.run(testMseLoss)
+        '''
         # Plot the prediction for the x below
         x = np.linspace(0.0, 11.0, num=1000)[:, np.newaxis]
         xTensor = tf.pack(x)
-        predictedValues = PredictedValues(xTensor, trainData, trainTarget, K)
+        predictedValuesKnn = PredictedValues(xTensor, trainData, trainTarget, K)
+        predictedValuesSoft = PredictedValuesSoftDecision(testData, trainData, trainTarget)
+        predictedValuesGaussian = PredictedValuesGaussianProcesses(testData, trainData, trainTarget)
+        lossSoft = tf.reduce_mean(tf.square(tf.sub(predictedValuesSoft, testTarget)))/2.0
+        lossGaussian = tf.reduce_mean(tf.square(tf.sub(predictedValuesGaussian, testTarget)))/2.0
         import matplotlib.pyplot as plt
         plt.figure(0)
         init = tf.global_variables_initializer()
@@ -290,9 +322,29 @@ if __name__ == "__main__":
             sess.run(init)
             plt.figure(K+100)
             plt.scatter(sess.run(trainData), sess.run(trainTarget))
-            plt.plot(sess.run(xTensor), sess.run(predictedValues))
+            plt.plot(sess.run(xTensor), sess.run(predictedValuesKnn))
             fileName = str("KNN") + str(K) + str("trainingGraph.png")
             plt.savefig(fileName)
+
+            # Plot for SoftDecision
+            plt.figure(K+101)
+            plt.scatter(sess.run(testData), sess.run(testTarget))
+            plt.plot(sess.run(testData), sess.run(predictedValuesSoft))
+            fileName = str("SoftDecision.png")
+            plt.savefig(fileName)
+            print 'SoftDecisionLoss'
+            print sess.run(lossSoft)
+
+            # Plot for Gaussian
+            plt.figure(K+102)
+            plt.scatter(sess.run(testData), sess.run(testTarget))
+            plt.plot(sess.run(testData), sess.run(predictedValuesGaussian))
+            fileName = str("ConditionalGaussian.png")
+            plt.savefig(fileName)
+            print 'ConditionalGaussianLoss'
+            print sess.run(lossGaussian)
+    # Part 1.4
+    sys.exit(0) # TODO: Remove this, temporary for implementing bonus for part 1 
     # Part 2
     with np.load ("tinymnist.npz") as data :
         trainData, trainTarget = data ["x"], data["y"]
