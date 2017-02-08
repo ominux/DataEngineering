@@ -1,62 +1,433 @@
 \documentclass[a4paper,12pt]{article} 
-\usepackage{amssymb}  % For \therefore 
-
+%Packages included by Soon Chee Loong
+\usepackage{amssymb}  % For \therefore
+\usepackage{fullpage} % Package to use full page
+\usepackage{parskip} % Package to tweak paragraph skipping
+\usepackage{tikz} % Package for drawing
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{palatino}
+\usepackage{minted} % For code highlighting 
+\usepackage{amsmath} % To split long equations
+% More custom packages
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{physics}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{relsize}
+\usepackage{wrapfig}
+\usepackage{cite}
+%------------------------------------------------------------------
+% Collaboration Notes 
+% 0. Ensure tex always compiles, fix any errors immediately
+%		This doesn't have version control. So don't mess up.  
+% 1. Work on 1 main.tex file only 
+% 	Easier to back-up to local
+% 	Easier to work on local if needed. 
+% 2. TODO: Mark anything important to do as TODO
+% 	so we can easily search for all TODO: comments before submitting. 
+% 3. -25: Any number with -25 means it's a temporary number to replace. 
+%------------------------------------------------------------------
+\title{ECE521 Winter 2017: Assignment 1}
+\author{FuYuan Tee, (999298537)
+  \thanks{Equal Contribution (50\%), fuyuan.tee@mail.utoronto.ca}
+\and Chee Loong Soon, (999295793) \thanks{Equal Contribution (50\%),  cheeloong.soon@mail.utoronto.ca}} 
+\date{\today}
 \begin{document}
-\title{ECE521 Assignment 1}
-\author{Soon Chee Loong, 999295793 \thanks{University of Toronto cheeloong.soon@mail.utoronto.ca}}
- 
-\date {\today}
-
-\maketitle 
+\maketitle
 \tableofcontents
-
-\section{k-Nearest Neighrbour}
-
-
-
+%------------------------------------------------------------------
+\section{k-Nearest Neighbour}
+%-----------------------------------------------------
 \subsection{Geometry of k-NN}
-
+%--------------------------------
 \subsubsection{Describe 1D Dataset}
+\begin{itemize}
+\item Points from two classes (0, 1) alternate and are equally spaced from each other in One-Dimension as illustrated in Table \ref{table:generatedXY}. 
+\item TODO: Exact formula with defined notations
 
+\item TODO: Plot graph of K vs 1's and 0's if have time. 
+%--------------------------------
+% Begin Table 
+\begin{table}[ht]
+\centering % used for centering table
+\begin{tabular}{c c c c} % centered columns (4 columns)
+\hline % single horizontal line
+X (Input) & Y (Output) \\ [0.5ex] 
+\hline
+0 & 0 \\ 
+1 & 1 \\
+2 & 0 \\
+3 & 1 \\
+4 & 0 \\
+5 & 1 \\
+6 & 0 \\
+8 & 1 \\ [1ex] % vertical space
+\hline
+\end{tabular}
+\caption{X and Y generated values}\label{table:generatedXY} 
+\end{table}
+% End Table 
+%--------------------------------
+\item This results in the prediction accuracy as shown in Table \ref{table:kAccuracy}.
+%--------------------------------
+% Begin Table 
+\begin{table}[ht]
+\centering % used for centering table
+\begin{tabular}{c c c c} % centered columns (4 columns)
+\hline % single horizontal line
+K & Prediction Accuracy (\%) \\ [0.5ex] 
+\hline
+1 & 100.0 \\ 
+2 & 50.0 \\
+3 & 33.3 \\
+4 & 50.0 \\
+5 & 100.0 \\
+6 & 50.0 \\
+7 & 33.3 \\
+8 & 50.0 \\ [1ex] % vertical space
+\hline
+\end{tabular}
+\caption{K and Prediction Accuracy for two periods}
+\label{table:kAccuracy}
+\end{table}
+% End Table 
+%--------------------------------
+\end{itemize}
+%-----------------------------------------------------
 \subsubsection{Curse of Dimensionality}
 
-\subsection{Euclidean Distance Function}
+Need to prove equation \ref{equation:CurseOfDim}.
+\begin{equation}
+\label{equation:CurseOfDim}
+\mathbf{var}(\frac{||x^{(i)} - x^{(j)}||_{2}^{2}}{\mathbf{E}[||x^{(i)} - x^{(j)}||_{2}^{2}] }) = \frac{N + 2}{N} - 1
+\end{equation} 
 
+Equation \ref{equation:ExpectationFormula} is given from  Probability Theory. 
+\begin{equation}
+\label{equation:ExpectationFormula}
+\mathbf{var}[x] = \mathbf{E}[x^{2}] - \mathbf{E}[x]^{2}
+\end{equation} 
+
+Below are the given equations. 
+\begin{equation}
+x \in \mathbb{R}^{n}
+\end{equation} 
+\begin{equation}
+\label{equation:GaussianDistribution}
+\Pr(X) \sim \prod_{n=1}^{N} \mathcal{N}(x_{n},\; 0 \; \sigma^{2})
+\end{equation} 
+{\centering where $n$ represents the $n^{th}$ dimension. 
+
+$N$ represents the number of training data. \par}
+
+\begin{equation}
+\label{equation:DifferenceGaussian}
+d_{n} = x_{n}^{i} - x_{n}^{j}
+\end{equation} 
+
+{\centering where $i$ represents the $i^{th}$ training data. 
+
+$j$ represents the $j^{th}$ training data.. \par}
+
+\begin{equation}
+\label{equation:DifferenceDistribution}
+\Pr(d_{n}) \sim \mathcal{N}(d_{n} ; 0 , 2\sigma^{2})
+\end{equation} 
+
+\begin{equation}
+\label{equation:IndependentDifference}
+\mathbf{E}[d_{n}^{2}d_{m}^{2}] = \mathbf{E}[d_{n}^{2}]\mathbf{E}[d_{m}^{2}]
+\end{equation}
+
+\begin{equation}
+\label{equation:FourthMoment}
+\mathbf{E}[d_{n}^{4}] = 3(\sqrt{2}\sigma)^{4} = 12\sigma^{4}
+\end{equation} 
+
+From equation \ref{equation:GaussianDistribution} and \ref{equation:ExpectationFormula}, we can imply
+\begin{equation}
+\mathbf{E}[x_{n}] = 0
+\end{equation} 
+\begin{equation}
+\mathbf{var}[x_{n}] = \sigma^{2} = \mathbf{E}[x_{n}^{2}]
+\end{equation} 
+
+From equation \ref{equation:DifferenceDistribution} and \ref{equation:ExpectationFormula}, we can imply
+\begin{equation}
+\mathbf{E}[d_{n}] = 0
+\end{equation} 
+\begin{equation}
+\label{equation:DifferenceVariance}
+\mathbf{var}[d_{n}] = 2\sigma^{2} = \mathbf{E}[d_{n}^{2}]
+\end{equation} 
+
+From equation \ref{equation:IndependentDifference} and \ref{equation:DifferenceVariance}, 
+\begin{equation}
+\mathbf{E}[d_{n}^{2}d_{m}^{2}] = \mathbf{E}[d_{n}^{2}]\mathbf{E}[d_{m}^{2}] = (2\sigma^{2})(2\sigma^{2}) = 4\sigma^{4}
+\end{equation} 
+
+From equation \ref{equation:CurseOfDim} and \ref{equation:DifferenceGaussian}, 
+\begin{equation}
+\label{equation:newCurseOfDim}
+||x^{(i)} - x^{(j)}||_{2}^{2} = \sum_{n=1}^{N} (x_{n}^{(i)} - x_{n}^{(j)})^{2} = \sum_{n=1}^{N} d_{n}^{2}
+\end{equation} 
+
+Substituting equations \ref{equation:CurseOfDim},  \ref{equation:newCurseOfDim} into \ref{equation:ExpectationFormula}, 
+\begin{equation}
+\label{equation:ExpandedExpectationFormula}
+\mathbf{var}(\frac{\sum_{n=1}^{N} d_{n}^{2}}{\mathbf{E}[\sum_{n=1}^{N} d_{n}^{2}]}) = \mathbf{E}[(\frac{\sum_{n=1}^{N} d_{n}^{2}}{\mathbf{E}[\sum_{n=1}^{N} d_{n}^{2}]})^{2}] - \mathbf{E}[(\frac{\sum_{n=1}^{N} d_{n}^{2}}{\mathbf{E}[\sum_{n=1}^{N} d_{n}^{2}]})]^{2}
+\end{equation} 
+
+Looking into the first term of the RightHandSide (RHS) of equation \ref{equation:ExpandedExpectationFormula},
+\begin{equation}
+\label{equation:CurseOfDimLHS}
+\begin{split}
+\mathbf{E}[(\frac{\sum_{n=1}^{N} d_{n}^{2}}{\mathbf{E}[\sum_{n=1}^{N} d_{n}^{2}]})^{2}]
+= 
+\mathbf{E}[(\frac{\sum_{n=1}^{N} d_{n}^{2}}{\sum_{n=1}^{N} \mathbf{E}[\ d_{n}^{2}]})^{2}]
+=
+\mathbf{E}[(\frac{\sum_{n=1}^{N} d_{n}^{2}}{\sum_{n=1}^{N} 2\sigma^{2}})^{2}] \\
+=
+\mathbf{E}[(\frac{\sum_{n=1}^{N} d_{n}^{2}}{2N\sigma^{2}})^{2}]
+= 
+\mathbf{E}[(\frac{\sum_{n=1}^{N} d_{n}^{2}}{2N\sigma^{2}})^{2}]
+=
+\mathbf{E}[\frac{(\sum_{n=1}^{N} d_{n}^{2})^{2}}{(2N\sigma^{2})^{2}}] \\
+= 
+\mathbf{E}[\frac{(\sum_{n=1}^{N} d_{n}^{2})^{2}}{4N^{2}\sigma^{4}}]
+=
+\mathbf{E}[\frac{\sum_{n=1}^{N}\sum_{m=1}^{N}d_{n}^{2}d_{m}^{2}}{4N^{2}\sigma^{4}}]
+=
+\mathbf{E}[\frac{\sum_{n=1}^{N}\sum_{m=1}^{N}d_{n}^{2}d_{m}^{2}}{4N^{2}\sigma^{4}}] \\
+=
+\frac{\mathbf{E}[\sum_{n=1}^{N}\sum_{m=1}^{N}d_{n}^{2}d_{m}^{2}]}{4N^{2}\sigma^{4}} \\
+= 
+\frac{\mathbf{E}[\sum_{n=1}^{N}d_{n}^{4} + 2\sum_{n=1}^{N-1}\sum_{m=n+1}^{N}d_{n}^{2}d_{m}^{2}]}{4N^{2}\sigma^{4}} \\
+=
+\frac{\mathbf{E}[\sum_{n=1}^{N}d_{n}^{4}] + \mathbf{E}[2\sum_{n=1}^{N-1}\sum_{m=n+1}^{N}d_{n}^{2}d_{m}^{2}]}{4N^{2}\sigma^{4}} \\
+=
+\frac{\sum_{n=1}^{N}\mathbf{E}[d_{n}^{4}] + \mathbf{E}[2\sum_{n=1}^{N-1}\sum_{m=n+1}^{N}d_{n}^{2}d_{m}^{2}]}{4N^{2}\sigma^{4}} \\
+= 
+\frac{\sum_{n=1}^{N}12\sigma^{4} + 2\sum_{n=1}^{N-1}\sum_{m=n+1}^{N}\mathbf{E}[d_{n}^{2}d_{m}^{2}]}{4N^{2}\sigma^{4}} \\
+=
+\frac{12N\sigma^{4} + 2\sum_{n=1}^{N-1}\sum_{m=n+1}^{N} 4\sigma^{4}}{4N^{2}\sigma^{4}} \\
+=
+\frac{12N\sigma^{4} + 2(\frac{N(N-1)}{2}) 4\sigma^{4}}{4N^{2}\sigma^{4}} 
+= \frac{4N^{2}\sigma^{4} + 8N\sigma^{4}}{4N^{2}\sigma^{4}} = \frac{N + 2}{N}
+\end{split}
+\end{equation} 
+
+Looking into the second term of the RHS of equation \ref{equation:ExpandedExpectationFormula},
+\begin{equation}
+\label{equation:CurseOfDimRHS}
+\begin{split}
+\mathbf{E}[(\frac{\sum_{n=1}^{N} d_{n}^{2}}{\mathbf{E}[\sum_{n=1}^{\infty} d_{n}^{2}]})]^{2} 
+= 
+\mathbf{E}[(\frac{\sum_{n=1}^{N} d_{n}^{2}}{\sum_{n=1}^{N} \mathbf{E}[d_{n}^{2}]})]^{2} 
+=
+\mathbf{E}[(\frac{\sum_{n=1}^{N} d_{n}^{2}}{\sum_{n=1}^{N} 2\sigma^{2}})]^{2} \\
+= 
+\mathbf{E}[(\frac{\sum_{n=1}^{N} d_{n}^{2}}{2N\sigma^{2}})]^{2} 
+= 
+(\frac{\mathbf{E}[\sum_{n=1}^{N} d_{n}^{2}]}{2N\sigma^{2}})^{2} 
+=
+(\frac{\sum_{n=1}^{N} \mathbf{E}[ d_{n}^{2}]}{2N\sigma^{2}})^{2} \\
+=
+(\frac{N2\sigma^{2}}{2N\sigma^{2}})^{2} = 1^{2} = 1
+\end{split}
+\end{equation} 
+
+Therefore, combining both terms from the RHS of equation  \ref{equation:ExpandedExpectationFormula} as calculated in equations \ref{equation:CurseOfDimLHS} and \ref{equation:CurseOfDimRHS}  results in 
+\begin{equation}
+ \frac{N + 2}{N} - 1
+\end{equation} 
+
+which proves equation \ref{equation:CurseOfDim}. 
+
+Show it vanishes as $lim_{N\to\infty}$.
+
+From equation \ref{equation:CurseOfDim}, 
+\begin{equation}
+\label{equation:CurseOfDimVanish}
+lim_{N\to\infty} (\frac{N + 2}{N} - 1) = 
+lim_{N\to\infty} (\frac{N + 2 - N}{N}) = 
+lim_{N\to\infty} (\frac{2}{N}) = 0
+\end{equation} 
+%-----------------------------------------------------
+\subsection{Euclidean Distance Function}
 \subsubsection{Inner Product}
 
+All input vectors have same magnitude in the training set. 
+$||x^{(1)}||_{2}^{2} = ... = ||x^{(M)}||_{2}^{2}$
+
+Need show that in order to find nearest neighbor of a test point $x^{*}$ among the training set, it is sufficient to just compare and rank the negative inner product between the training and the test data, $x^{(M)^{T}}x^{*}$. 
+
+Think of a 2-Dimensional case, if all input vectors have the same magnitude, that defines a circle in the training set. Taking the inner product between two vectors, $x^{(M)^{T}}x^{*}$ would simply be calculating the angle between the two vectors. This is similar to performing a cosine similarity calculation. Therefore, ranking based on negative inner product would be looking for the smallest angle between any 2 input vectors. 
+
+Now, extending this intuition to a M-Dimensional case. It is a hypersphere where all the vectors extend to the surface of the hypersphere as they have the same magnitude. Taking the negative inner product, $x^{(M)^{T}}x^{*}$ and ranking them would be finding the minimum angle between any of the 2 points on the surface, which is its nearest neighbor. 
+
+This can be illustrated below in equation \ref{equation:Hypersphere}. 
+$R$ is the radius of the hypersphere and all vectors have a magnitude equal to this radius. 
+\begin{equation}
+\label{equation:Hypersphere}
+\begin{split}
+||x^{(*)}||_{2}^{2} = \sum_{n=1}^{N} (x^{(*)}_{n})^{2} = R^{2} \\
+||x^{(1)}||_{2}^{2} = \sum_{n=1}^{N} (x^{(1)}_{n})^{2} = R^{2} \\
+. \\
+. \\
+. \\
+||x^{(M)}||_{2}^{2} = \sum_{n=1}^{N} (x^{(M)}_{n})^{2} = R^{2}
+\end{split}
+\end{equation}
+
 \subsubsection{Pairwise Distances}
+\begin{minted}{python}
+# 1.2 Euclidean Distance Function 
+# 1.2.2 Pairwise Distances
+# Write a vectorized Tensorflow Python function that implements
+# the pairwise squared Euclidean distance function for two input matrices.
+# No Loops and makes use of Tensorflow broadcasting.
+def PairwiseDistances(X, Z):
+    """
+    input:
+        X is a matrix of size (B x N)
+        Z is a matrix of size (C x N)
+    output:
+        D = matrix of size (B x C) containing the pairwise Euclidean distances
+    """
+    B = X.get_shape().as_list()[0]
+    N = X.get_shape().as_list()[1]
+    C = Z.get_shape().as_list()[0]
+    # Ensure the N dimensions are consistent 
+    assert  N == Z.get_shape().as_list()[1]
+    # Reshape to make use of broadcasting in Python
+    X = tf.reshape(X, [B, 1, N])
+    Z = tf.reshape(Z, [1, C, N])
+    # The code below automatically does broadcasting. 
+    D = tf.reduce_sum(tf.square(tf.sub(X, Z)), 2)
+    return D
+\end{minted}
 
+%-----------------------------------------------------
 \subsection{Making Predictions}
-
+%--------------------------------
 \subsubsection{Choosing Nearest Neighbour}
-
+\begin{minted}{python}
+# 1.3 Making Predictions
+# 1.3.1 Choosing nearest neighbours
+# Write a vectorized Tensorflow Python function that takes a pairwise distance matrix
+# and returns the responsibilities of the training examples to a new test data point. 
+# It should not contain loops.
+# Use tf.nn.top_k
+def ChooseNearestNeighbours(D, K):
+    """
+    input:
+        D is a matrix of size (B x C)
+        K is the top K responsibilities for each test input
+    output:
+        topK are the value of the squared distances for the topK
+        indices are the index of the location of these squared distances
+    """
+    # Take topK of negative distances since it is the closest data.
+    topK, indices = tf.nn.top_k(tf.neg(D), K)
+    return topK, indices
+\end{minted}
+%--------------------------------
 \subsubsection{Prediction}
+\begin{minted}{python}
+# 1.3.2 Prediction
+# Compute the k-NN prediction with K = {1, 3, 5, 50}
+# For each value of K, compute and report:
+    # training MSE loss
+    # validation MSE loss
+    # test MSE loss
+# Choose best k using validation error = 50
+def PredictKnn(trainData , testData, trainTarget,  testTarget, K):
+    """
+    input:
+        trainData
+        testData
+        trainTarget
+        testTarget
+    output:
+        loss
+    """
+    D = PairwiseDistances(testData, trainData)
+    topK, indices = ChooseNearestNeighbours(D, K)
+    # Select the proper outputs to be averaged from the target values and average them
+    trainTargetSelectedAveraged = tf.reduce_mean(tf.gather(trainTarget, indices), 1)
+    # Calculate the loss from the actual values
+    loss = tf.reduce_mean(tf.square(tf.sub(trainTargetSelectedAveraged, testTarget)))
+    return loss
 
+# Plot the prediction function for x = [0, 11]
+def PredictedValues(x, trainData, trainTarget, K):
+    """
+    Plot the predicted values
+    input:
+        x = test target to plot and predict
+    """
+    D = PairwiseDistances(x, trainData)
+    topK, indices = ChooseNearestNeighbours(D, K)
+    predictedValues = tf.reduce_mean(tf.gather(trainTarget, indices), 1)
+    return predictedValues
+\end{minted}
+
+\begin{table}[ht]
+\centering % used for centering table
+\begin{tabular}{c c c c} % centered columns (4 columns)
+\hline % single horizontal line
+K & Training MSE Loss & Validation MSE Loss & Test MSE Loss \\ [0.5ex] 
+\hline
+1 & -25 & -25 & -25 \\ 
+3 & -25 & -25 & -25 \\
+5 & -25 & -25 & -25 \\
+50 & -25 & -25 & -25 \\ [1ex] % [1ex] adds vertical space
+\hline % single line
+\end{tabular}
+\caption{KNN and Loss} % title of Table
+\label{table:KLoss} % is used to refer this table in the text
+\end{table}
+
+%-----------------------------------------------------
 \subsection{Soft kNN and Gaussian Processes}
-
+%--------------------------------
 \subsubsection{Soft Decisions}
-
+TODO: 
+%--------------------------------
 \subsubsection{Conditional Distribution of a Gaussian}
-
+TODO:
+%------------------------------------------------------------------
 \section{Linear and Logistic Regression}
-
+%-----------------------------------------------------
 \subsection{Geometry of Linear Regression}
-
+%--------------------------------
 \subsubsection{Convex Function}
-
+%--------------------------------
 \subsubsection{DeNormalization}
-
+%--------------------------------
 \subsubsection{Regularization}
-
+%--------------------------------
 \subsubsection{Binary Classifiers for Multi-class Classification}
-
+%-----------------------------------------------------
 \subsection{Stochastic Gradient Descent}
-
+%--------------------------------
 \subsubsection{Tuning Learning Rate}
-
+%--------------------------------
 \subsubsection{Mini-batch Size}
-
+%--------------------------------
 \subsubsection{Generalization}
+%------------------------------------------------------------------
+\section{Appendices}
+Dear Teaching Assistants, 
+we implemented our code separately as we wanted to maximize our learning. The graphs and code snippets pasted in this report come from two separate solutions which are both added as Appendices. 
 
+For Stochastic Gradient Descent implementation, we started from Jimmy's posted code as a starter code and work from there for this assignment as suggested from Jimmy. 
 
-\end{document} % To end input file 
+\subsection{Entire Code 1: Chee Loong Soon's version}
+% TODO: Paste Soon Chee Loong's entire code once fully done
+\subsection{Entire Code 2: Fuyuan Tee's version}
+% TODO: Paste Fuyuan Tee's entire code once fully done 
+\end{document}
