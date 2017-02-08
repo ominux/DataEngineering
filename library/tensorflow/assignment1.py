@@ -147,56 +147,88 @@ def ShuffleBatches(trainData, trainTarget):
     # TODO: implement shuffle
     return trainData, trainTarget
 
-def LinearRegression(trainData, trainTarget, testData, testTarget):
-    #TODO: For loop across different learning rates.
-    learningRateTrials = [0.0, 0.0001, 0.0001, 0.01, 0.1, 1.0]
+def LinearRegression(trainData, trainTarget, validData, validTarget, testData, testTarget):
+    figureCount = 30
+    # 2.2.3 Generalization (done by partner) 
+    # Run SGD with B = 50 and use validation performance to choose best weight decay coefficient
+    # from weightDecay = {0., 0.0001, 0.001, 0.01, 0.1, 1.}
+    # TODO: Plot weightDecay vs test set accuracy. (Done by partner) 
+    weightDecayTrials= [0.0, 0.0001, 0.0001, 0.01, 0.1, 1.0]
+    # Plot total loss function vs number of updates for the best learning rate found
+    learningRateTrials = [1.0, 0.1, 0.01, 0.001]
+    # 2.2.2 Effect of the mini-batch size
+    # Run with Batch Size, B = {10, 5, 100, 700} and tune the learning rate separately for each mini-batch size.
+    # Plot  the total loss function vs the number of updates for each mini-batch size.
     miniBatchSizeTrials = [10, 50, 100, 700]
     learningRate = 0.01
     miniBatchSize = 10
     weightDecayCoeff = 1.0
-    # Build computation graph
-    W, b, X, y_target, y_predicted, meanSquaredError, train = buildGraph(learningRate, weightDecayCoeff)
-    # Initialize session
-    init = tf.global_variables_initializer()
-    sess = tf.InteractiveSession()
-    sess.run(init)
-    initialW = sess.run(W)  
-    initialb = sess.run(b)
+    # for weightDecayCoeff in weightDecayTrials:
+    for learningRate in learningRateTrials:
+        for miniBatchSize in miniBatchSizeTrials:
+            # Build computation graph
+            W, b, X, y_target, y_predicted, meanSquaredError, train = buildGraph(learningRate, weightDecayCoeff)
+            # Initialize session
+            init = tf.global_variables_initializer()
+            sess = tf.InteractiveSession()
+            sess.run(init)
+            initialW = sess.run(W)  
+            initialb = sess.run(b)
 
-    print "Initial weights: %s, initial bias: %.2f", initialW, initialb
-    # Training model
-    wList = []
+            # print "Initial weights: %s, initial bias: %.2f", initialW, initialb
+            # Training model
+            numEpoch = 70
+            currEpoch = 0
+            wList = []
 
-    numEpoch = 20
-    currEpoch = 0
-    xAxis = []
-    yAxis = []
-    numUpdate = 0
-    step = 1
-    err = -1 
-    while currEpoch <= numEpoch:
-        # Shuffle the batches and return
-        trainData, trainTarget = ShuffleBatches(trainData, trainTarget)
-        step =  1
-        # Full batch
-        while step*miniBatchSize < 700:
-            _, err, currentW, currentb, yhat = sess.run([train, meanSquaredError, W, b, y_predicted], feed_dict={X: trainData[step*miniBatchSize:(step+1)*miniBatchSize], y_target: trainTarget[step*miniBatchSize:(step+1)*miniBatchSize]})
-            wList.append(currentW)
-            #if not (step*miniBatchSize % 50):
-            #    print "Iter: %3d, MSE-train: %4.2f, weights: %s, bias: %.2f", step, err, currentW.T, currentb
-            step = step + 1
-            xAxis.append(numUpdate)
-            numUpdate += 1
-            yAxis.append(err)
-        # Testing model
-        errTest = sess.run(meanSquaredError, feed_dict={X: testData, y_target: testTarget})
-        print "Final testing MSE: ", errTest
-        currEpoch += 1
-    print "Iter: ", step, "MSE-train:", err
-    import matplotlib.pyplot as plt
-    plt.figure(1)
-    plt.plot(np.array(xAxis), np.array(yAxis))
-    plt.savefig('trainEpoch.png')
+            xAxis = []
+            yTrainErr = []
+            yValidErr = []
+            yTestErr = []
+            numUpdate = 0
+            step = 0
+            errTrain = -1 
+            errValid = -1 
+            errTest = -1 
+            while currEpoch <= numEpoch:
+                # Shuffle the batches and return
+                trainData, trainTarget = ShuffleBatches(trainData, trainTarget)
+                step = 0 
+                # Full batch
+                while step*miniBatchSize < 700:
+                    _, errTrain, currentW, currentb, yhat = sess.run([train, meanSquaredError, W, b, y_predicted], feed_dict={X: trainData[step*miniBatchSize:(step+1)*miniBatchSize], y_target: trainTarget[step*miniBatchSize:(step+1)*miniBatchSize]})
+                    wList.append(currentW)
+                    #if not (step*miniBatchSize % 50):
+                    #    print "Iter: %3d, MSE-train: %4.2f, weights: %s, bias: %.2f", step, err, currentW.T, currentb
+                    step = step + 1
+                    xAxis.append(numUpdate)
+                    numUpdate += 1
+                    yTrainErr.append(errTrain)
+                    errValid = sess.run(meanSquaredError, feed_dict={X: validData, y_target: validTarget})
+                    errTest = sess.run(meanSquaredError, feed_dict={X: testData, y_target: testTarget})
+                    yValidErr.append(errValid)
+                    yTestErr.append(errTest)
+                # Testing model
+                # TO know what is being run
+                currEpoch += 1
+            print "Iter: ", step
+            print "Final Valid MSE: ", errTrain
+            print "Final Valid MSE: ", errValid
+            print "Final Test MSE: ", errTest
+            import matplotlib.pyplot as plt
+            plt.figure(figureCount)
+            figureCount = figureCount + 1
+            plt.plot(np.array(xAxis), np.array(yTrainErr))
+            plt.savefig("TrainLossLearnRate" + str(learningRate) + "Batch" + str(miniBatchSize) + '.png')
+
+            plt.figure(figureCount)
+            figureCount = figureCount + 1
+            plt.plot(np.array(xAxis), np.array(yValidErr))
+            plt.savefig("ValidLossLearnRate" + str(learningRate) + "Batch" + str(miniBatchSize) + '.png')
+            plt.figure(figureCount)
+            figureCount = figureCount + 1
+            plt.plot(np.array(xAxis), np.array(yTestErr))
+            plt.savefig("TestLossLearnRate" + str(learningRate) + "Batch" + str(miniBatchSize) + '.png')
     return
 
 if __name__ == "__main__":
@@ -266,24 +298,4 @@ if __name__ == "__main__":
         trainData, trainTarget = data ["x"], data["y"]
         validData, validTarget = data ["x_valid"], data ["y_valid"]
         testData, testTarget = data ["x_test"], data ["y_test"]
-        LinearRegression(trainData, trainTarget, testData, testTarget)
-'''
-
-
-# 2.2.1 Tuning the learning rate
-# Train the linear regression model on the tiny MNIST dataset using SGD
-# to optimize for the total loss.
-# Set weight decay = 1
-# Tune learning rate to obtain best overall convergence speed.
-# TODO: Plot total loss function vs number of updates for the best learning rate found
-
-# 2.2.2 Effect of the mini-batch size
-# TODO: Run with Batch Size, B = {10, 5, 100, 700} and tune the learning rate separately for each mini-batch size.
-# TODO: Plot  the total loss function vs the number of updates for each mini-batch size.
-
-# 2.2.3 Generalization
-# TODO: Run SGD with B = 50 and use validation performance to choose best weight decay coefficient
-# from weightDecay = {0., 0.0001, 0.001, 0.01, 0.1, 1.}
-
-# TODO: Plot weightDecay vs test set accuracy. 
-'''
+        LinearRegression(trainData, trainTarget,validData, validTarget, testData, testTarget)
