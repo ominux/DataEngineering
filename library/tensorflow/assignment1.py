@@ -154,6 +154,10 @@ def buildGraph(learningRate, weightDecayCoeff):
 
 def ShuffleBatches(trainData, trainTarget):
     # TODO: implement shuffle
+    rngState = np.random.get_state()
+    np.random.shuffle(trainData)
+    np.random.set_state(rngState)
+    np.random.shuffle(trainTarget)
     return trainData, trainTarget
 
 def LinearRegression(trainData, trainTarget, validData, validTarget, testData, testTarget):
@@ -164,7 +168,7 @@ def LinearRegression(trainData, trainTarget, validData, validTarget, testData, t
     # TODO: Plot weightDecay vs test set accuracy. (Done by partner) 
     weightDecayTrials= [0.0, 0.0001, 0.0001, 0.01, 0.1, 1.0]
     # Plot total loss function vs number of updates for the best learning rate found
-    learningRateTrials = [1.0, 0.1, 0.01, 0.001]
+    learningRateTrials = [0.1, 0.01, 0.001]
     # 2.2.2 Effect of the mini-batch size
     # Run with Batch Size, B = {10, 5, 100, 700} and tune the learning rate separately for each mini-batch size.
     # Plot  the total loss function vs the number of updates for each mini-batch size.
@@ -173,8 +177,8 @@ def LinearRegression(trainData, trainTarget, validData, validTarget, testData, t
     miniBatchSize = 10
     weightDecayCoeff = 1.0
     # for weightDecayCoeff in weightDecayTrials:
-    for learningRate in learningRateTrials:
-        for miniBatchSize in miniBatchSizeTrials:
+    for miniBatchSize in miniBatchSizeTrials:
+        for learningRate in learningRateTrials:
             # Build computation graph
             W, b, X, y_target, y_predicted, meanSquaredError, train = buildGraph(learningRate, weightDecayCoeff)
             # Initialize session
@@ -186,7 +190,7 @@ def LinearRegression(trainData, trainTarget, validData, validTarget, testData, t
 
             # print "Initial weights: %s, initial bias: %.2f", initialW, initialb
             # Training model
-            numEpoch = 70
+            numEpoch = 200
             currEpoch = 0
             wList = []
 
@@ -220,8 +224,9 @@ def LinearRegression(trainData, trainTarget, validData, validTarget, testData, t
                 # Testing model
                 # TO know what is being run
                 currEpoch += 1
-            print "Iter: ", step
-            print "Final Valid MSE: ", errTrain
+            print "LearningRate: " , learningRate, " Mini batch Size: ", miniBatchSize
+            print "Iter: ", numUpdate
+            print "Final Train MSE: ", errTrain
             print "Final Valid MSE: ", errValid
             print "Final Test MSE: ", errTest
             import matplotlib.pyplot as plt
@@ -343,8 +348,6 @@ if __name__ == "__main__":
             plt.savefig(fileName)
             print 'ConditionalGaussianLoss'
             print sess.run(lossGaussian)
-    # Part 1.4
-    sys.exit(0) # TODO: Remove this, temporary for implementing bonus for part 1 
     # Part 2
     with np.load ("tinymnist.npz") as data :
         trainData, trainTarget = data ["x"], data["y"]
