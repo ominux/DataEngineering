@@ -333,8 +333,12 @@ if __name__ == "__main__":
 
             # Plot for SoftDecision
             plt.figure(K+101)
-            plt.scatter(sess.run(testData), sess.run(testTarget))
-            plt.plot(sess.run(testData), sess.run(predictedValuesSoft))
+            plt.title("Soft Decision kNN on Test Set, MSE = " + str(sess.run(lossSoft)))
+            plt.xlabel("Data Value")
+            plt.ylabel("Target Value")
+            plt.scatter(sess.run(testData), sess.run(testTarget), label= "testValue")
+            plt.plot(sess.run(testData), sess.run(predictedValuesSoft), label = "predicted")
+            plt.legend()
             fileName = str("SoftDecision.png")
             plt.savefig(fileName)
             print 'SoftDecisionLoss'
@@ -342,8 +346,12 @@ if __name__ == "__main__":
 
             # Plot for Gaussian
             plt.figure(K+102)
-            plt.scatter(sess.run(testData), sess.run(testTarget))
-            plt.plot(sess.run(testData), sess.run(predictedValuesGaussian))
+            plt.title("Gaussian Process Regression on Test Set, MSE = " + str(sess.run(lossGaussian)))
+            plt.xlabel("Data Value")
+            plt.ylabel("Target Value")
+            plt.scatter(sess.run(testData), sess.run(testTarget), label = "testValue")
+            plt.plot(sess.run(testData), sess.run(predictedValuesGaussian), label = "predicted")
+            plt.legend()
             fileName = str("ConditionalGaussian.png")
             plt.savefig(fileName)
             print 'ConditionalGaussianLoss'
