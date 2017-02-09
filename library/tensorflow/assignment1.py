@@ -92,7 +92,7 @@ def PredictedValues(x, trainData, trainTarget, K):
 
 # 1.4 Soft-Knn & Gaussian Processes
 # 1.4.1.1 Soft Decisions
-# TODO: Write a Tensorflow python program based on the soft k-NN model to compute 
+# Write a Tensorflow python program based on the soft k-NN model to compute 
 # predictions on the data1D.npy dataset. 
 # Set lambda = 100 NOT 10 as given in assignment handout
 # and plot the test-set prediction of the model. 
@@ -153,7 +153,6 @@ def buildGraph(learningRate, weightDecayCoeff):
 
 
 def ShuffleBatches(trainData, trainTarget):
-    # TODO: implement shuffle
     rngState = np.random.get_state()
     np.random.shuffle(trainData)
     np.random.set_state(rngState)
@@ -165,7 +164,7 @@ def LinearRegression(trainData, trainTarget, validData, validTarget, testData, t
     # 2.2.3 Generalization (done by partner) 
     # Run SGD with B = 50 and use validation performance to choose best weight decay coefficient
     # from weightDecay = {0., 0.0001, 0.001, 0.01, 0.1, 1.}
-    # TODO: Plot weightDecay vs test set accuracy. (Done by partner) 
+    # Plot weightDecay vs test set accuracy. (Done by partner) 
     weightDecayTrials= [0.0, 0.0001, 0.0001, 0.01, 0.1, 1.0]
     # Plot total loss function vs number of updates for the best learning rate found
     learningRateTrials = [0.1, 0.01, 0.001]
