@@ -246,12 +246,15 @@ def LinearRegression(trainData, trainTarget, validData, validTarget, testData, t
     return
 
 def SortData(inputVal, outputVal):
-        p = np.argsort(inputVal, axis=0)
-        inputVal = np.array(inputVal)[p]
-        outputVal = np.array(outputVal)[p]
-        inputVal = inputVal[:, :,0]
-        outputVal = outputVal[:, :,0]
-        return inputVal, outputVal
+    """
+    This sorts a given test set by the dataValue before plotting it.
+    """
+    p = np.argsort(inputVal, axis=0)
+    inputVal = np.array(inputVal)[p]
+    outputVal = np.array(outputVal)[p]
+    inputVal = inputVal[:, :,0]
+    outputVal = outputVal[:, :,0]
+    return inputVal, outputVal
 
 if __name__ == "__main__":
     print 'helloworld'
