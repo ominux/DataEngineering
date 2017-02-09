@@ -9,8 +9,10 @@
 \usepackage{palatino}
 \usepackage{minted} % For code highlighting 
 \usepackage{amsmath} % To split long equations
-% More custom packages
+% More custom packages (default or by Christopher) 
 \usepackage{amssymb}
+\usepackage{bm}
+\usepackage{multirow} % Used to merge multiple tables cells along a row
 \usepackage{mathtools}
 \usepackage{physics}
 \usepackage{tabularx}
@@ -18,6 +20,9 @@
 \usepackage{relsize}
 \usepackage{wrapfig}
 \usepackage{cite}
+%------------------------------------------------------------------
+% Adjust line spacing
+\renewcommand{\baselinestretch}{1.5}
 %------------------------------------------------------------------
 % Collaboration Notes 
 % 0. Ensure tex always compiles, fix any errors immediately
@@ -45,9 +50,9 @@
 \subsubsection{Describe 1D Dataset}
 \begin{itemize}
 \item Points from two classes (0, 1) alternate and are equally spaced from each other in One-Dimension as illustrated in Table \ref{table:generatedXY}. 
-\item TODO: Exact formula with defined notations
 
-\item TODO: Plot graph of K vs 1's and 0's if have time. 
+The formula for generating the dataset would be 0 for every value of x that is even and 1 for every value of x that is odd as shown in Table \ref{table:generatedXY}. 
+
 %--------------------------------
 % Begin Table 
 \begin{table}[ht]
@@ -214,6 +219,8 @@ Looking into the first term of the RightHandSide (RHS) of equation \ref{equation
 =
 \frac{12N\sigma^{4} + 2\sum_{n=1}^{N-1}\sum_{m=n+1}^{N} 4\sigma^{4}}{4N^{2}\sigma^{4}} \\
 =
+\frac{12N\sigma^{4} + 2{N \choose 2}4\sigma^{4}}{4N^{2}\sigma^{4}} 
+=
 \frac{12N\sigma^{4} + 2(\frac{N(N-1)}{2}) 4\sigma^{4}}{4N^{2}\sigma^{4}} 
 = \frac{4N^{2}\sigma^{4} + 8N\sigma^{4}}{4N^{2}\sigma^{4}} = \frac{N + 2}{N}
 \end{split}
@@ -255,6 +262,8 @@ lim_{N\to\infty} (\frac{N + 2}{N} - 1) =
 lim_{N\to\infty} (\frac{N + 2 - N}{N}) = 
 lim_{N\to\infty} (\frac{2}{N}) = 0
 \end{equation} 
+
+This proves that the variance vanishes which means that a test data point will be equally close to all training examples in a high dimensional space. 
 %-----------------------------------------------------
 \subsection{Euclidean Distance Function}
 \subsubsection{Inner Product}
@@ -379,55 +388,448 @@ def PredictedValues(x, trainData, trainTarget, K):
 \centering % used for centering table
 \begin{tabular}{c c c c} % centered columns (4 columns)
 \hline % single horizontal line
-K & Training MSE Loss & Validation MSE Loss & Test MSE Loss \\ [0.5ex] 
+$k$ & Training MSE Loss & Validation MSE Loss & Test MSE Loss \\ [0.5ex] 
 \hline
-1 & -25 & -25 & -25 \\ 
-3 & -25 & -25 & -25 \\
-5 & -25 & -25 & -25 \\
-50 & -25 & -25 & -25 \\ [1ex] % [1ex] adds vertical space
+1 & 0.000  & 0.272 & 0.311 \\
+3 & 0.105  & 0.326 & 0.145 \\
+5 & 0.119  & 0.310 & 0.178 \\
+50 & 1.248 & 1.229 & 0.707 \\ [1ex] % [1ex] adds vertical space
 \hline % single line
 \end{tabular}
 \caption{KNN and Loss} % title of Table
 \label{table:KLoss} % is used to refer this table in the text
 \end{table}
 
+The best value of $k$ is based on one that gives the lowest validation MSE loss. In this case, the best $k$ is found to be $k = 1$. \\
+TODO Justify how $k$ is picked from plot, as per question.
+
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[width=\textwidth]{Graphics/A1Q1}
+    \caption{\label{figure:kNN} k-NN regression on data1D for various values of k}
+\end{figure}
+
+\clearpage
+
 %-----------------------------------------------------
 \subsection{Soft kNN and Gaussian Processes}
 %--------------------------------
 \subsubsection{Soft Decisions}
-TODO: 
+\begin{minted}{python}
+
+
+\end{minted}
 %--------------------------------
 \subsubsection{Conditional Distribution of a Gaussian}
-TODO:
+
+% Defining custom commands for frequently encountered mathematical expressions
+\newcommand{\yTrain}{\bm{y}_{train}}
+	% EXTRA: Please comment if you know of a way to do the following better:
+	\newcommand{\oneOne}{y^* y^*}
+	\newcommand{\oneTwo}{y^* \yTrain}
+	\newcommand{\twoOne}{\yTrain y^*}
+	\newcommand{\twoTwo}{\yTrain \yTrain}
+\newcommand{\sigmaMat}{\begin{bmatrix}
+		\Sigma_{y^* y^*} & \Sigma_{y^* \yTrain} \\
+    	\Sigma_{\yTrain y^*} & \Sigma_{\yTrain \yTrain}
+	\end{bmatrix}
+}
+\newcommand{\lambdaMat}{\begin{bmatrix}
+		\Lambda_{y^* y^*} & \Lambda_{y^* \yTrain} \\
+    	\Lambda_{\yTrain y^*} & \Lambda_{\yTrain \yTrain}
+	\end{bmatrix}
+}
+\newcommand{\Amat}{\Sigma_{\oneOne}}
+\newcommand{\Bmat}{\Sigma_{\oneTwo}}
+\newcommand{\Cmat}{\Sigma_{\twoOne}}
+\newcommand{\Dmat}{\Sigma_{\twoTwo}}
+%--------------------------------------------------------------------
+
+Given an $M$ + 1 Gaussian random vector:
+\begin{align}
+	\bm{y} = \begin{bmatrix} 
+    		y^* \\ y^{(1)} \\ \vdots \\ y^{(m)}
+        \end{bmatrix}
+        \sim \mathcal{N} \left( \bm{0}, \Sigma \right) 
+\end{align}
+Splitting the vector into two parts as follows and describing the resulting distribution 
+using stacked block notation:
+\begin{alignat}{3}
+ 	\bm{y} = \begin{bmatrix}
+        	y^* \\ \yTrain
+        \end{bmatrix}
+        & \sim \mathcal{N} \left( \begin{bmatrix}
+        		0 \\ \bm{0}
+             \end{bmatrix}, \sigmaMat \right) \\
+        & \sim \mathcal{N} \left( \begin{bmatrix}
+        		0 \\ \bm{0}
+             \end{bmatrix}, \Sigma = \Lambda^{-1} = \lambdaMat^{-1} \right)
+\end{alignat}
+
+Given that $\yTrain$ is observed, find $P(y^* | \yTrain) \sim \mathcal{N} 
+\left( y^*; \mu^*, \Sigma^* \right)$. \vspace{1em}
+
+By completing the squares on the quadratic term of the exponent for the multivariate Gaussian equation,
+\begin{align}
+	& - \frac{1}{2} ( \bm{y} - \bm{\mu} )^{T} \bm{\Sigma}^{-1} ( \bm{y} - \bm{\mu} ) \\
+    & = - \frac{1}{2} \bm{y}^{T} \bm{\Sigma}^{-1} \bm{y}^{T} \\
+    & = - \frac{1}{2} \begin{bmatrix} y^{*T} & \yTrain^{T} \end{bmatrix}
+    	\lambdaMat \begin{bmatrix} y^* \\ \yTrain \end{bmatrix} \\
+    & = - \frac{1}{2} \begin{bmatrix} 
+    		y^{*T} \Lambda_{\oneOne} + \yTrain \Lambda_{\twoOne} 
+            & y^{*T} \Lambda_{\oneTwo} + \yTrain \Lambda_{\twoTwo} 
+    	\end{bmatrix} \begin{bmatrix} y^* \\ \yTrain \end{bmatrix} \\
+    & \label{equation:Bonus_BeforeTranspose}= - \frac{1}{2} \left( 
+    	y^{*T} \Lambda_{\oneOne} y^* 
+        + \yTrain^{T} \Lambda_{\twoOne} y^*
+        + y^{*T} \Lambda_{\oneTwo} \yTrain
+        + \yTrain^{T} \Lambda_{\twoTwo} \yTrain
+		\right)
+\end{align}
+
+Since $ \yTrain^{T} \Lambda_{\twoOne} y^* $ is a scalar and 
+$\Lambda_{\twoOne}^{T} = \Lambda_{\oneTwo}$,
+\begin{align}
+	\left( \yTrain^{T} \Lambda_{\twoOne} y^* \right)^{T} = 
+    y^{*T} \Lambda_{\oneTwo} \yTrain
+\end{align}
+
+Hence, equation \ref{equation:Bonus_BeforeTranspose} simplifies to:
+\begin{align}
+%	& - \frac{1}{2} ( \bm{y} - \bm{\mu} )^{T} \bm{\Sigma}^{-1} ( \bm{y} - \bm{\mu} ) \\
+	& - \frac{1}{2} \left(
+    	y^{*T} \Lambda_{\oneOne} y^* 
+    	+ 2 y^{*T} \Lambda_{\oneTwo} \yTrain
+    	+ \yTrain^{T} \Lambda_{\twoTwo} \yTrain
+    	\right) \\
+    & \label{equation:Bonus_AfterTranspose} = - \frac{1}{2} y^{*T} \Lambda_{\oneOne} y^* 
+    	- y^{*T} \Lambda_{\oneTwo} \yTrain
+    	- \frac{1}{2} \yTrain^{T} \Lambda_{\twoTwo} \yTrain
+\end{align}
+
+Completing the square for a multivariate Gaussian quadratic term with \\
+$\bm{x} \sim \mathcal{N} \left( \bm{\mu}, \bm{\Sigma} \right)$ yields:
+\begin{align}
+	& - \frac{1}{2} ( \bm{x} - \bm{\mu} )^{T} \bm{\Sigma}^{-1} ( \bm{x} - \bm{\mu} ) \\
+    & \label{equation:Bonus_GeneralGaussianSquareCompletion} = - \frac{1}{2} \bm{x}^{T} \Sigma^{-1} \bm{x} + \bm{x}^{T} \Sigma^{-1} \bm{\mu}
+    - \frac{1}{2} \bm{\mu}^{T} \Sigma^{-1} \bm{\mu}
+\end{align}
+
+Given that $\yTrain$ and $\Sigma_{\twoTwo}$ are known, the conditional Gaussian Distribution $P(y^* | \yTrain)$ can be inferred by performing a term-by-term comparison between the terms of equation \ref{equation:Bonus_AfterTranspose} and those of equation \ref{equation:Bonus_GeneralGaussianSquareCompletion}.
+
+Comparing terms that are of second order with respect to $y^*$,
+\begin{align}
+	\label{equation:Bonus_ConditionalSigma} \Sigma^* = \Lambda_{\oneTwo}^{-1}
+\end{align}
+
+Comparing terms that are of first order with respect to $y^*$,
+\begin{align}
+	\Sigma^{*-1} \mu^{*} =& \ \Lambda_{\oneTwo} \yTrain \\
+    \mu* =& \ \Sigma^* \Lambda_{\oneTwo} \yTrain \\
+    \label{equation:Bonus_ConditionalMu} =& \Lambda_{\oneOne}^{-1} \Lambda_{\oneTwo} \yTrain
+\end{align}
+
+Using the matrix-inverse identity provided in Tutorial 3 (pg. 41), the terms $\Lambda_{\oneOne}$ and $\Lambda_{\oneTwo}$ can be expressed using terms in $\Sigma = \sigmaMat$,
+\begin{align}
+	\Lambda_{\oneOne} =& \left( \Amat - \Bmat \Dmat^{-1} \Cmat \right)^{-1} \\
+    \Lambda_{\oneTwo} =& - \left( \Dmat - \Cmat \Amat^{-1} \Bmat \right)^{-1} 
+    	\Bmat \Dmat^{-1} \\
+\end{align}
+
+The results above allow equations \ref{equation:Bonus_ConditionalSigma} and \ref{equation:Bonus_ConditionalMu} to be expressed in terms of the original $\Sigma$ block terms:
+\begin{align}
+	\mu^* =& \ - \Bmat \Dmat^{-1} \yTrain \\
+	\Sigma^* =& \ \Amat - \Cmat^{T} \Dmat^{-1} \Cmat
+\end{align}
+\begin{align}
+	\therefore P(y^* | \yTrain) \sim \mathcal{N} 
+    \left( - \Bmat \Dmat^{-1} \yTrain, \Amat - \Cmat^{T} \Dmat^{-1} \Cmat \right)
+\end{align}
+\clearpage
 %------------------------------------------------------------------
 \section{Linear and Logistic Regression}
 %-----------------------------------------------------
 \subsection{Geometry of Linear Regression}
 %--------------------------------
 \subsubsection{Convex Function}
-%--------------------------------
+Need to show if equation \ref{equation:LTwoPenalizedMSE} is a convex function of W using Jensen Inequality given by equation 
+\ref{equation:JensenInequality}. \\
+
+
+
+$M$ is the total number of training data. 
+$N$ is the number of dimension for each training data. 
+\begin{equation}
+\label{equation:LTwoPenalizedMSE}
+\begin{split}
+L = L_{D} + L_{W} = \sum_{m=1}^{M} \frac{1}{2M} ||W^{T}x^{(m)} + b - y^{(m)}||_{2}^{2} + \frac{\lambda}{2} ||W||_{2}^{2} \\
+= \sum_{m=1}^{M} \frac{1}{2M} (\sum_{n=1}^{N}(W_{n}x^{(m)}_{n}) + b - y^{(m)})^{2} + \frac{\lambda}{2} W^{T}W = \sum_{m=1}^{M} \frac{1}{2M} ((W^{T}x^{(m)} + b - y^{(m)})^{2}) + \frac{\lambda}{2} W^{T}W 
+\end{split}
+\end{equation}
+
+\begin{equation}
+\label{equation:JensenInequality}
+f(\alpha W_{1} + (1-\alpha)W_{2}) \leq \alpha f(W_{1}) + (1-\alpha)f(W_{2})
+\end{equation}
+
+Since the sum of two convex function is convex, we can prove each sum term, $\mathcal{L_D}$ and $\mathcal{L_W}$ on equation \ref{equation:LTwoPenalizedMSE} separately. You can easily prove that the sum of two convex is still convex by summing both sides of Jensen's Inequality for both convex functions for both functions and Jensen's Inequality would still hold, indicating that the sum of the convex functions is still convex. This enables us to simplify the analysis by solving each term separately. 
+
+As a convex function divided by a positive value is still a convex function, we can ignore the division by $2M$ since $M > 0$ means that $\frac{1}{2M} > 0$. Similarly, $\frac{\lambda}{2} \geq 0$ and it only scales $W^{T}W$. You can divide both sides of Jensen's inequality by a positive constant and it will still hold. This enables us to simplify the analysis by ignoring the positive constants. 
+
+This means we just have to prove that equation \ref{equation:minimalLeftConvex} is convex and equation \ref{equation:minimalRightConvex} is convex. By doing so, we would have proven that equation \ref{equation:LTwoPenalizedMSE} is convex. 
+
+\begin{equation}
+\label{equation:minimalLeftConvex}
+(W^{T}_{n}x^{(m)}_{n} + b_{n} - y^{(m)}_{n})^{2}
+\end{equation}
+
+\begin{equation}
+\label{equation:minimalRightConvex}
+ W^{T}W
+\end{equation}
+
+2.1.1.1 Proof of Convexity of $\mathcal{L_D}$ with respect to $W$
+
+Rearranging equation \ref{equation:JensenInequality} for $\mathcal{L_D}$,
+\begin{align}
+	\label{equation:Convexivity_ModifiedJensen} \mathcal{L_D}(\alpha W_1 + (1 - \alpha) W_2) - \alpha \mathcal{L_D}(W_1) 
+    	- (1 - \alpha) \mathcal{L_D} \leq 0
+\end{align}
+\begin{multline}
+	LHS \equiv \mathcal{L_D}[\alpha W_1 + (1 - \alpha) W_2 ] - 
+    	\alpha \mathcal{L_D}(W_1) - (1 - \alpha) \mathcal{L_D}(W_2) \\
+        = \{[\alpha W_1 + (1 - \alpha) W_2]^{T} x + (b - y)\}^{T} 
+    	\{[\alpha W_1 + (1 - \alpha) W_2]^{T} x + (b - y)\} \\ 
+        - \alpha [W_1^{T} x + (b - y)]^{T} [W_1^{T} x + (b - y)] \\
+        - (1 -\alpha) [W_2^{T} x + (b - y)]^{T} [W_2^{T} x + (b - y)]
+\end{multline}
+\begin{multline}
+    = [ x^{T} (\alpha W_1 + (1 - \alpha) W_2) + (b -y )^{T}]
+    	\{[\alpha W_1 + (1 - \alpha) W_2]^{T} x + (b - y)\} \\
+        - \alpha [x^{T} W_1 + (b - y)^{T}] [W_1^{T} x + (b - y)] \\
+        - (1 -\alpha) [x^{T} W_2 + (b - y)^{T}] [W_2^{T} x + (b - y)]
+\end{multline}
+\begin{multline}
+    = \{ x^{T} [\alpha W_1 + (1 - \alpha) W_2] [\alpha W_1^{T} + (1 - \alpha) W_2^{T}] x \\
+    	+ 2 x^{T} [\alpha W_1 + (1 - \alpha) W_2] (b - y)  + (b - y)^{T} (b - y) \} \\
+        - \alpha [ x^{T} W_1 W_1^{T} x + 2 x^{T} W_1 (b - y) + (b - y)^{T} (b - y)] \\
+        - (1 - \alpha) [ x^{T} W_2 W_2^{T} x + 2 x^{T} W_2 (b - y) + (b - y)^{T} (b - y)] 
+\end{multline}
+Rearranging similar terms together,
+\begin{multline}
+	= \{ x^{T} \left[ \alpha^2 W_1 W_1^{T} + 2 \alpha (1 - \alpha) W_1^{T} W_2
+    	+ (1 - \alpha)^2 W_2^{T} W_2 \right] x \\ 
+        - \alpha (x^{T} W_1 W_1^{T} x) - (1 - \alpha)(x^{T} W_2 W_2{T} x) \} \\
+        + \{ 2 \alpha x^{T} W_1 (b - y) - 2 \alpha x^{T} W_1 (b - y) \} \\
+        + \{ 2 (1 - \alpha) x^{T} W_2 (b - y) - 2 (1 - \alpha) x^{T} W_2 (b - y) \} \\
+        + \{ 1 - \alpha - (1 - \alpha) \} (b - y)^{T} (b - y)
+\end{multline}
+\begin{alignat}{2}
+	&= (\alpha^2 - \alpha) x^{T} W_1 W_1^{T} x + 2 \alpha (1 - \alpha) x^{T} W_1^{T} W_2 x
+    	+ [(1 - \alpha)^2 - (1 - \alpha)] x^{T} W_2 W_2^{T} x \\
+    &= - \alpha (1 - \alpha) x^{T} W_1 W_1^{T} x + 2 \alpha (1 - \alpha) x^{T} W_1^{T} W_2 x
+    	- \alpha (1 - \alpha) x^{T} W_2 W_2^{T} x \\
+    &= - \alpha (1 - \alpha) [ x^{T} W_1 W_1^{T} x - 2 x^{T} W_1^{T} W_2 x + 
+        x^{T} W_2 W_2^{T} x ] \\
+    \label{equation:Convexivity_LD} &= - \alpha (1 - \alpha) [W_1^{T} x - W_2^{T} x]^{T} [W_1^{T} x - W_2^{T} x] \\
+    &\leq 0 \equiv RHS
+\end{alignat}
+Equation \ref{equation:Convexivity_LD} is less than or equal to zero as $-\alpha (1 - \alpha) \leq 0 ;\ \forall \alpha \in [0, 1]$. Furthermore, the remaining quadratic term is greater than or equal to zero since it is a square of the term $\forall \ \left( W_1^{T} x - W_2^{T} x \right) \in \mathbb{R}^N$. 
+
+Hence, it is shown that $\mathcal{L_D}$ is convex.
+\vspace{1em}
+
+\clearpage
+2.1.1.2 Proof of Convexity of $\mathcal{L_W}$
+
+From the Left Hand Side of Equation \ref{equation:Convexivity_ModifiedJensen},
+\begin{align}
+	LHS &\equiv \mathcal{L_W}[\alpha W_1 + (1 - \alpha) W_2 ] - 
+    	\alpha \mathcal{L_W}(W_1) - (1 - \alpha) \mathcal{L_W}(W_2) \\
+    &= [\alpha W_1 + (1 - \alpha) W_2]^{T} [\alpha W_1 + (1 - \alpha) W_2] 
+    	- \alpha W_1^{T} W_1 - (1 - \alpha) W_2^{T} W_2 \\
+    &= [\alpha W_1^{T} + (1 - \alpha) W_2^{T}] [\alpha W_1 + (1 - \alpha) W_2] 
+    	- \alpha W_1^{T} W_1 - (1 - \alpha) W_2^{T} W_2 \\
+    &= [\alpha^2 W_1^{T} W_1 + 2 \alpha (1 - \alpha) W_1^{T} W_2 + (1 - \alpha)^2 W_2^{T} W_2]
+    	- \alpha W_1^{T} W_1 - (1 - \alpha) W_2^{T} W_2 \\
+    &= (\alpha^2 - \alpha) x^{T} W_1 W_1^{T} x + 2 \alpha (1 - \alpha) x^{T} W_1^{T} W_2 x
+    	+ [(1 - \alpha)^2 - (1 - \alpha)] x^{T} W_2 W_2^{T} x \\
+    &= - \alpha (1 - \alpha) W_1^{T} W_1 + 2 \alpha (1 - \alpha) W_1^{T} W_2
+    	- \alpha (1 - \alpha) W_2 W_2^{T}\\
+    &= - \alpha (1 - \alpha) [ W_1^{T} W_1 - 2 W_1^{T} W_2 x + W_2^{T} W_2] \\
+    \label{equation:Convexivity_LW} &= - \alpha (1 - \alpha) [W_1 - W_2]^{T} [W_1 - W_2] \\
+    &\leq 0 \equiv RHS
+\end{align}
+
+Using a similar argument as that for Section 2.1.1.1, the loss function $\mathcal{L_W}$ is shown to be convex with respect to $W$. 
+
+Therefore, error is a convex function of W. 
+
+Need to show if error is convex function of bias, $b$. 
+Instead of performing a similar proof which is long and tedious, 
+we can think of the bias as one of the dimensions in the weight vector with x = 1. We can further simplify equation \ref{equation:minimalLeftConvex} by setting
+$W^{T}_{N+1} = b$ and $x^{(m)}_{N+1} = 1$ so that the equation simplifies into equation \ref{equation:minimalLeftConvexSimplified}. 
+Since that is the case, and W is convex, this means the bias is convex as well.
+
+\begin{equation}
+\label{equation:minimalLeftConvexSimplified}
+L = \sum_{m=1}^{M} \frac{1}{2M} \sum_{n=1}^{N+1} W^{T}_{n}x^{(m)}_{n} - y^{(m)} + \frac{\lambda}{2} W^{T}W 
+\end{equation}
+
+ %--------------------------------
 \subsubsection{DeNormalization}
+
+The original optimal weights and optimal bias are optimal to the non-transformed dataset. This means that the 
+$\frac{\partial L}{\partial W} = 0$ and $\frac{\partial L}{\partial b} = 0$. 
+
+More specifically, $\frac{\partial L}{\partial W_{n}} = 2(\sum_{i = 1, i  \neq n}^{N}W_{i}x_{i} + W_{n}x_{n} + b - y)x_{n} = 0$. 
+
+A single dimension of $x$ scales by $\alpha > 1$ and shifts by $\beta > 1$. This is the same as de-normalizing the data point instead of normalizing it which normally deducts each data point by the mean and scaled by its variance. The reason for normalizing is to prevent any component from dominating the sum and to prevent the weights from learning the high bias that is not needed for prediction. Hence, de-normalizing ends up making $W_{n}$ dominate in the loss as well as force it to learn the bias for each data point. 
+
+The gradient then becomes equation \ref{equation:a}. 
+
+\begin{equation}
+\label{equation:a}
+\frac{\partial L}{\partial W_{n}} = 2(\sum_{i = 1, i  \neq n}^{N}W_{i} x_{i} + W_{n}(\alpha X_{n} + \beta) + b - y)(\alpha x_{n} + \beta)
+\end{equation}
+
+The weight vector $W$ will move upwards to reach towards the data points. The optimal weights and bias after learning will move higher compared to the optimal weights and biased learned from the non-transformed original data. 
+As the model changes by scaling by a positive constant of $\alpha$, the minimum value remains the same, but every other value will be scaled higher. However, the model shifts by a positive constant of $\beta$. As a result, the minimum value shifts upwards as well. As a result, the new minimum value of the loss function will be higher compare to the original minimum loss. 
 %--------------------------------
 \subsubsection{Regularization}
+
+The new minimum value will increase as the weight and bias will fit to the regularize model more and less to the training set. 
+This means the loss will increase on the training set. 
+However, this regularization helps the prediction on both the validation and the test set by preventing the model from over-fitting to the training set. 
+
 %--------------------------------
 \subsubsection{Binary Classifiers for Multi-class Classification}
+
+Given $D > 2$ and only able to use binary classifiers. A method to solve a multi-class classification task using a number of binary classifiers would be to assign a binary classifier to each class in the $D$ classes. 
+Each binary classifier would predict if a given test input belong to a specific class. This assumes that each test input can belong to more than 1 class as it is not constrained to belong to more than 1 class or no classes at all from this design. 
+
+\clearpage
 %-----------------------------------------------------
 \subsection{Stochastic Gradient Descent}
-%--------------------------------
-\subsubsection{Tuning Learning Rate}
+%-----------------------------------------------------
+% Colour Definitions
+\definecolor{blue}{HTML}{1f77b4}
+\definecolor{orange}{HTML}{ff7f0e}
+\definecolor{green}{HTML}{2ca02c}
+%-----------------------------------------------------
+Before proceeding with our explanations for the subsequent sections, we would like to clarify on the convergence logic we selected for training our '3/5' digit classifier.
+
+The model weights are randomly initialised. In our model, training convergence is implemented through early stopping. In our case, it is defined to be when the average validation MSE for the latest epoch is more than 0.99 of the average validation MSE for the previous epoch.
+
+The logic is that when the average relative learnings between epochs is less than 1\%, the training is terminated prematurely for shorter computation time. This makes sense since the model is not learning much from the features. 
+
+Training convergence also happens when the average MSE of one epoch is larger than its predecessor. This is done since an increase in the average validation MSE is a sign of over-fitting.
+
+\subsubsection{Tuning Learning Rate, $\eta$}
+
+The values $\eta$ was generated based on increasing orders of 1 (see Table \ref{table:etaAndNumUpdates}). Higher values of $\eta$ lead to fewer number of updates to reach convergence. However, from trial and error, it was discovered that there is an upper bound for $\eta$ to ensure training convergence. When the value of $\eta$ is more than 0.1 (i.e. 1, 10, etc.), the training does not converge.
+
+As a result, the best value for $\eta$ is selected to be 0.1. The results also summarised in Figure \ref{figure:BestEta}.
+
+\begin{table}[ht]
+	\centering % used for centering table
+    \caption{Number of updates until convergence for various values of 
+    	$\eta$} % title of Table
+	\label{table:etaAndNumUpdates} % is used to refer this table in the text
+    \vspace{1em}
+	\begin{tabular}{r r}
+		\hline % single horizontal line
+		$\eta$ & \textit{Number of Updates} \\ 
+        [0.5ex] 
+		\hline
+		0.001 & 1863 \\
+		0.01 & 337 \\
+		0.1 & 57 \\
+        $>$ 0.3 & \textit{N/A} \\
+        [1ex] % [1ex] adds vertical space
+		\hline % single line
+	\end{tabular}
+\end{table}
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[width=\textwidth]{Graphics/A1Q2_1}
+    \caption{\label{figure:BestEta}Graph of training mean squared error
+    	(MSE) against number of updates for the best learning rate found, 
+    	$\eta = 0.1$. ($B = 50, \lambda = 1$)}
+\end{figure}
+\clearpage
 %--------------------------------
 \subsubsection{Mini-batch Size}
+From Table \ref{table:etaBatchSizeAndNumUpdates}, the same pattern for $\eta$ is observed where higher values of $\eta$ lead to fewer number of updates. Meanwhile, there is an optimum value for batch size, $B$. The best mini-batch size is $B = 100$, which leads to the fewest number of updates, regardless of $\eta$. 
+
+However, when the $B = 700$, convergence (at least from our definition above), fails to occur. Please refer to Figure \ref{figure:BatchSubplots} for more information.
+
+\begin{table}[ht]
+	\centering % used for centering table
+    \caption{Number of updates until convergence for various values of 
+    	$\eta$ and $B$} % title of Table
+	\label{table:etaBatchSizeAndNumUpdates} % is used to refer this table in the text
+    \vspace{1em}
+	\begin{tabular}{r|r r r}
+		\toprule
+		\multirow{2}{*}{$B$} & \multicolumn{3}{c}{$\eta$} \\
+        & 0.001 & 0.01 & 0.1 \\
+        \hline
+        10 & 2871 & 491 & 211 \\
+        50 & 1963 & 337 & 57 \\
+        100 & 1114 & 274 & 43 \\
+        700 \footnote{Maximum number of updates exceeded} & 6001 & 6001 & 6001 \\
+        [1ex] % [1ex] adds vertical space
+		\hline
+	\end{tabular}
+\end{table}
+\clearpage
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[height=0.8\textheight]{Graphics/A1Q2_2}
+    \caption{\label{figure:BatchSubplots}Subplots of training MSE against 
+    	number of updates for various batch sizes, $B$ and learning rates,
+        $\eta$ = \textcolor{blue}{\textbf{0.001}}, \textcolor{orange}
+        {\textbf{0.01}}, \textcolor{green}{\textbf{0.1}}. ($\lambda = 1$ for all cases)}
+\end{figure}
+\clearpage
 %--------------------------------
 \subsubsection{Generalization}
+
+Based on \textcolor{blue}{validation set} plot in Figure \ref{figure:modelAccuracies}, the best value for $\lambda$ is picked based on the highest validation accuracy obtained. As observed from Table \ref{table:modelAccuracies}, $\lambda$ = 0.001, 0.01 and 0.1 all give the best validation accuracy of 93.0\%. In this case, the best value of $\lambda$ chosen is 0.01, the middle ground between the three possible values.
+
+As seen from the Figure \ref{figure:modelAccuracies}, higher values of $\lambda$ initially increases the test set accuracy. This is because $\lambda$ prevents over-fitting of the model to the training set by penalizing large values of the weights. From a bias-variance trade-off perspective, incorporating $\lambda$ effectively reduces the model variance at the cost of a slight increase in bias. This effectively leads to an overall increase in the test set accuracy. This is true up to $\lambda = 0.1$.
+
+When $\lambda = 1$, the validation and test set accuracy drops significantly. For this high value of $\lambda$, the weights are being penalized too much and it prevents the model form effectively learning and capturing key features in the input data. From a bias-variance trade-off perspective, the high $\lambda$ value has increased the model bias significantly to the point there is a net decrease in the model's performance. 
+
+$\lambda$ has to be tuned to the validation set instead of the training set. If $\lambda$ was tuned based on the training set, the model would further over-fitting the model to the training set. This is because $\lambda$ would have been tuned to optimise the value of the training MSE.
+
+\begin{table}[ht]
+	\centering % used for centering table
+    \caption{Validation and test set accuracies for various values of 
+    	weight-decay regularizer, $\lambda$}
+	\label{table:modelAccuracies} % is used to refer this table in the text
+    \vspace{1em}
+	\begin{tabular}{r|r r}
+		\toprule
+		$\lambda$ & Validation Accuracy & Test Accuracy \\
+        \hline
+        0 & 0.930 & 0.900 \\
+        0.0001 & 0.910 & 0.900 \\
+        0.001 & 0.930 & 0.910 \\
+        0.01 & 0.930 & 0.910 \\
+        0.1 & 0.930 & 0.910 \\
+        1 & 0.830 & 0.795 \\
+        [1ex] % [1ex] adds vertical space
+		\hline
+	\end{tabular}
+\end{table}
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[width=\textwidth]{Graphics/A1Q2_3}
+    \caption{\label{figure:modelAccuracies} Graph of 
+    \textcolor{blue}{validation} and \textcolor{orange}{test} set accuracies
+    against $\log_{10}(\lambda)$. ($\eta = 0.1, B = 50$)}
+\end{figure} 
+\clearpage
 %------------------------------------------------------------------
-\section{Appendices}
-Dear Teaching Assistants, 
-we implemented our code separately as we wanted to maximize our learning. The graphs and code snippets pasted in this report come from two separate solutions which are both added as Appendices. 
-
-For Stochastic Gradient Descent implementation, we started from Jimmy's posted code as a starter code and work from there for this assignment as suggested from Jimmy. 
-
-\subsection{Entire Code 1: Chee Loong Soon's version}
-% TODO: Paste Soon Chee Loong's entire code once fully done
-\subsection{Entire Code 2: Fuyuan Tee's version}
-% TODO: Paste Fuyuan Tee's entire code once fully done 
-\end{document}
