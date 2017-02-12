@@ -216,7 +216,7 @@ def LinearRegression(trainData, trainTarget, validData, validTarget, testData, t
                     xAxis.append(numUpdate)
                     numUpdate += 1
                     yTrainErr.append(errTrain)
-                    # TODO: THIS IS WRONG, YOU ARE TRAINING THE MODEL AT THE SAME TIME!
+                    # Note: These are not training the model since you did not fetch 'train'
                     errValid = sess.run(meanSquaredError, feed_dict={X: validData, y_target: validTarget})
                     errTest = sess.run(meanSquaredError, feed_dict={X: testData, y_target: testTarget})
                     yValidErr.append(errValid)
