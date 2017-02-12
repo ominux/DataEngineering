@@ -16,6 +16,7 @@ class LogisticRegression(object):
         self.miniBatchSize = 500
         self.learningRate = learningRate
         self.numEpoch = 5000
+        self.numEpoch = 200
 
     # Logistic Regression 
     def LogisticRegressionMethod(self):
@@ -70,13 +71,17 @@ class LogisticRegression(object):
                 # train comes from BuildGraph's optimization method
                 # returnedValues = sess.run([whatYouWantToReturnThatWereReturnedFromBuildGraph], 
                 #               feed_dic{valuesToFeedIntoPlaceHoldersThatWereReturnedFromBuildGraph})
-                # sess.run() executes whatever graph you built
+                # sess.run() executes whatever graph you built once up to the point where it needs to fetch
+                # and fetches everything that's in ([variablesToFetch])
+                # Thus, if you don't fetch 'train = optimizer.minimize(loss)', it won't optimize it
                 _, errTrain, currentW, currentb, yhat, accTrain= sess.run([train, meanSquaredError, W, b, y_predicted, accuracy], feed_dict={X: np.reshape(self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], (self.miniBatchSize,784)),y_target: self.trainTarget[step*self.miniBatchSize:(step+1)*self.miniBatchSize], needTrain: True})
                 wList.append(currentW)
                 step = step + 1
                 xAxis.append(numUpdate)
                 numUpdate += 1
                 yTrainErr.append(errTrain)
+                # These will not optimize the function cause you did not fetch 'train' 
+                # So it won't have to execute that.
                 errValid, accValid = sess.run([meanSquaredError, accuracy], feed_dict={X: np.reshape(self.validData, (self.validData.shape[0],784)), y_target: self.validTarget, needTrain: False})
 
                 errTest, accTest = sess.run([meanSquaredError, accuracy], feed_dict={X: np.reshape(self.testData, (self.testData.shape[0], 784)), y_target: self.testTarget, needTrain: False})
@@ -137,32 +142,38 @@ class LogisticRegression(object):
         # Label to know if it should train or simply return the errors
         needTrain = tf.placeholder(tf.bool)
 
-        weightDecay = tf.div(tf.constant(self.weightDecay),tf.constant(2.0))
+        weightDecayCoeff = tf.div(tf.constant(self.weightDecay),tf.constant(2.0))
         # Graph definition
         y_predicted = tf.matmul(X, W) + b
-
-        # Error definition
-        meanSquaredError = tf.reduce_mean(tf.reduce_mean(tf.square(y_predicted - y_target), 
-                                                    reduction_indices=1, 
-                                                    name='squared_error'), 
-                                      name='mean_squared_error')
-
-        weightDecayMeanSquareError = tf.reduce_mean(tf.reduce_mean(tf.square(weightDecay)))
-
-        weightDecayTerm = tf.multiply(weightDecay, weightDecayMeanSquareError)
-
-        meanSquaredError = tf.add(meanSquaredError, weightDecayTerm)
-
-        finalTrainingMSE = tf.select(needTrain, meanSquaredError, tf.constant(0.0))
-
-        # Training mechanism
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate = self.learningRate)
-        # Train and update the parameters defined
-        train = optimizer.minimize(loss=finalTrainingMSE)
 
         correctPred = tf.equal(tf.cast(tf.greater_equal(y_predicted, 0.5), tf.float32), tf.floor(y_target))
         accuracy = tf.reduce_mean(tf.cast(correctPred, "float"))
 
+        # Error definition
+        # Divide by 2M instead of M
+        meanSquaredError = tf.div(tf.reduce_mean(tf.reduce_mean(tf.square(y_predicted - y_target), 
+                                                    reduction_indices=1, 
+                                                    name='squared_error'), 
+                                      name='mean_squared_error'), tf.constant(2.0))
+
+        crossEntropyError = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_predicted, y_target))
+
+        weightDecayMeanSquareError = tf.reduce_mean(tf.square(W))
+
+        weightDecayError = tf.multiply(weightDecayCoeff, weightDecayMeanSquareError)
+
+        crossEntropyError = tf.add(meanSquaredError, weightDecayError)
+        meanSquaredError = tf.add(meanSquaredError, weightDecayError)
+
+        finalTrainingMSE = tf.select(needTrain, meanSquaredError, tf.constant(0.0))
+
+
+        # Training mechanism
+        optimizer = tf.train.GradientDescentOptimizer(learning_rate = self.learningRate)
+        
+        # Train and update the parameters defined
+        # sess.run(train) will execute the optimized function
+        train = optimizer.minimize(loss=finalTrainingMSE)
         return W, b, X, y_target, y_predicted, meanSquaredError, train, needTrain, accuracy
 
     def ShuffleBatches(self, trainData, trainTarget):

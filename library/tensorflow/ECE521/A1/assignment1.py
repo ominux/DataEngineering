@@ -138,10 +138,11 @@ def buildGraph(learningRate, weightDecayCoeff):
     # Graph definition
     y_predicted = tf.matmul(X,W) + b 
     # Error definition
-    meanSquaredError = tf.reduce_mean(tf.reduce_mean(tf.square(y_predicted - y_target), 
+    # Divided by 2M instead of M
+    meanSquaredError = tf.div(tf.reduce_mean(tf.reduce_mean(tf.square(y_predicted - y_target), 
                                                 reduction_indices=1, 
                                                 name='squared_error'), 
-                                  name='mean_squared_error')
+                                  name='mean_squared_error'), tf.constant(2.0))
     weightDecayMeanSquareError = tf.reduce_mean(tf.square(W))
     weightDecayTerm = tf.multiply(weightDecay, weightDecayMeanSquareError)
     meanSquaredError = tf.add(meanSquaredError,weightDecayTerm)
