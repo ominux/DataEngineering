@@ -142,7 +142,7 @@ def buildGraph(learningRate, weightDecayCoeff):
                                                 reduction_indices=1, 
                                                 name='squared_error'), 
                                   name='mean_squared_error')
-    weightDecayMeanSquareError = tf.reduce_mean(tf.reduce_mean(tf.square(weightDecay)))
+    weightDecayMeanSquareError = tf.reduce_mean(tf.square(W))
     weightDecayTerm = tf.multiply(weightDecay, weightDecayMeanSquareError)
     meanSquaredError = tf.add(meanSquaredError,weightDecayTerm)
 
@@ -178,6 +178,8 @@ def LinearRegression(trainData, trainTarget, validData, validTarget, testData, t
     # for weightDecayCoeff in weightDecayTrials:
     for miniBatchSize in miniBatchSizeTrials:
         for learningRate in learningRateTrials:
+            # Reset entire graph
+            tf.reset_default_graph()
             # Build computation graph
             W, b, X, y_target, y_predicted, meanSquaredError, train = buildGraph(learningRate, weightDecayCoeff)
             # Initialize session
