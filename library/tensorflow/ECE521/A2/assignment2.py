@@ -13,10 +13,9 @@ class LogisticRegression(object):
         self.testTarget = testTarget
         # Default hyperparameter values
         self.weightDecay = 0.01
-        self.miniBatchSize = 3
         self.miniBatchSize = 500
         # MeanSquareError learningRate = 0.001, otherwise overshoots 
-        # CrossEntropyError, learningRate = 0.01
+        # CrossEntropyError, learningRate = 0.01, 98.6% test accuracy highest
         self.learningRate = learningRate
         self.numEpoch = 5000
         self.numEpoch = 200
@@ -173,11 +172,13 @@ class LogisticRegression(object):
         finalTrainingError = tf.select(needTrain, crossEntropyError, tf.constant(0.0))
 
         # Training mechanism
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate = self.learningRate)
+        gdOptimizer = tf.train.GradientDescentOptimizer(learning_rate = self.learningRate)
+        adamOptimizer = tf.train.AdamOptimizer(learning_rate = self.learningRate)
         
         # Train and update the parameters defined
         # sess.run(train) will execute the optimized function
-        train = optimizer.minimize(loss=finalTrainingError)
+        # train = optimizer.minimize(loss=finalTrainingError)
+        train = adamOptimizer.minimize(loss=finalTrainingError)
 
         # TODO: Return both errors for plotting
         return W, b, X, y_target, y_predicted, crossEntropyError, train, needTrain, accuracy
@@ -207,14 +208,14 @@ if __name__ == "__main__":
         randIndx = np.arange(len(Data))
         np.random.shuffle(randIndx)
         Data, Target = Data[randIndx], Target[randIndx]
-        trainData, trainTarget = Data[:3], Target[:3]
         trainData, trainTarget = Data[:3500], Target[:3500]
         validData, validTarget = Data[3500:3600], Target[3500:3600]
         testData, testTarget = Data[3600:], Target[3600:]
-        for learningRate in [0.01]: #, 0.001, 0.0001]:
+        for learningRate in [0.01]:
             tf.reset_default_graph()
             l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate)
-            print "Max Test Accuracy is: ", l.LogisticRegressionMethod()
+            maxTestAccuracy = l.LogisticRegressionMethod()
+            print "Max Test Accuracy is: ", maxTestAccuracy
     ''' 
     # Multi-class Classification
     # Get all 10 labels
