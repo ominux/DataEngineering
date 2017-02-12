@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import sys
 
 class LogisticRegression(object):
     def __init__(self, trainData, trainTarget, validData, validTarget, testData, testTarget):
@@ -12,7 +13,9 @@ class LogisticRegression(object):
         # Default hyperparameter values
         self.weightDecay = 0.01
         self.miniBatchSize = 500
+        self.learningRate = 0.01
         self.learningRate = 0.001
+        self.numEpoch = 2
         self.numEpoch = 700
         self.LogisticRegressionMethod()
 
@@ -36,7 +39,7 @@ class LogisticRegression(object):
         """
 
         maxTestClassificationAccuracy = 0
-        W, b, X, y_target, y_predicted, meanSquaredError, train , needTrain = self.buildGraph()
+        W, b, X, y_target, y_predicted, meanSquaredError, train , needTrain, accuracy = self.buildGraph()
         figureCount = 1 
 
         # Session
@@ -51,36 +54,48 @@ class LogisticRegression(object):
         yTrainErr = []
         yValidErr = []
         yTestErr = []
+        yTrainAcc = []
+        yValidAcc = []
+        yTestAcc = []
         numUpdate = 0
         step = 0
         errTrain = -1 
         errValid = -1 
         errTest = -1 
+        accTrain = -1
+        accValid = -1
+        accTest = -1
         while currEpoch <= self.numEpoch:
             self.trainData, self.trainTarget = self.ShuffleBatches(self.trainData, self.trainTarget)
             step = 0 
             while step*self.miniBatchSize < 500: 
                 # train comes from BuildGraph's optimization method
-                # returnedValues = sess.run([whatYouWantToReturn], 
+                # returnedValues = sess.run([whatYouWantToReturnThatWereReturnedFromBuildGraph], 
                 #               feed_dic{valuesToFeedIntoPlaceHoldersThatWereReturnedFromBuildGraph})
                 # sess.run() executes whatever graph you built
-                _, errTrain, currentW, currentb, yhat = sess.run([train, meanSquaredError, W, b, y_predicted], feed_dict={X: np.reshape(self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], (self.miniBatchSize,784)),y_target: self.trainTarget[step*self.miniBatchSize:(step+1)*self.miniBatchSize], needTrain: True})
+                _, errTrain, currentW, currentb, yhat, accTrain= sess.run([train, meanSquaredError, W, b, y_predicted, accuracy], feed_dict={X: np.reshape(self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], (self.miniBatchSize,784)),y_target: self.trainTarget[step*self.miniBatchSize:(step+1)*self.miniBatchSize], needTrain: True})
                 wList.append(currentW)
                 step = step + 1
                 xAxis.append(numUpdate)
                 numUpdate += 1
                 yTrainErr.append(errTrain)
-                errValid = sess.run(meanSquaredError, feed_dict={X: np.reshape(self.validData, (self.validData.shape[0],784)), y_target: self.validTarget, needTrain: False})
+                errValid, accValid = sess.run([meanSquaredError, accuracy], feed_dict={X: np.reshape(self.validData, (self.validData.shape[0],784)), y_target: self.validTarget, needTrain: False})
 
-                errTest = sess.run(meanSquaredError, feed_dict={X: np.reshape(self.testData, (self.testData.shape[0], 784)), y_target: self.testTarget, needTrain: False})
+                errTest, accTest = sess.run([meanSquaredError, accuracy], feed_dict={X: np.reshape(self.testData, (self.testData.shape[0], 784)), y_target: self.testTarget, needTrain: False})
                 yValidErr.append(errValid)
                 yTestErr.append(errTest)
+                yValidAcc.append(accValid)
+                yTestAcc.append(accTest)
+                yTrainAcc.append(accTrain)
             currEpoch += 1
         print "LearningRate: " , self.learningRate, " Mini batch Size: ", self.miniBatchSize
         print "Iter: ", numUpdate
         print "Final Train MSE: ", errTrain
         print "Final Valid MSE: ", errValid
         print "Final Test MSE: ", errTest
+        print "Final Train Acc: ", accTrain
+        print "Final Valid Acc: ", accValid
+        print "Final Test Acc: ", accTest
         import matplotlib.pyplot as plt
         plt.figure(figureCount)
         figureCount = figureCount + 1
@@ -95,6 +110,18 @@ class LogisticRegression(object):
         plt.plot(np.array(xAxis), np.array(yTestErr))
         plt.savefig("TestLossLearnRate" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
         # TODO: Accuracy on all of them
+        plt.figure(figureCount)
+        figureCount = figureCount + 1
+        plt.plot(np.array(xAxis), np.array(yTrainAcc))
+        plt.savefig("TrainAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
+        plt.figure(figureCount)
+        figureCount = figureCount + 1
+        plt.plot(np.array(xAxis), np.array(yValidAcc))
+        plt.savefig("ValidAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
+        plt.figure(figureCount)
+        figureCount = figureCount + 1
+        plt.plot(np.array(xAxis), np.array(yTestAcc))
+        plt.savefig("TestAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
         return maxTestClassificationAccuracy
 
     # Build the computational graph
@@ -133,7 +160,11 @@ class LogisticRegression(object):
         optimizer = tf.train.GradientDescentOptimizer(learning_rate = self.learningRate)
         # Train and update the parameters defined
         train = optimizer.minimize(loss=finalTrainingMSE)
-        return W, b, X, y_target, y_predicted, meanSquaredError, train, needTrain
+
+        correctPred = tf.equal(tf.floor(y_predicted + tf.constant(0.5)), tf.floor(y_target))
+        accuracy = tf.reduce_mean(tf.cast(correctPred, "float"))
+
+        return W, b, X, y_target, y_predicted, meanSquaredError, train, needTrain, accuracy
 
     def ShuffleBatches(self, trainData, trainTarget):
         rngState = np.random.get_state()
