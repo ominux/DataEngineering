@@ -4,7 +4,7 @@ import sys
 
 # TODO: Replace all 784 with some automatic calculation
 class LogisticRegression(object):
-    def __init__(self, trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate = 0.001):
+    def __init__(self, trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate = 0.0001):
         self.trainData = trainData
         self.trainTarget = trainTarget
         self.validData = validData
@@ -13,7 +13,10 @@ class LogisticRegression(object):
         self.testTarget = testTarget
         # Default hyperparameter values
         self.weightDecay = 0.01
+        self.miniBatchSize = 3
         self.miniBatchSize = 500
+        # MeanSquareError learningRate = 0.001, otherwise overshoots 
+        # CrossEntropyError, learningRate = 0.01
         self.learningRate = learningRate
         self.numEpoch = 5000
         self.numEpoch = 200
@@ -38,7 +41,7 @@ class LogisticRegression(object):
         """
 
         maxTestClassificationAccuracy = 0.0
-        W, b, X, y_target, y_predicted, meanSquaredError, train , needTrain, accuracy = self.buildGraph()
+        W, b, X, y_target, y_predicted, crossEntropyError, train , needTrain, accuracy = self.buildGraph()
         figureCount = 1 
 
         # Session
@@ -74,7 +77,7 @@ class LogisticRegression(object):
                 # sess.run() executes whatever graph you built once up to the point where it needs to fetch
                 # and fetches everything that's in ([variablesToFetch])
                 # Thus, if you don't fetch 'train = optimizer.minimize(loss)', it won't optimize it
-                _, errTrain, currentW, currentb, yhat, accTrain= sess.run([train, meanSquaredError, W, b, y_predicted, accuracy], feed_dict={X: np.reshape(self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], (self.miniBatchSize,784)),y_target: self.trainTarget[step*self.miniBatchSize:(step+1)*self.miniBatchSize], needTrain: True})
+                _, errTrain, currentW, currentb, yhat, accTrain= sess.run([train,crossEntropyError, W, b, y_predicted, accuracy], feed_dict={X: np.reshape(self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], (self.miniBatchSize,784)),y_target: self.trainTarget[step*self.miniBatchSize:(step+1)*self.miniBatchSize], needTrain: True})
                 wList.append(currentW)
                 step = step + 1
                 xAxis.append(numUpdate)
@@ -82,9 +85,9 @@ class LogisticRegression(object):
                 yTrainErr.append(errTrain)
                 # These will not optimize the function cause you did not fetch 'train' 
                 # So it won't have to execute that.
-                errValid, accValid = sess.run([meanSquaredError, accuracy], feed_dict={X: np.reshape(self.validData, (self.validData.shape[0],784)), y_target: self.validTarget, needTrain: False})
+                errValid, accValid = sess.run([crossEntropyError, accuracy], feed_dict={X: np.reshape(self.validData, (self.validData.shape[0],784)), y_target: self.validTarget, needTrain: False})
 
-                errTest, accTest = sess.run([meanSquaredError, accuracy], feed_dict={X: np.reshape(self.testData, (self.testData.shape[0], 784)), y_target: self.testTarget, needTrain: False})
+                errTest, accTest = sess.run([crossEntropyError, accuracy], feed_dict={X: np.reshape(self.testData, (self.testData.shape[0], 784)), y_target: self.testTarget, needTrain: False})
                 yValidErr.append(errValid)
                 yTestErr.append(errTest)
                 yValidAcc.append(accValid)
@@ -149,34 +152,38 @@ class LogisticRegression(object):
         correctPred = tf.equal(tf.cast(tf.greater_equal(y_predicted, 0.5), tf.float32), tf.floor(y_target))
         accuracy = tf.reduce_mean(tf.cast(correctPred, "float"))
 
-        # Error definition
+        # Weight Decay Error calculation
+        weightDecayMeanSquareError = tf.reduce_mean(tf.square(W))
+
+        weightDecayError = tf.multiply(weightDecayCoeff, weightDecayMeanSquareError)
+
+        # Mean Square Error Calculation
         # Divide by 2M instead of M
         meanSquaredError = tf.div(tf.reduce_mean(tf.reduce_mean(tf.square(y_predicted - y_target), 
                                                     reduction_indices=1, 
                                                     name='squared_error'), 
                                       name='mean_squared_error'), tf.constant(2.0))
-
-        crossEntropyError = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_predicted, y_target))
-
-        weightDecayMeanSquareError = tf.reduce_mean(tf.square(W))
-
-        weightDecayError = tf.multiply(weightDecayCoeff, weightDecayMeanSquareError)
-
-        crossEntropyError = tf.add(meanSquaredError, weightDecayError)
         meanSquaredError = tf.add(meanSquaredError, weightDecayError)
 
-        finalTrainingMSE = tf.select(needTrain, meanSquaredError, tf.constant(0.0))
+        # Cross Entropy Error Calculation
+        crossEntropyError = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(y_predicted, y_target))
+        crossEntropyError = tf.add(crossEntropyError, weightDecayError)
 
+        # Don't train if don't have to for validation and test set
+        finalTrainingError = tf.select(needTrain, crossEntropyError, tf.constant(0.0))
 
         # Training mechanism
         optimizer = tf.train.GradientDescentOptimizer(learning_rate = self.learningRate)
         
         # Train and update the parameters defined
         # sess.run(train) will execute the optimized function
-        train = optimizer.minimize(loss=finalTrainingMSE)
-        return W, b, X, y_target, y_predicted, meanSquaredError, train, needTrain, accuracy
+        train = optimizer.minimize(loss=finalTrainingError)
+
+        # TODO: Return both errors for plotting
+        return W, b, X, y_target, y_predicted, crossEntropyError, train, needTrain, accuracy
 
     def ShuffleBatches(self, trainData, trainTarget):
+        # Gets the state as the current time
         rngState = np.random.get_state()
         np.random.shuffle(trainData)
         np.random.set_state(rngState)
@@ -200,10 +207,11 @@ if __name__ == "__main__":
         randIndx = np.arange(len(Data))
         np.random.shuffle(randIndx)
         Data, Target = Data[randIndx], Target[randIndx]
+        trainData, trainTarget = Data[:3], Target[:3]
         trainData, trainTarget = Data[:3500], Target[:3500]
         validData, validTarget = Data[3500:3600], Target[3500:3600]
         testData, testTarget = Data[3600:], Target[3600:]
-        for learningRate in [0.001]:
+        for learningRate in [0.01]: #, 0.001, 0.0001]:
             tf.reset_default_graph()
             l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate)
             print "Max Test Accuracy is: ", l.LogisticRegressionMethod()
