@@ -27,7 +27,7 @@ class LogisticRegression(object):
     def LogisticRegressionMethod(self):
         """
         Implements logistic regression and cross-entropy loss.
-        using tf.nn.sigmoid_cross_etnropy_with_logits
+        using tf.nn.sigmoid_cross_entropy_with_logits
         Weight-decay coefficient = 0.01
         Mini-batch size = B = 500
         Two Class notMNIST dataset
@@ -137,6 +137,7 @@ class LogisticRegression(object):
         # Parameters to train
         # Images are 28*28 = 784 pixels
 
+        # TODO: Update the W and b initialization so it depends on inputTarget size
         # Binary Classification
         W = tf.Variable(tf.truncated_normal(shape=[784, 1], stddev=0.5), name='weights')
         b = tf.Variable(0.0, name='biases')
@@ -265,20 +266,6 @@ if __name__ == "__main__":
         validData, validTarget = Data[15000:16000], Target[15000:16000]
         # Target values are from 0 to 9
         testData, testTarget = Data[16000:], Target[16000:]
-        '''
-        trainData, trainTarget = Data[:3], Target[:3]
-        validData, validTarget = Data[5:8], Target[5:8]
-        testData, testTarget = Data[3:], Target[3:]
-        print Data.shape
-        print Target.shape
-        print validData.shape
-        print validTarget.shape
-        print testData.shape
-        print testTarget.shape
-        print testData
-        print testTarget
-        print validTarget
-        '''
         # Binary Class Linear Regression =  0.001
         # Binary Class Logistic Regression Sigmoid = 0.01
         # Multiclass Classification Logistic Regression Softmax = 0.01
