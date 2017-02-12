@@ -13,12 +13,15 @@ class LogisticRegression(object):
         self.testTarget = testTarget
         # Default hyperparameter values
         self.weightDecay = 0.01
+        self.miniBatchSize = 3
         self.miniBatchSize = 500
         # MeanSquareError learningRate = 0.001, otherwise overshoots 
         # CrossEntropyError, learningRate = 0.01, 98.6% test accuracy highest
+        # CrossEntropySoftmax Error, learningRate = 0.001
         self.learningRate = learningRate
         self.numEpoch = 5000
-        self.numEpoch = 200
+        self.numEpoch = 200 # Binary Classification 
+        self.numEpoch = 100 # Multi-class Classification
 
     # Logistic Regression 
     def LogisticRegressionMethod(self):
@@ -76,12 +79,13 @@ class LogisticRegression(object):
                 # sess.run() executes whatever graph you built once up to the point where it needs to fetch
                 # and fetches everything that's in ([variablesToFetch])
                 # Thus, if you don't fetch 'train = optimizer.minimize(loss)', it won't optimize it
-                _, errTrain, currentW, currentb, yhat, accTrain= sess.run([train,crossEntropyError, W, b, y_predicted, accuracy], feed_dict={X: np.reshape(self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], (self.miniBatchSize,784)),y_target: self.trainTarget[step*self.miniBatchSize:(step+1)*self.miniBatchSize], needTrain: True})
+                _, errTrain, currentW, currentb, yhat, accTrain= sess.run([train, crossEntropyError, W, b, y_predicted, accuracy], feed_dict={X: np.reshape(self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], (self.miniBatchSize,784)),y_target: self.trainTarget[step*self.miniBatchSize:(step+1)*self.miniBatchSize], needTrain: True})
                 wList.append(currentW)
                 step = step + 1
                 xAxis.append(numUpdate)
                 numUpdate += 1
                 yTrainErr.append(errTrain)
+                yTrainAcc.append(accTrain)
                 # These will not optimize the function cause you did not fetch 'train' 
                 # So it won't have to execute that.
                 errValid, accValid = sess.run([crossEntropyError, accuracy], feed_dict={X: np.reshape(self.validData, (self.validData.shape[0],784)), y_target: self.validTarget, needTrain: False})
@@ -91,15 +95,13 @@ class LogisticRegression(object):
                 yTestErr.append(errTest)
                 yValidAcc.append(accValid)
                 yTestAcc.append(accTest)
-
-                yTrainAcc.append(accTrain)
             currEpoch += 1
         print "LearningRate: " , self.learningRate, " Mini batch Size: ", self.miniBatchSize
         print "Iter: ", numUpdate
         print "Final Train MSE: ", errTrain
+        print "Final Train Acc: ", accTrain
         print "Final Valid MSE: ", errValid
         print "Final Test MSE: ", errTest
-        print "Final Train Acc: ", accTrain
         print "Final Valid Acc: ", accValid
         print "Final Test Acc: ", accTest
         import matplotlib.pyplot as plt
@@ -134,12 +136,23 @@ class LogisticRegression(object):
     def buildGraph(self):
         # Parameters to train
         # Images are 28*28 = 784 pixels
+
+        # Binary Classification
         W = tf.Variable(tf.truncated_normal(shape=[784, 1], stddev=0.5), name='weights')
         b = tf.Variable(0.0, name='biases')
 
+        # Multi-class Clasification (10 classes)
+        # note: very important to increase dimensions W & b to train each 
+        # separately using cross entropy error
+        W = tf.Variable(tf.truncated_normal(shape=[784, 10], stddev=0.5), name='weights')
+        b = tf.Variable(tf.zeros([10]), name='biases')
+
         # Supervised Inputs
         X = tf.placeholder(tf.float32, [None, 784], name='input_x')
-        y_target = tf.placeholder(tf.float32, [None,1], name='target_y')
+
+        # y_target for binary class classification
+        #y_target = tf.placeholder(tf.float32, [None,1], name='target_y')
+        y_target = tf.placeholder(tf.float32, [None, 10], name='target_y')
 
         # Label to know if it should train or simply return the errors
         needTrain = tf.placeholder(tf.bool)
@@ -148,14 +161,22 @@ class LogisticRegression(object):
         # Graph definition
         y_predicted = tf.matmul(X, W) + b
 
+        # This works only for Binary Case
+        '''
         correctPred = tf.equal(tf.cast(tf.greater_equal(y_predicted, 0.5), tf.float32), tf.floor(y_target))
         accuracy = tf.reduce_mean(tf.cast(correctPred, "float"))
+        '''
+        
+        # Multi-class Classification
+        correctPred = tf.equal(tf.argmax(y_predicted, 1), tf.argmax(y_target, 1))
+        accuracy = tf.reduce_mean(tf.cast(correctPred, "float"))
+
 
         # Weight Decay Error calculation
         weightDecayMeanSquareError = tf.reduce_mean(tf.square(W))
-
         weightDecayError = tf.multiply(weightDecayCoeff, weightDecayMeanSquareError)
 
+        '''
         # Mean Square Error Calculation
         # Divide by 2M instead of M
         meanSquaredError = tf.div(tf.reduce_mean(tf.reduce_mean(tf.square(y_predicted - y_target), 
@@ -164,15 +185,23 @@ class LogisticRegression(object):
                                       name='mean_squared_error'), tf.constant(2.0))
         meanSquaredError = tf.add(meanSquaredError, weightDecayError)
 
-        # Cross Entropy Error Calculation
-        crossEntropyError = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(y_predicted, y_target))
-        crossEntropyError = tf.add(crossEntropyError, weightDecayError)
+        # Cross Entropy Sigmoid Error Binary-class Calculation
+        crossEntropySigmoidError = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(y_predicted, y_target))
+        crossEntropySigmoidError = tf.add(crossEntropySigmoidError, weightDecayError)
+        '''
+
+        # Cross Entropy Softmax Error Multi-class Classification
+        # note: Cross entropy only works with values from 0 to 1, so multi-class must be one hot encoded
+        crossEntropySoftmaxError = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_predicted, y_target))
+        crossEntropySoftmaxError = tf.add(crossEntropySoftmaxError, weightDecayError)
 
         # Don't train if don't have to for validation and test set
-        finalTrainingError = tf.select(needTrain, crossEntropyError, tf.constant(0.0))
+        #finalTrainingError = tf.select(needTrain, meanSquaredError, tf.constant(0.0))
+        #finalTrainingError = tf.select(needTrain, crossEntropySigmoidError, tf.constant(0.0))
+        finalTrainingError = tf.select(needTrain, crossEntropySoftmaxError, tf.constant(0.0))
 
         # Training mechanism
-        gdOptimizer = tf.train.GradientDescentOptimizer(learning_rate = self.learningRate)
+        #gdOptimizer = tf.train.GradientDescentOptimizer(learning_rate = self.learningRate)
         adamOptimizer = tf.train.AdamOptimizer(learning_rate = self.learningRate)
         
         # Train and update the parameters defined
@@ -180,8 +209,8 @@ class LogisticRegression(object):
         # train = optimizer.minimize(loss=finalTrainingError)
         train = adamOptimizer.minimize(loss=finalTrainingError)
 
-        # TODO: Return both errors for plotting
-        return W, b, X, y_target, y_predicted, crossEntropyError, train, needTrain, accuracy
+        # TODO: Return both errors for plotting for 1.1.3
+        return W, b, X, y_target, y_predicted, crossEntropySoftmaxError, train, needTrain, accuracy
 
     def ShuffleBatches(self, trainData, trainTarget):
         # Gets the state as the current time
@@ -191,10 +220,15 @@ class LogisticRegression(object):
         np.random.shuffle(trainTarget)
         return trainData, trainTarget
 
+def convertOneHot(targetValues):
+    numClasses = np.max(targetValues) + 1
+    return np.eye(numClasses)[targetValues]
+
 if __name__ == "__main__":
     print "LogisticRegression"
     # Binary Classification
     # Get only 2 labels
+    '''
     with np.load("notMNIST.npz") as data :
         Data, Target = data ["images"], data["labels"]
         posClass = 2
@@ -216,7 +250,8 @@ if __name__ == "__main__":
             l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate)
             maxTestAccuracy = l.LogisticRegressionMethod()
             print "Max Test Accuracy is: ", maxTestAccuracy
-    ''' 
+    '''
+
     # Multi-class Classification
     # Get all 10 labels
     with np.load("notMNIST.npz") as data:
@@ -228,5 +263,31 @@ if __name__ == "__main__":
         Target = Target[randIndx]
         trainData, trainTarget = Data[:15000], Target[:15000]
         validData, validTarget = Data[15000:16000], Target[15000:16000]
+        # Target values are from 0 to 9
         testData, testTarget = Data[16000:], Target[16000:]
-    '''
+        '''
+        trainData, trainTarget = Data[:3], Target[:3]
+        validData, validTarget = Data[5:8], Target[5:8]
+        testData, testTarget = Data[3:], Target[3:]
+        print Data.shape
+        print Target.shape
+        print validData.shape
+        print validTarget.shape
+        print testData.shape
+        print testTarget.shape
+        print testData
+        print testTarget
+        print validTarget
+        '''
+        # Binary Class Linear Regression =  0.001
+        # Binary Class Logistic Regression Sigmoid = 0.01
+        # Multiclass Classification Logistic Regression Softmax = 0.01
+        # Cross entropy loss only works from 0 to 1! Not from 0 to 9
+        trainTarget = convertOneHot(trainTarget)
+        validTarget = convertOneHot(validTarget)
+        testTarget = convertOneHot(testTarget)
+        for learningRate in [0.01]:
+            tf.reset_default_graph()
+            l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate)
+            maxTestAccuracy = l.LogisticRegressionMethod()
+            print "Max Test Accuracy is: ", maxTestAccuracy
