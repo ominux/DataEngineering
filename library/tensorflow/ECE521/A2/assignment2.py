@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 import sys
 
+# TODO: Replace all 784 with some automatic calculation
 class LogisticRegression(object):
     def __init__(self, trainData, trainTarget, validData, validTarget, testData, testTarget):
         self.trainData = trainData
@@ -12,6 +13,8 @@ class LogisticRegression(object):
         self.testTarget = testTarget
         # Default hyperparameter values
         self.weightDecay = 0.01
+        # TODO: TEMP
+        self.miniBatchSize = 3
         self.miniBatchSize = 500
         self.learningRate = 0.01
         self.learningRate = 0.001
@@ -68,7 +71,7 @@ class LogisticRegression(object):
         while currEpoch <= self.numEpoch:
             self.trainData, self.trainTarget = self.ShuffleBatches(self.trainData, self.trainTarget)
             step = 0 
-            while step*self.miniBatchSize < 500: 
+            while step*self.miniBatchSize < self.trainData.shape[0]: 
                 # train comes from BuildGraph's optimization method
                 # returnedValues = sess.run([whatYouWantToReturnThatWereReturnedFromBuildGraph], 
                 #               feed_dic{valuesToFeedIntoPlaceHoldersThatWereReturnedFromBuildGraph})
@@ -109,7 +112,8 @@ class LogisticRegression(object):
         figureCount = figureCount + 1
         plt.plot(np.array(xAxis), np.array(yTestErr))
         plt.savefig("TestLossLearnRate" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
-        # TODO: Accuracy on all of them
+
+        # FIXME: Ensure accuracy calculation is correct on small examples
         plt.figure(figureCount)
         figureCount = figureCount + 1
         plt.plot(np.array(xAxis), np.array(yTrainAcc))
@@ -190,6 +194,8 @@ if __name__ == "__main__":
         randIndx = np.arange(len(Data))
         np.random.shuffle(randIndx)
         Data, Target = Data[randIndx], Target[randIndx]
+        # TODO: TEMP DEBUG
+        trainData, trainTarget = Data[:3], Target[:3]
         trainData, trainTarget = Data[:3500], Target[:3500]
         validData, validTarget = Data[3500:3600], Target[3500:3600]
         testData, testTarget = Data[3600:], Target[3600:]
