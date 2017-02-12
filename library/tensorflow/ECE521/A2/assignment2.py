@@ -211,6 +211,7 @@ class LogisticRegression(object):
         train = adamOptimizer.minimize(loss=finalTrainingError)
 
         # TODO: Return both errors for plotting for 1.1.3
+        # TODO: 1.1.3 Calculate Linear Regression using Normal Equation (analytical solution) 
         return W, b, X, y_target, y_predicted, crossEntropySoftmaxError, train, needTrain, accuracy
 
     def ShuffleBatches(self, trainData, trainTarget):
