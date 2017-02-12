@@ -4,7 +4,7 @@ import sys
 
 # TODO: Replace all 784 with some automatic calculation
 class LogisticRegression(object):
-    def __init__(self, trainData, trainTarget, validData, validTarget, testData, testTarget):
+    def __init__(self, trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate = 0.001):
         self.trainData = trainData
         self.trainTarget = trainTarget
         self.validData = validData
@@ -13,14 +13,9 @@ class LogisticRegression(object):
         self.testTarget = testTarget
         # Default hyperparameter values
         self.weightDecay = 0.01
-        # TODO: TEMP
-        self.miniBatchSize = 3
         self.miniBatchSize = 500
-        self.learningRate = 0.01
-        self.learningRate = 0.001
-        self.numEpoch = 2
-        self.numEpoch = 700
-        self.LogisticRegressionMethod()
+        self.learningRate = learningRate
+        self.numEpoch = 5000
 
     # Logistic Regression 
     def LogisticRegressionMethod(self):
@@ -41,7 +36,7 @@ class LogisticRegression(object):
             Best Test Classification Accuracy
         """
 
-        maxTestClassificationAccuracy = 0
+        maxTestClassificationAccuracy = 0.0
         W, b, X, y_target, y_predicted, meanSquaredError, train , needTrain, accuracy = self.buildGraph()
         figureCount = 1 
 
@@ -89,6 +84,7 @@ class LogisticRegression(object):
                 yTestErr.append(errTest)
                 yValidAcc.append(accValid)
                 yTestAcc.append(accTest)
+
                 yTrainAcc.append(accTrain)
             currEpoch += 1
         print "LearningRate: " , self.learningRate, " Mini batch Size: ", self.miniBatchSize
@@ -113,7 +109,6 @@ class LogisticRegression(object):
         plt.plot(np.array(xAxis), np.array(yTestErr))
         plt.savefig("TestLossLearnRate" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
 
-        # FIXME: Ensure accuracy calculation is correct on small examples
         plt.figure(figureCount)
         figureCount = figureCount + 1
         plt.plot(np.array(xAxis), np.array(yTrainAcc))
@@ -126,7 +121,7 @@ class LogisticRegression(object):
         figureCount = figureCount + 1
         plt.plot(np.array(xAxis), np.array(yTestAcc))
         plt.savefig("TestAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
-        return maxTestClassificationAccuracy
+        return max(np.array(yTestAcc))
 
     # Build the computational graph
     def buildGraph(self):
@@ -165,7 +160,7 @@ class LogisticRegression(object):
         # Train and update the parameters defined
         train = optimizer.minimize(loss=finalTrainingMSE)
 
-        correctPred = tf.equal(tf.floor(y_predicted + tf.constant(0.5)), tf.floor(y_target))
+        correctPred = tf.equal(tf.cast(tf.greater_equal(y_predicted, 0.5), tf.float32), tf.floor(y_target))
         accuracy = tf.reduce_mean(tf.cast(correctPred, "float"))
 
         return W, b, X, y_target, y_predicted, meanSquaredError, train, needTrain, accuracy
@@ -194,12 +189,13 @@ if __name__ == "__main__":
         randIndx = np.arange(len(Data))
         np.random.shuffle(randIndx)
         Data, Target = Data[randIndx], Target[randIndx]
-        # TODO: TEMP DEBUG
-        trainData, trainTarget = Data[:3], Target[:3]
         trainData, trainTarget = Data[:3500], Target[:3500]
         validData, validTarget = Data[3500:3600], Target[3500:3600]
         testData, testTarget = Data[3600:], Target[3600:]
-        l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget)
+        for learningRate in [0.001]:
+            tf.reset_default_graph()
+            l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate)
+            print "Max Test Accuracy is: ", l.LogisticRegressionMethod()
     ''' 
     # Multi-class Classification
     # Get all 10 labels
