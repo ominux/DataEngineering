@@ -25,12 +25,21 @@ class FullyConnectedNeuralNetwork(object):
         self.testTarget = testTarget
 
         self.learningRate = learningRate
+        self.numEpoch = 5
+        self.miniBatchSize = 500
         # Size of array is number of layers,
         # values are number of hidden units in each layer
         self.hiddenLayers = hiddenLayers
+        self.hiddenLayers = np.append(hiddenLayers, 10)
+        self.NeuralNetworkMethod()
 
-        # Build the fully connected Neural Network
-        self.buildFullyConnectedNeuralNetwork()
+    def ShuffleBatches(self, trainData, trainTarget):
+        # Gets the state as the current time
+        rngState = np.random.get_state()
+        np.random.shuffle(trainData)
+        np.random.set_state(rngState)
+        np.random.shuffle(trainTarget)
+        return trainData, trainTarget
 
     def layerWiseBuildingBlock(self, inputTensor, numberOfHiddenUnits):
         """
@@ -55,12 +64,135 @@ class FullyConnectedNeuralNetwork(object):
         return weightedSum
 
     def buildFullyConnectedNeuralNetwork(self):
-        inputTensor = tf.pack(self.trainData)
-        # TODO: may need to remove this for loop
+        weightedSum  = tf.pack(self.trainData)
+
+        X = tf.placeholder(tf.float32, [None, 784], name='X') 
+        y_target = tf.placeholder(tf.float32, [None, 10], name='target_y')
+        inputTensor = X
+        # TODO: may need to remove this for loop AND REPLACE WITH A SINGLE WEIGHT ? 
         for currLayer in self.hiddenLayers:
             weightedSum = self.layerWiseBuildingBlock(inputTensor, currLayer)
             # Parse with activation function of ReLu
             inputTensor = tf.nn.relu(weightedSum)
+
+        # inputTensor is now the final hidden layer, but only need weighted Sum
+        # Need add one more with softmax for output
+        y_predicted = weightedSum 
+
+        # Multi-class Classification
+        correctPred = tf.equal(tf.argmax(y_predicted, 1), tf.argmax(y_target, 1))
+        accuracy = tf.reduce_mean(tf.cast(correctPred, "float"))
+
+        # Cross Entropy Softmax Error Multi-class Classification
+        # note: Cross entropy only works with values from 0 to 1, so multi-class must be one hot encoded
+        crossEntropySoftmaxError = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_predicted, y_target))
+        adamOptimizer = tf.train.AdamOptimizer(learning_rate = self.learningRate)
+
+        # TODO: Include weight decay error
+        '''
+        # Weight Decay Error calculation
+        weightDecayMeanSquareError = tf.reduce_mean(tf.square(W))
+        weightDecayError = tf.multiply(weightDecayCoeff, weightDecayMeanSquareError)
+        crossEntropySoftmaxError = tf.add(crossEntropySoftmaxError, weightDecayError)
+        '''
+        finalTrainingError = crossEntropySoftmaxError
+        train = adamOptimizer.minimize(loss=finalTrainingError)
+
+        return X, y_target, y_predicted, finalTrainingError, train, accuracy
+
+    def NeuralNetworkMethod(self):
+        maxTestClassificationAccuracy = 0.0
+        inputTensor = tf.pack(self.trainData)
+        # Build the fully connected Neural Network
+        X, y_target, y_predicted, crossEntropyError, train, accuracy = self.buildFullyConnectedNeuralNetwork()
+        figureCount = 1 
+
+        # Session
+        init = tf.global_variables_initializer()
+        sess = tf.InteractiveSession()
+        sess.run(init)
+        currEpoch = 0
+        xAxis = []
+        yTrainErr = []
+        yValidErr = []
+        yTestErr = []
+        yTrainAcc = []
+        yValidAcc = []
+        yTestAcc = []
+        numUpdate = 0
+        step = 0
+        errTrain = -1 
+        errValid = -1 
+        errTest = -1 
+        accTrain = -1
+        accValid = -1
+        accTest = -1
+        while currEpoch <= self.numEpoch:
+            self.trainData, self.trainTarget = self.ShuffleBatches(self.trainData, self.trainTarget)
+            step = 0 
+            while step*self.miniBatchSize < self.trainData.shape[0]: 
+                # train comes from BuildGraph's optimization method
+                # returnedValues = sess.run([whatYouWantToReturnThatWereReturnedFromBuildGraph], 
+                #               feed_dic{valuesToFeedIntoPlaceHoldersThatWereReturnedFromBuildGraph})
+                # sess.run() executes whatever graph you built once up to the point where it needs to fetch
+                # and fetches everything that's in ([variablesToFetch])
+                # Thus, if you don't fetch 'train = optimizer.minimize(loss)', it won't optimize it
+                _, errTrain, yhat, accTrain = sess.run([train, crossEntropyError, y_predicted, accuracy], feed_dict={X: np.reshape(self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], (self.miniBatchSize,784)),y_target: self.trainTarget[step*self.miniBatchSize:(step+1)*self.miniBatchSize]})
+                step = step + 1
+                numUpdate += 1
+                # These will not optimize the function cause you did not fetch 'train' 
+                # So it won't have to execute that.
+                errValid, accValid = sess.run([crossEntropyError, accuracy], feed_dict={X: np.reshape(self.validData, (self.validData.shape[0],784)), y_target: self.validTarget})
+
+                errTest, accTest = sess.run([crossEntropyError, accuracy], feed_dict={X: np.reshape(self.testData, (self.testData.shape[0], 784)), y_target: self.testTarget})
+            # Plot against currEpoch for Neural Network
+            xAxis.append(currEpoch)
+            yTrainErr.append(errTrain)
+            yTrainAcc.append(accTrain)
+            yValidErr.append(errValid)
+            yTestErr.append(errTest)
+            yValidAcc.append(accValid)
+            yTestAcc.append(accTest)
+            currEpoch += 1
+        print "LearningRate: " , self.learningRate, " Mini batch Size: ", self.miniBatchSize
+        print "Iter: ", numUpdate
+        print "Final Train MSE: ", errTrain
+        print "Final Train Acc: ", accTrain
+        print "Final Valid MSE: ", errValid
+        print "Final Test MSE: ", errTest
+        print "Final Valid Acc: ", accValid
+        print "Final Test Acc: ", accTest
+        import matplotlib.pyplot as plt
+        plt.figure(figureCount)
+        figureCount = figureCount + 1
+        plt.plot(np.array(xAxis), np.array(yTrainErr))
+        plt.savefig("TrainLossLearnRate" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
+        plt.figure(figureCount)
+        figureCount = figureCount + 1
+        plt.plot(np.array(xAxis), np.array(yValidErr))
+        plt.savefig("ValidLossLearnRate" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
+        plt.figure(figureCount)
+        figureCount = figureCount + 1
+        plt.plot(np.array(xAxis), np.array(yTestErr))
+        plt.savefig("TestLossLearnRate" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
+
+        plt.figure(figureCount)
+        figureCount = figureCount + 1
+        plt.plot(np.array(xAxis), np.array(yTrainAcc))
+        plt.savefig("TrainAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
+        plt.figure(figureCount)
+        figureCount = figureCount + 1
+        plt.plot(np.array(xAxis), np.array(yValidAcc))
+        plt.savefig("ValidAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
+        plt.figure(figureCount)
+        figureCount = figureCount + 1
+        plt.plot(np.array(xAxis), np.array(yTestAcc))
+        plt.savefig("TestAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
+        return max(np.array(yTestAcc))
+
+def convertOneHot(targetValues):
+    numClasses = np.max(targetValues) + 1
+    return np.eye(numClasses)[targetValues]
 
 if __name__ == "__main__":
     with np.load("notMNIST.npz") as data:
@@ -74,7 +206,10 @@ if __name__ == "__main__":
         validData, validTarget = Data[15000:16000], Target[15000:16000]
         # Target values are from 0 to 9
         testData, testTarget = Data[16000:], Target[16000:]
+        trainTarget = convertOneHot(trainTarget)
+        validTarget = convertOneHot(validTarget)
+        testTarget = convertOneHot(testTarget)
         for learningRate in [0.01]:
             tf.reset_default_graph()
-            FullyConnectedNeuralNetwork(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate, np.array([1000, 500]))
+            FullyConnectedNeuralNetwork(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate, np.array([1000]))
         sys.exit(0)
