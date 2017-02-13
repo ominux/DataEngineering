@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import sys
+import math
 
 class FullyConnectedNeuralNetwork(object):
     """
@@ -12,14 +13,26 @@ class FullyConnectedNeuralNetwork(object):
     Train on entire multi-class MNIST dataset
     Weight initialization using Xavier Initialization
     """
-    def __init__(self, learningRate = 0.001, numHiddenLayers = 1, numHiddenUnits = 1000):
-        self.learningRate = learningRate
-        # TODO: Make this into an array where size of array is number of layers,
-        #       and values are number of hidden units in each layer
-        self.numHiddenLayers = numHiddenLayers
-        self.numHiddenUnits = numHiddenUnits
+    def __init__(self, trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate = 0.001, hiddenLayers = np.array([1000])):
+        """
+        hiddenLayers is an array indicating the number of hidden units in each layer
+        """
+        self.trainData = np.reshape(trainData, (trainData.shape[0], 784))
+        self.trainTarget = trainTarget
+        self.validData = validData
+        self.validTarget = validTarget
+        self.testData = testData
+        self.testTarget = testTarget
 
-    def weightedSum(self, inputTensor, numberOfHiddenUnits):
+        self.learningRate = learningRate
+        # Size of array is number of layers,
+        # values are number of hidden units in each layer
+        self.hiddenLayers = hiddenLayers
+
+        # Build the fully connected Neural Network
+        self.buildFullyConnectedNeuralNetwork()
+
+    def layerWiseBuildingBlock(self, inputTensor, numberOfHiddenUnits):
         """
         Layer-wise Building Block
         Input: 
@@ -31,16 +44,37 @@ class FullyConnectedNeuralNetwork(object):
         A list of hidden activations
         No Loops
         """
-        numInput = inputTensor.shape[0]
+        numInput = inputTensor.get_shape().as_list()[1]
         numOutput = numberOfHiddenUnits
         # Xavier Initialization
+        #variance = tf.div(tf.constant(3.0), tf.add(numInput, tf.constant(numOutput)))
         variance = 3.0/(numInput + numOutput)
-        # TODO: Calculate squareroot of variance
-        weight = tf.Variable(tf.truncated_normal(shape=[numInput, numOutput], stddev= variance))
+        weight = tf.Variable(tf.truncated_normal(shape=[numInput, numOutput], stddev = math.sqrt(variance)))
         bias = tf.Variable(tf.zeros([numOutput]))
-        weightedSum = tf.matmul(inputTensor, weight) + bias
+        weightedSum = tf.matmul(tf.cast(inputTensor, "float32"), weight) + bias
         return weightedSum
 
+    def buildFullyConnectedNeuralNetwork(self):
+        inputTensor = tf.pack(self.trainData)
+        # TODO: may need to remove this for loop
+        for currLayer in self.hiddenLayers:
+            weightedSum = self.layerWiseBuildingBlock(inputTensor, currLayer)
+            # Parse with activation function of ReLu
+            inputTensor = tf.nn.relu(weightedSum)
+
 if __name__ == "__main__":
-    FullyConnectedNeuralNetwork(0.001, 1, 1000)
-    sys.exit(0)
+    with np.load("notMNIST.npz") as data:
+        Data, Target = data ["images"], data["labels"]
+        np.random.seed(521)
+        randIndx = np.arange(len(Data))
+        np.random.shuffle(randIndx)
+        Data = Data[randIndx]/255.
+        Target = Target[randIndx]
+        trainData, trainTarget = Data[:15000], Target[:15000]
+        validData, validTarget = Data[15000:16000], Target[15000:16000]
+        # Target values are from 0 to 9
+        testData, testTarget = Data[16000:], Target[16000:]
+        for learningRate in [0.01]:
+            tf.reset_default_graph()
+            FullyConnectedNeuralNetwork(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate, np.array([1000, 500]))
+        sys.exit(0)
