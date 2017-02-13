@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 import sys
 
-class FullyConnectedNeuralNetworks(object):
+class FullyConnectedNeuralNetwork(object):
     """
     Fully Connected Neural Network
     Activation Function: Rectified Linear Unit
@@ -21,12 +21,26 @@ class FullyConnectedNeuralNetworks(object):
 
     def weightedSum(self, inputTensor, numberOfHiddenUnits):
         """
-        Input: Hidden activiations from previous layer
-        Output: Weighted sum of the inputs
-        Initialize Weight Matrix and Biases in same function
-        Not Loops
+        Layer-wise Building Block
+        Input: 
+            inputTensor: Hidden activations from previous layer
+            numberOfHiddenUnitsInCurrentLayer
+        Output: z = Weighted sum of the inputs
+
+        Initialize Weight Matrix and Biases in this function
+        A list of hidden activations
+        No Loops
         """
-        weightedSum = 0.0
-        # TODO: 
+        numInput = inputTensor.shape[0]
+        numOutput = numberOfHiddenUnits
+        # Xavier Initialization
+        variance = 3.0/(numInput + numOutput)
+        # TODO: Calculate squareroot of variance
+        weight = tf.Variable(tf.truncated_normal(shape=[numInput, numOutput], stddev= variance))
+        bias = tf.Variable(tf.zeros([numOutput]))
+        weightedSum = tf.matmul(inputTensor, weight) + bias
         return weightedSum
 
+if __name__ == "__main__":
+    FullyConnectedNeuralNetwork(0.001, 1, 1000)
+    sys.exit(0)
