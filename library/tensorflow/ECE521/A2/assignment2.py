@@ -6,18 +6,17 @@ import sys
 class LogisticRegression(object):
     def __init__(self, trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate = 0.0001):
         self.trainData = trainData
-        print trainData.size
         self.trainTarget = trainTarget
         self.validData = validData
         self.validTarget = validTarget
         self.testData = testData
         self.testTarget = testTarget
-        # Default hyperparameter values
-        self.weightDecay = 0.01
         # For 1.1.3, weight decay is 0
         self.weightDecay = 0.00
         # For 1.1.3, should use entire batch instead of miniBatchSize, and already hard-coded as 3500 when fed in
         self.miniBatchSize = 500
+        # Default hyperparameter values
+        self.weightDecay = 0.01
         # MeanSquareError learningRate = 0.001, otherwise overshoots 
         # CrossEntropyError, learningRate = 0.01, 98.6% test accuracy highest
         # CrossEntropySoftmax Error, learningRate = 0.001
@@ -440,7 +439,6 @@ if __name__ == "__main__":
             maxTestAccuracy = l.LogisticRegressionMethodBinary()
             print "Max Test Accuracy is: ", maxTestAccuracy
 
-    '''
     # Multi-class Classification
     # Get all 10 labels
     with np.load("notMNIST.npz") as data:
@@ -463,4 +461,3 @@ if __name__ == "__main__":
             l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate)
             maxTestAccuracy = l.LogisticRegressionMethodMulti()
             print "Max Test Accuracy is: ", maxTestAccuracy
-    # '''
