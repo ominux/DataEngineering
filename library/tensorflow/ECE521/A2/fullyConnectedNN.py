@@ -25,13 +25,18 @@ class FullyConnectedNeuralNetwork(object):
         self.testTarget = testTarget
 
         self.learningRate = learningRate
-        # Start to early stop at 5 for valid and 8 for test
-        self.numEpoch = 6
+        # Start to early stop at 5 for valid and 8 for test 
+        self.numEpochWithoutDropout = 6
+        # TODO: Figure this out
+        self.numEpochWithDropout = 20
+        self.numEpoch = self.numEpochWithoutDropout
         self.miniBatchSize = 500
         self.weightDecay = (3.0 * np.exp(1)) - 4.0
-        # Size of array is number of layers,
+        self.dropoutProbability = 0.5
+        # Size of array is number of layers
         # values are number of hidden units in each layer
         self.hiddenLayers = hiddenLayers
+        # Add the final output as a hidden layer for multi-class (10 classes)
         self.hiddenLayers = np.append(hiddenLayers, 10)
         self.NeuralNetworkMethod()
 
@@ -85,6 +90,8 @@ class FullyConnectedNeuralNetwork(object):
             weightedSum = self.layerWiseBuildingBlock(inputTensor, currLayer)
             # Parse with activation function of ReLu
             inputTensor = tf.nn.relu(weightedSum)
+            # 2.4.1 Dropout
+            inputTensor = tf.nn.dropout(inputTensor, self.dropoutProbability)
 
         # inputTensor is now the final hidden layer, but only need weighted Sum
         # Need add one more with softmax for output
