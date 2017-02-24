@@ -16,9 +16,7 @@ class LogisticRegression(object):
         self.weightDecay = 0.01
         # For 1.1.3, weight decay is 0
         self.weightDecay = 0.00
-        # For 1.1.3, should use entire batch instead of miniBatchSize
-        #self.miniBatchSize = 3500
-
+        # For 1.1.3, should use entire batch instead of miniBatchSize, and already hard-coded as 3500 when fed in
         self.miniBatchSize = 500
         # MeanSquareError learningRate = 0.001, otherwise overshoots 
         # CrossEntropyError, learningRate = 0.01, 98.6% test accuracy highest
@@ -52,7 +50,7 @@ class LogisticRegression(object):
 
         maxTestClassificationAccuracy = 0.0
         self.numEpoch = self.numEpochBinary
-        W, b, X, y_target, y_predicted, crossEntropyError, train , needTrain, accuracy, WNormalEquation, accuracyNormal = self.buildGraphBinary()
+        W, b, X, y_target, y_predicted, crossEntropyError, train , needTrain, accuracy, WNormalEquation, accuracyNormal, Xall, y_targetAll = self.buildGraphBinary()
         figureCount = 1 
 
         # Session
@@ -91,7 +89,7 @@ class LogisticRegression(object):
                 # sess.run() executes whatever graph you built once up to the point where it needs to fetch
                 # and fetches everything that's in ([variablesToFetch])
                 # Thus, if you don't fetch 'train = optimizer.minimize(loss)', it won't optimize it
-                _, errTrain, currentW, currentb, yhat, accTrain, currentWNormalEquation, accTrainNormal= sess.run([train, crossEntropyError, W, b, y_predicted, accuracy, WNormalEquation, accuracyNormal], feed_dict={X: np.reshape(self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], (self.miniBatchSize,784)),y_target: self.trainTarget[step*self.miniBatchSize:(step+1)*self.miniBatchSize], needTrain: True})
+                _, errTrain, currentW, currentb, yhat, accTrain, currentWNormalEquation, accTrainNormal= sess.run([train, crossEntropyError, W, b, y_predicted, accuracy, WNormalEquation, accuracyNormal], feed_dict={X: np.reshape(self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], (self.miniBatchSize,784)),Xall: np.reshape(self.trainData,(3500,784)), y_targetAll: self.trainTarget, y_target: self.trainTarget[step*self.miniBatchSize:(step+1)*self.miniBatchSize], needTrain: True})
                 wList.append(currentW)
                 step = step + 1
                 xAxis.append(numUpdate)
@@ -103,9 +101,9 @@ class LogisticRegression(object):
 
                 # These will not optimize the function cause you did not fetch 'train' 
                 # So it won't have to execute that.
-                errValid, accValid, accValidNormal = sess.run([crossEntropyError, accuracy, accuracyNormal], feed_dict={X: np.reshape(self.validData, (self.validData.shape[0],784)), y_target: self.validTarget, needTrain: False})
+                errValid, accValid, accValidNormal = sess.run([crossEntropyError, accuracy, accuracyNormal], feed_dict={X: np.reshape(self.validData, (self.validData.shape[0],784)), Xall: np.reshape(self.trainData, (3500, 784)), y_targetAll: self.trainTarget, y_target: self.validTarget, needTrain: False})
 
-                errTest, accTest, accTestNormal = sess.run([crossEntropyError, accuracy, accuracyNormal], feed_dict={X: np.reshape(self.testData, (self.testData.shape[0], 784)), y_target: self.testTarget, needTrain: False})
+                errTest, accTest, accTestNormal = sess.run([crossEntropyError, accuracy, accuracyNormal], feed_dict={X: np.reshape(self.testData, (self.testData.shape[0], 784)), Xall: np.reshape(self.trainData, (3500, 784)), y_targetAll: self.trainTarget, y_target: self.testTarget, needTrain: False})
                 yValidErr.append(errValid)
                 yTestErr.append(errTest)
                 yValidAcc.append(accValid)
@@ -326,9 +324,13 @@ class LogisticRegression(object):
         b = tf.Variable(0.0, name='biases')
         # Supervised Inputs
         X = tf.placeholder(tf.float32, [None, 784], name='input_x')
+        # Need all for 1.1.3
+        Xall = tf.placeholder(tf.float32, [None, 784], name='input_x')
 
         # y_target for binary class classification
         y_target = tf.placeholder(tf.float32, [None,1], name='target_y')
+        # Need all for 1.1.3
+        y_targetAll = tf.placeholder(tf.float32, [None,1], name='target_y')
 
         # Label to know if it should train or simply return the errors
         needTrain = tf.placeholder(tf.bool)
@@ -383,14 +385,17 @@ class LogisticRegression(object):
         # Return both errors for plotting for 1.1.3 and set weight to 0 for LogisticRegression for plotting when comparing
         # 1.1.3 Calculate Linear Regression using Normal Equation (analytical solution) 
         # Concatenate 1 to account for Bias
-        OnesForX = tf.ones(shape=tf.pack([tf.shape(X)[0], 1]))
-        Xnormal = tf.concat(1,[X , OnesForX])
-        WNormalEquation = tf.matmul(tf.matmul(tf.matrix_inverse(tf.matmul(tf.transpose(Xnormal), Xnormal)), tf.transpose(Xnormal)), y_target)
-        y_predictedNormal = tf.matmul(Xnormal, WNormalEquation)
+        OnesForX = tf.ones(shape=tf.pack([tf.shape(Xall)[0], 1]))
+        Xnormal = tf.concat(1,[Xall , OnesForX])
+        WNormalEquation = tf.matmul(tf.matmul(tf.matrix_inverse(tf.matmul(tf.transpose(Xnormal), Xnormal)), tf.transpose(Xnormal)), y_targetAll)
+        OnesForCurrX = tf.ones(shape=tf.pack([tf.shape(X)[0], 1]))
+        currX = tf.concat(1,[X , OnesForCurrX])
+        y_predictedNormal = tf.matmul(currX, WNormalEquation)
+
         correctPredNormal = tf.equal(tf.cast(tf.greater_equal(y_predictedNormal, 0.5), tf.float32), tf.floor(y_target))
         accuracyNormal = tf.reduce_mean(tf.cast(correctPredNormal, "float"))
 
-        return W, b, X, y_target, y_predicted, crossEntropySigmoidError, train, needTrain, accuracy, WNormalEquation, accuracyNormal
+        return W, b, X, y_target, y_predicted, crossEntropySigmoidError, train, needTrain, accuracy, WNormalEquation, accuracyNormal, Xall, y_targetAll
 
     def ShuffleBatches(self, trainData, trainTarget):
         # Gets the state as the current time
