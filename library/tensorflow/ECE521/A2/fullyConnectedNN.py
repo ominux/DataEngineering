@@ -31,8 +31,6 @@ class FullyConnectedNeuralNetwork(object):
         # Early Stops at about 12 for both valid at test
         self.numEpochDropout = 12
         self.numEpoch = self.numEpochDropout
-        # TEMP
-        self.numEpoch = 1
         self.miniBatchSize = 500
         self.weightDecay = (3.0 * np.exp(1)) - 4.0
         self.dropoutProbability = 0.5
