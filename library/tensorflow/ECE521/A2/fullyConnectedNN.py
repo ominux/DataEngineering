@@ -9,10 +9,11 @@ class FullyConnectedNeuralNetwork(object):
     Activation Function: Rectified Linear Unit
     Cost Function: Cross-Entropy
     Output Layer: Softmax 
-    tf.saver to save model at 25%, 50%, 75% and 100% of training process
     Train on entire multi-class MNIST dataset
     Weight initialization using Xavier Initialization
+    tf.saver to save model at 25%, 50%, 75% and 100% of training process
     """
+
     def __init__(self, trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate = 0.001, hiddenLayers = np.array([1000])):
         """
         hiddenLayers is an array indicating the number of hidden units in each layer
@@ -26,10 +27,11 @@ class FullyConnectedNeuralNetwork(object):
 
         self.learningRate = learningRate
         # Start to early stop at 5 for valid and 8 for test 
-        self.numEpochWithoutDropout = 6
-        # TODO: Figure this out
-        self.numEpochWithDropout = 20
-        self.numEpoch = self.numEpochWithoutDropout
+        self.numEpochNoDropout = 6
+        # Early Stops at about 12 for both valid at test
+        self.numEpochDropout = 12
+        # TEMP
+        self.numEpoch = 1
         self.miniBatchSize = 500
         self.weightDecay = (3.0 * np.exp(1)) - 4.0
         self.dropoutProbability = 0.5
@@ -68,6 +70,8 @@ class FullyConnectedNeuralNetwork(object):
         weight = tf.Variable(tf.truncated_normal(shape=[numInput, numOutput], stddev = math.sqrt(variance)))
         bias = tf.Variable(tf.zeros([numOutput]))
         weightedSum = tf.matmul(tf.cast(inputTensor, "float32"), weight) + bias
+
+        tf.add_to_collection("Weights", weight)
 
         # Add to collection for weight decay loss
         weightDecayCoeff = tf.div(tf.cast(tf.constant(self.weightDecay), "float32"),tf.constant(2.0))
@@ -113,13 +117,15 @@ class FullyConnectedNeuralNetwork(object):
         finalTrainingError = crossEntropySoftmaxError
         train = adamOptimizer.minimize(loss=finalTrainingError)
 
-        return X, y_target, y_predicted, finalTrainingError, train, accuracy
+        weights = tf.get_collection("Weights")
+
+        return X, y_target, y_predicted, finalTrainingError, train, accuracy, weights
 
     def NeuralNetworkMethod(self):
         maxTestClassificationAccuracy = 0.0
         inputTensor = tf.pack(self.trainData)
         # Build the fully connected Neural Network
-        X, y_target, y_predicted, crossEntropyError, train, accuracy = self.buildFullyConnectedNeuralNetwork()
+        X, y_target, y_predicted, crossEntropyError, train, accuracy, weights = self.buildFullyConnectedNeuralNetwork()
         figureCount = 1 
 
         # Session
@@ -142,6 +148,7 @@ class FullyConnectedNeuralNetwork(object):
         accTrain = -1
         accValid = -1
         accTest = -1
+        # TODO: 2.4.2 Save model from 25%, 50%, 75% and 100% from early stopping point
         while currEpoch <= self.numEpoch:
             self.trainData, self.trainTarget = self.ShuffleBatches(self.trainData, self.trainTarget)
             step = 0 
@@ -152,7 +159,7 @@ class FullyConnectedNeuralNetwork(object):
                 # sess.run() executes whatever graph you built once up to the point where it needs to fetch
                 # and fetches everything that's in ([variablesToFetch])
                 # Thus, if you don't fetch 'train = optimizer.minimize(loss)', it won't optimize it
-                _, errTrain, yhat, accTrain = sess.run([train, crossEntropyError, y_predicted, accuracy], feed_dict={X: np.reshape(self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], (self.miniBatchSize,784)),y_target: self.trainTarget[step*self.miniBatchSize:(step+1)*self.miniBatchSize]})
+                _, errTrain, yhat, accTrain, hiddenImages = sess.run([train, crossEntropyError, y_predicted, accuracy, weights], feed_dict={X: np.reshape(self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], (self.miniBatchSize,784)),y_target: self.trainTarget[step*self.miniBatchSize:(step+1)*self.miniBatchSize]})
                 step = step + 1
                 numUpdate += 1
                 # These will not optimize the function cause you did not fetch 'train' 
@@ -178,10 +185,17 @@ class FullyConnectedNeuralNetwork(object):
         print "Final Valid Acc: ", accValid
         print "Final Test Acc: ", accTest
         import matplotlib.pyplot as plt
+        
         plt.figure(figureCount)
+        # print hiddenImages[0].shape # 784 * 1000, basically 28*28 input and 1000 output
+        plt.imshow(hiddenImages[0], interpolation="nearest", cmap="gray")
+        plt.savefig("FirstHiddenLayer")
+
         figureCount = figureCount + 1
+        plt.figure(figureCount)
         plt.plot(np.array(xAxis), np.array(yTrainErr))
         plt.savefig("TrainLossLearnRate" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
+
         plt.figure(figureCount)
         figureCount = figureCount + 1
         plt.plot(np.array(xAxis), np.array(yValidErr))
