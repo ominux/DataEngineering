@@ -25,8 +25,10 @@ class FullyConnectedNeuralNetwork(object):
         self.testTarget = testTarget
 
         self.learningRate = learningRate
-        self.numEpoch = 5
+        # Start to early stop at 5 for valid and 8 for test
+        self.numEpoch = 6
         self.miniBatchSize = 500
+        self.weightDecay = (3.0 * np.exp(1)) - 4.0
         # Size of array is number of layers,
         # values are number of hidden units in each layer
         self.hiddenLayers = hiddenLayers
@@ -61,6 +63,15 @@ class FullyConnectedNeuralNetwork(object):
         weight = tf.Variable(tf.truncated_normal(shape=[numInput, numOutput], stddev = math.sqrt(variance)))
         bias = tf.Variable(tf.zeros([numOutput]))
         weightedSum = tf.matmul(tf.cast(inputTensor, "float32"), weight) + bias
+
+        # Add to collection for weight decay loss
+        weightDecayCoeff = tf.div(tf.cast(tf.constant(self.weightDecay), "float32"),tf.constant(2.0))
+        # Weight Decay Error calculation
+        weightDecayMeanSquareError = tf.reduce_mean(tf.square(weight))
+        weightDecayError = tf.multiply(weightDecayCoeff, weightDecayMeanSquareError)
+
+        tf.add_to_collection("WeightDecayLoss", weightDecayError)
+
         return weightedSum
 
     def buildFullyConnectedNeuralNetwork(self):
@@ -69,7 +80,7 @@ class FullyConnectedNeuralNetwork(object):
         X = tf.placeholder(tf.float32, [None, 784], name='X') 
         y_target = tf.placeholder(tf.float32, [None, 10], name='target_y')
         inputTensor = X
-        # TODO: may need to remove this for loop AND REPLACE WITH A SINGLE WEIGHT ? 
+
         for currLayer in self.hiddenLayers:
             weightedSum = self.layerWiseBuildingBlock(inputTensor, currLayer)
             # Parse with activation function of ReLu
@@ -83,18 +94,15 @@ class FullyConnectedNeuralNetwork(object):
         correctPred = tf.equal(tf.argmax(y_predicted, 1), tf.argmax(y_target, 1))
         accuracy = tf.reduce_mean(tf.cast(correctPred, "float"))
 
+
         # Cross Entropy Softmax Error Multi-class Classification
         # note: Cross entropy only works with values from 0 to 1, so multi-class must be one hot encoded
         crossEntropySoftmaxError = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_predicted, y_target))
         adamOptimizer = tf.train.AdamOptimizer(learning_rate = self.learningRate)
 
-        # TODO: Include weight decay error
-        '''
-        # Weight Decay Error calculation
-        weightDecayMeanSquareError = tf.reduce_mean(tf.square(W))
-        weightDecayError = tf.multiply(weightDecayCoeff, weightDecayMeanSquareError)
-        crossEntropySoftmaxError = tf.add(crossEntropySoftmaxError, weightDecayError)
-        '''
+        # Calculate weight decay error
+        totalWeightDecayError = sum(tf.get_collection("WeightDecayLoss"))
+        crossEntropySoftmaxError = tf.add(crossEntropySoftmaxError, totalWeightDecayError)
         finalTrainingError = crossEntropySoftmaxError
         train = adamOptimizer.minimize(loss=finalTrainingError)
 
@@ -209,7 +217,8 @@ if __name__ == "__main__":
         trainTarget = convertOneHot(trainTarget)
         validTarget = convertOneHot(validTarget)
         testTarget = convertOneHot(testTarget)
+        hiddenLayers = np.array([1000])
         for learningRate in [0.01]:
             tf.reset_default_graph()
-            FullyConnectedNeuralNetwork(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate, np.array([1000]))
+            FullyConnectedNeuralNetwork(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate, hiddenLayers)
         sys.exit(0)
