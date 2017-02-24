@@ -30,6 +30,7 @@ class FullyConnectedNeuralNetwork(object):
         self.numEpochNoDropout = 6
         # Early Stops at about 12 for both valid at test
         self.numEpochDropout = 12
+        self.numEpoch = self.numEpochDropout
         # TEMP
         self.numEpoch = 1
         self.miniBatchSize = 500
@@ -185,11 +186,25 @@ class FullyConnectedNeuralNetwork(object):
         print "Final Valid Acc: ", accValid
         print "Final Test Acc: ", accTest
         import matplotlib.pyplot as plt
-        
         plt.figure(figureCount)
-        # print hiddenImages[0].shape # 784 * 1000, basically 28*28 input and 1000 output
-        plt.imshow(hiddenImages[0], interpolation="nearest", cmap="gray")
-        plt.savefig("FirstHiddenLayer")
+        # Average across the 1000 hidden units to get a grascale image
+        # To convert from (784,1000) to (784) to (28,28)
+        hiddenImageToPlot = np.reshape(np.average(hiddenImages[0], 1), (28,28))
+        plt.imshow(hiddenImageToPlot, interpolation="nearest", cmap="gray")
+        plt.savefig("FirstHiddenLayerAverageEpoch" + str(self.numEpoch) + ".png")
+        figureCount = figureCount + 1
+
+        # Draw the figures (28, 28)
+        plt.figure(figureCount, figsize=(28,28))
+        numHiddenLayer = hiddenImages[0].shape[1]
+        numRows = numHiddenLayer/2
+        for eachHiddenLayer in xrange(numHiddenLayer):
+            plt.subplot(numRows, numRows, eachHiddenLayer+1)
+            currImage = hiddenImages[0]
+            hiddenImageToPlot = np.reshape(currImage[::,eachHiddenLayer:eachHiddenLayer+1], (28,28))
+            plt.title("HiddenLayer " + str(eachHiddenLayer))
+            plt.imshow(hiddenImageToPlot, interpolation="nearest", cmap="gray")
+        plt.savefig("FirstHiddenLayerAllUnitsEpoch" + str(self.numEpoch) + ".png")
 
         figureCount = figureCount + 1
         plt.figure(figureCount)
