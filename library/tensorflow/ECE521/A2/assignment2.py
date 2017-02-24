@@ -6,6 +6,7 @@ import sys
 class LogisticRegression(object):
     def __init__(self, trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate = 0.0001):
         self.trainData = trainData
+        print trainData.size
         self.trainTarget = trainTarget
         self.validData = validData
         self.validTarget = validTarget
@@ -13,15 +14,22 @@ class LogisticRegression(object):
         self.testTarget = testTarget
         # Default hyperparameter values
         self.weightDecay = 0.01
+        # For 1.1.3, weight decay is 0
+        self.weightDecay = 0.00
+        # For 1.1.3, should use entire batch instead of miniBatchSize
+        #self.miniBatchSize = 3500
+
         self.miniBatchSize = 500
         # MeanSquareError learningRate = 0.001, otherwise overshoots 
         # CrossEntropyError, learningRate = 0.01, 98.6% test accuracy highest
         # CrossEntropySoftmax Error, learningRate = 0.001
         self.learningRate = learningRate
-        # self.numEpoch = 5000
-        self.numEpochBinary = 200
-        self.numEpochMulti = 100 # Multi-class Classification
         self.numEpoch = 0 
+        self.numEpochBinary = 200
+        # Normal Equation method really slow
+        self.numEpochBinary = 1
+        self.numEpochMulti = 100 # Multi-class Classification
+        # self.numEpoch = 5000
 
     # Logistic Regression 
     def LogisticRegressionMethodBinary(self):
@@ -44,7 +52,7 @@ class LogisticRegression(object):
 
         maxTestClassificationAccuracy = 0.0
         self.numEpoch = self.numEpochBinary
-        W, b, X, y_target, y_predicted, crossEntropyError, train , needTrain, accuracy = self.buildGraphBinary()
+        W, b, X, y_target, y_predicted, crossEntropyError, train , needTrain, accuracy, WNormalEquation, accuracyNormal = self.buildGraphBinary()
         figureCount = 1 
 
         # Session
@@ -62,6 +70,9 @@ class LogisticRegression(object):
         yTrainAcc = []
         yValidAcc = []
         yTestAcc = []
+        yTrainNormalAcc = []
+        yValidNormalAcc = []
+        yTestNormalAcc = []
         numUpdate = 0
         step = 0
         errTrain = -1 
@@ -80,22 +91,27 @@ class LogisticRegression(object):
                 # sess.run() executes whatever graph you built once up to the point where it needs to fetch
                 # and fetches everything that's in ([variablesToFetch])
                 # Thus, if you don't fetch 'train = optimizer.minimize(loss)', it won't optimize it
-                _, errTrain, currentW, currentb, yhat, accTrain= sess.run([train, crossEntropyError, W, b, y_predicted, accuracy], feed_dict={X: np.reshape(self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], (self.miniBatchSize,784)),y_target: self.trainTarget[step*self.miniBatchSize:(step+1)*self.miniBatchSize], needTrain: True})
+                _, errTrain, currentW, currentb, yhat, accTrain, currentWNormalEquation, accTrainNormal= sess.run([train, crossEntropyError, W, b, y_predicted, accuracy, WNormalEquation, accuracyNormal], feed_dict={X: np.reshape(self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], (self.miniBatchSize,784)),y_target: self.trainTarget[step*self.miniBatchSize:(step+1)*self.miniBatchSize], needTrain: True})
                 wList.append(currentW)
                 step = step + 1
                 xAxis.append(numUpdate)
                 numUpdate += 1
                 yTrainErr.append(errTrain)
+
                 yTrainAcc.append(accTrain)
+                yTrainNormalAcc.append(accTrainNormal)
+
                 # These will not optimize the function cause you did not fetch 'train' 
                 # So it won't have to execute that.
-                errValid, accValid = sess.run([crossEntropyError, accuracy], feed_dict={X: np.reshape(self.validData, (self.validData.shape[0],784)), y_target: self.validTarget, needTrain: False})
+                errValid, accValid, accValidNormal = sess.run([crossEntropyError, accuracy, accuracyNormal], feed_dict={X: np.reshape(self.validData, (self.validData.shape[0],784)), y_target: self.validTarget, needTrain: False})
 
-                errTest, accTest = sess.run([crossEntropyError, accuracy], feed_dict={X: np.reshape(self.testData, (self.testData.shape[0], 784)), y_target: self.testTarget, needTrain: False})
+                errTest, accTest, accTestNormal = sess.run([crossEntropyError, accuracy, accuracyNormal], feed_dict={X: np.reshape(self.testData, (self.testData.shape[0], 784)), y_target: self.testTarget, needTrain: False})
                 yValidErr.append(errValid)
                 yTestErr.append(errTest)
                 yValidAcc.append(accValid)
+                yValidNormalAcc.append(accValidNormal)
                 yTestAcc.append(accTest)
+                yTestNormalAcc.append(accTestNormal)
             currEpoch += 1
         print "Binary-Class"
         print "LearningRate: " , self.learningRate, " Mini batch Size: ", self.miniBatchSize
@@ -123,14 +139,17 @@ class LogisticRegression(object):
         plt.figure(figureCount)
         figureCount = figureCount + 1
         plt.plot(np.array(xAxis), np.array(yTrainAcc))
+        plt.plot(np.array(xAxis), np.array(yTrainNormalAcc))
         plt.savefig("BinaryTrainAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
         plt.figure(figureCount)
         figureCount = figureCount + 1
         plt.plot(np.array(xAxis), np.array(yValidAcc))
+        plt.plot(np.array(xAxis), np.array(yValidNormalAcc))
         plt.savefig("BinaryValidAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
         plt.figure(figureCount)
         figureCount = figureCount + 1
         plt.plot(np.array(xAxis), np.array(yTestAcc))
+        plt.plot(np.array(xAxis), np.array(yTestNormalAcc))
         plt.savefig("BinaryTestAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
         return max(np.array(yTestAcc))
 
@@ -294,8 +313,6 @@ class LogisticRegression(object):
         # sess.run(train) will execute the optimized function
         train = adamOptimizer.minimize(loss=finalTrainingError)
 
-        # TODO: Return both errors for plotting for 1.1.3
-        # TODO: 1.1.3 Calculate Linear Regression using Normal Equation (analytical solution) 
         return W, b, X, y_target, y_predicted, crossEntropySoftmaxError, train, needTrain, accuracy
 
     # Build the computational graph
@@ -344,7 +361,7 @@ class LogisticRegression(object):
         # Don't train if don't have to for validation and test set
 
         # For 1.1.3 to be updated to normal equation instead
-        # TODO: 1.1.3
+        # This was for your own gradient descent for MSE that was not needed in this assignment
         #finalTrainingError = tf.select(needTrain, meanSquaredError, tf.constant(0.0))
 
         finalTrainingError = tf.select(needTrain, crossEntropySigmoidError, tf.constant(0.0))
@@ -352,7 +369,7 @@ class LogisticRegression(object):
         # Training mechanism
 
         # For 1.1.1
-        # TODO: PLot
+        # TODO: Plot by manually tweaking between both optimizers
         #gdOptimizer = tf.train.GradientDescentOptimizer(learning_rate = self.learningRate)
 
         # For 1.1.2 onwards
@@ -363,9 +380,17 @@ class LogisticRegression(object):
         # train = optimizer.minimize(loss=finalTrainingError)
         train = adamOptimizer.minimize(loss=finalTrainingError)
 
-        # TODO: Return both errors for plotting for 1.1.3
-        # TODO: 1.1.3 Calculate Linear Regression using Normal Equation (analytical solution) 
-        return W, b, X, y_target, y_predicted, crossEntropySigmoidError, train, needTrain, accuracy
+        # Return both errors for plotting for 1.1.3 and set weight to 0 for LogisticRegression for plotting when comparing
+        # 1.1.3 Calculate Linear Regression using Normal Equation (analytical solution) 
+        # Concatenate 1 to account for Bias
+        OnesForX = tf.ones(shape=tf.pack([tf.shape(X)[0], 1]))
+        Xnormal = tf.concat(1,[X , OnesForX])
+        WNormalEquation = tf.matmul(tf.matmul(tf.matrix_inverse(tf.matmul(tf.transpose(Xnormal), Xnormal)), tf.transpose(Xnormal)), y_target)
+        y_predictedNormal = tf.matmul(Xnormal, WNormalEquation)
+        correctPredNormal = tf.equal(tf.cast(tf.greater_equal(y_predictedNormal, 0.5), tf.float32), tf.floor(y_target))
+        accuracyNormal = tf.reduce_mean(tf.cast(correctPredNormal, "float"))
+
+        return W, b, X, y_target, y_predicted, crossEntropySigmoidError, train, needTrain, accuracy, WNormalEquation, accuracyNormal
 
     def ShuffleBatches(self, trainData, trainTarget):
         # Gets the state as the current time
@@ -381,6 +406,7 @@ def convertOneHot(targetValues):
 
 if __name__ == "__main__":
     print "LogisticRegression"
+    print "Takes about 90 seconds"
 
     # Binary Classification
     # Get only 2 labels
@@ -409,6 +435,7 @@ if __name__ == "__main__":
             maxTestAccuracy = l.LogisticRegressionMethodBinary()
             print "Max Test Accuracy is: ", maxTestAccuracy
 
+    '''
     # Multi-class Classification
     # Get all 10 labels
     with np.load("notMNIST.npz") as data:
@@ -431,3 +458,4 @@ if __name__ == "__main__":
             l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate)
             maxTestAccuracy = l.LogisticRegressionMethodMulti()
             print "Max Test Accuracy is: ", maxTestAccuracy
+    # '''
