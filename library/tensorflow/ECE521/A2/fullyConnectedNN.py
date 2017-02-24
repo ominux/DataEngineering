@@ -194,17 +194,27 @@ class FullyConnectedNeuralNetwork(object):
         plt.savefig("FirstHiddenLayerAverageEpoch" + str(self.numEpoch) + ".png")
         figureCount = figureCount + 1
 
-        # Draw the figures (28, 28)
-        plt.figure(figureCount, figsize=(28,28))
+        print 'Done Plotting AverageImage'
+        plt.figure(figureCount)
         numHiddenLayer = hiddenImages[0].shape[1]
-        numRows = numHiddenLayer/2
+        fig = plt.figure(figsize=(28,28))
+        numCol = 25
+        numRow = numHiddenLayer/numCol
         for eachHiddenLayer in xrange(numHiddenLayer):
-            plt.subplot(numRows, numRows, eachHiddenLayer+1)
+            print 'hl:', eachHiddenLayer
+            # Draw each figures (28, 28)
             currImage = hiddenImages[0]
             hiddenImageToPlot = np.reshape(currImage[::,eachHiddenLayer:eachHiddenLayer+1], (28,28))
-            plt.title("HiddenLayer " + str(eachHiddenLayer))
-            plt.imshow(hiddenImageToPlot, interpolation="nearest", cmap="gray")
+            ax = fig.add_subplot(numCol, numRow, eachHiddenLayer+1)
+            ax.imshow(hiddenImageToPlot, interpolation="nearest", cmap="gray")
+            ax.xaxis.set_visible(False)
+            ax.yaxis.set_visible(False)
+            x0, x1 = ax.get_xlim()
+            y0, y1 = ax.get_ylim()
+            ax.set_aspect(abs(x1-x0)/abs(y1-y0))
+        print 'Saving all images'
         plt.savefig("FirstHiddenLayerAllUnitsEpoch" + str(self.numEpoch) + ".png")
+        print 'Saved all images'
 
         figureCount = figureCount + 1
         plt.figure(figureCount)
