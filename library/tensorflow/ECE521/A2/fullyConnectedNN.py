@@ -31,8 +31,11 @@ class FullyConnectedNeuralNetwork(object):
         # Early Stops at about 12 for both valid at test
         self.numEpochDropout = 12
         self.numEpoch = self.numEpochDropout
+        self.numEpoch = 6 # temp
         self.miniBatchSize = 500
-        self.weightDecay = (3.0 * np.exp(1)) - 4.0
+        #self.weightDecay = (3.0 * np.exp(1)) - 4.0
+        self.weightDecay = (3.0 * np.exp(-4)) # TODO: 
+        self.weightDecay = 3e-4 # TODO:  // 
         self.dropoutProbability = 0.5
         # Size of array is number of layers
         # values are number of hidden units in each layer
@@ -94,7 +97,8 @@ class FullyConnectedNeuralNetwork(object):
             # Parse with activation function of ReLu
             inputTensor = tf.nn.relu(weightedSum)
             # 2.4.1 Dropout
-            inputTensor = tf.nn.dropout(inputTensor, self.dropoutProbability)
+            # TODO: Dropout 
+            # inputTensor = tf.nn.dropout(inputTensor, self.dropoutProbability)
 
         # inputTensor is now the final hidden layer, but only need weighted Sum
         # Need add one more with softmax for output
@@ -175,6 +179,7 @@ class FullyConnectedNeuralNetwork(object):
             yValidAcc.append(accValid)
             yTestAcc.append(accTest)
             currEpoch += 1
+            print currEpoch
         print "LearningRate: " , self.learningRate, " Mini batch Size: ", self.miniBatchSize
         print "Iter: ", numUpdate
         print "Final Train MSE: ", errTrain
@@ -184,6 +189,8 @@ class FullyConnectedNeuralNetwork(object):
         print "Final Valid Acc: ", accValid
         print "Final Test Acc: ", accTest
         import matplotlib.pyplot as plt
+
+        '''
         plt.figure(figureCount)
         # Average across the 1000 hidden units to get a grascale image
         # To convert from (784,1000) to (784) to (28,28)
@@ -191,8 +198,8 @@ class FullyConnectedNeuralNetwork(object):
         plt.imshow(hiddenImageToPlot, interpolation="nearest", cmap="gray")
         plt.savefig("FirstHiddenLayerAverageEpoch" + str(self.numEpoch) + ".png")
         figureCount = figureCount + 1
-
         print 'Done Plotting AverageImage'
+
         plt.figure(figureCount)
         numHiddenLayer = hiddenImages[0].shape[1]
         fig = plt.figure(figsize=(28,28))
@@ -213,16 +220,19 @@ class FullyConnectedNeuralNetwork(object):
         print 'Saving all images'
         plt.savefig("FirstHiddenLayerAllUnitsEpoch" + str(self.numEpoch) + ".png")
         print 'Saved all images'
+        '''
 
         figureCount = figureCount + 1
         plt.figure(figureCount)
         plt.plot(np.array(xAxis), np.array(yTrainErr))
         plt.savefig("TrainLossLearnRate" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
 
+        figureCount = figureCount + 1
         plt.figure(figureCount)
         figureCount = figureCount + 1
         plt.plot(np.array(xAxis), np.array(yValidErr))
         plt.savefig("ValidLossLearnRate" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
+
         plt.figure(figureCount)
         figureCount = figureCount + 1
         plt.plot(np.array(xAxis), np.array(yTestErr))
@@ -232,10 +242,12 @@ class FullyConnectedNeuralNetwork(object):
         figureCount = figureCount + 1
         plt.plot(np.array(xAxis), np.array(yTrainAcc))
         plt.savefig("TrainAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
+
         plt.figure(figureCount)
         figureCount = figureCount + 1
         plt.plot(np.array(xAxis), np.array(yValidAcc))
         plt.savefig("ValidAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
+
         plt.figure(figureCount)
         figureCount = figureCount + 1
         plt.plot(np.array(xAxis), np.array(yTestAcc))
