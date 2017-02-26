@@ -1,0 +1,60 @@
+LearningRate:  0.01  Mini batch Size:  500
+numEpoch:  180
+Final Train MSE:  2.20425
+Final Valid MSE:  2.2254
+Final Test MSE:  2.21405
+Final Train Acc:  0.254
+Final Valid Acc:  0.238
+Final Test Acc:  0.251101
+NeuralNetwork
+LearningRate:  0.01  Mini batch Size:  500
+NumEpoch:  6
+NumUpdate:  180
+Final Train MSE:  2.20425
+Final Train Acc:  0.254
+Final Valid MSE:  2.2254
+Final Test MSE:  2.21405
+Final Valid Acc:  0.238
+Final Test Acc:  0.251101
+2.2.2NeuralNetwork
+Max Test Accuracy is:  0.255507
+LearningRate:  0.001  Mini batch Size:  500
+numEpoch:  180
+Final Train MSE:  2.30239
+Final Valid MSE:  2.30317
+Final Test MSE:  2.30284
+Final Train Acc:  0.094
+Final Valid Acc:  0.078
+Final Test Acc:  0.0994861
+NeuralNetwork
+LearningRate:  0.001  Mini batch Size:  500
+NumEpoch:  6
+NumUpdate:  180
+Final Train MSE:  2.30239
+Final Train Acc:  0.094
+Final Valid MSE:  2.30317
+Final Test MSE:  2.30284
+Final Valid Acc:  0.078
+Final Test Acc:  0.0994861
+2.2.2NeuralNetwork
+Max Test Accuracy is:  0.100587
+LearningRate:  0.1  Mini batch Size:  500
+numEpoch:  180
+Final Train MSE:  0.649903
+Final Valid MSE:  0.583812
+Final Test MSE:  0.633124
+Final Train Acc:  0.776
+Final Valid Acc:  0.803
+Final Test Acc:  0.818282
+NeuralNetwork
+LearningRate:  0.1  Mini batch Size:  500
+NumEpoch:  6
+NumUpdate:  180
+Final Train MSE:  0.649903
+Final Train Acc:  0.776
+Final Valid MSE:  0.583812
+Final Test MSE:  0.633124
+Final Valid Acc:  0.803
+Final Test Acc:  0.818282
+2.2.2NeuralNetwork
+Max Test Accuracy is:  0.825991
