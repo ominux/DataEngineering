@@ -1,3 +1,4 @@
+import datetime
 import numpy as np
 import tensorflow as tf
 import sys
@@ -31,7 +32,7 @@ class FullyConnectedNeuralNetwork(object):
         # Early Stops at about 12 for both valid at test
         self.numEpochDropout = 12
         self.numEpoch = self.numEpochDropout
-        self.numEpoch = 6 # temp
+        self.numEpoch = 1 # temp
         self.miniBatchSize = 500
         #self.weightDecay = (3.0 * np.exp(1)) - 4.0
         self.weightDecay = (3.0 * np.exp(-4)) # TODO: 
@@ -152,7 +153,7 @@ class FullyConnectedNeuralNetwork(object):
         accValid = -1
         accTest = -1
         # TODO: 2.4.2 Save model from 25%, 50%, 75% and 100% from early stopping point
-        while currEpoch <= self.numEpoch:
+        while currEpoch < self.numEpoch:
             self.trainData, self.trainTarget = self.ShuffleBatches(self.trainData, self.trainTarget)
             step = 0 
             while step*self.miniBatchSize < self.trainData.shape[0]: 
@@ -179,7 +180,7 @@ class FullyConnectedNeuralNetwork(object):
             yValidAcc.append(accValid)
             yTestAcc.append(accTest)
             currEpoch += 1
-            print currEpoch
+            logStdOut("currEpoch: " + str(currEpoch))
         print "LearningRate: " , self.learningRate, " Mini batch Size: ", self.miniBatchSize
         print "Iter: ", numUpdate
         print "Final Train MSE: ", errTrain
@@ -258,23 +259,49 @@ def convertOneHot(targetValues):
     numClasses = np.max(targetValues) + 1
     return np.eye(numClasses)[targetValues]
 
-if __name__ == "__main__":
+questionTitle = ""
+
+def executeNeuralNetwork(questionTitle):
+    startTime = datetime.datetime.now()
     with np.load("notMNIST.npz") as data:
         Data, Target = data ["images"], data["labels"]
-        np.random.seed(521)
-        randIndx = np.arange(len(Data))
-        np.random.shuffle(randIndx)
-        Data = Data[randIndx]/255.
-        Target = Target[randIndx]
-        trainData, trainTarget = Data[:15000], Target[:15000]
-        validData, validTarget = Data[15000:16000], Target[15000:16000]
-        # Target values are from 0 to 9
-        testData, testTarget = Data[16000:], Target[16000:]
-        trainTarget = convertOneHot(trainTarget)
-        validTarget = convertOneHot(validTarget)
-        testTarget = convertOneHot(testTarget)
-        hiddenLayers = np.array([1000])
         for learningRate in [0.01]:
+            np.random.seed(521)
+            randIndx = np.arange(len(Data))
+            np.random.shuffle(randIndx)
+            Data = Data[randIndx]/255.
+            Target = Target[randIndx]
+            trainData, trainTarget = Data[:15000], Target[:15000]
+            validData, validTarget = Data[15000:16000], Target[15000:16000]
+            # Target values are from 0 to 9
+            testData, testTarget = Data[16000:], Target[16000:]
+            trainTarget = convertOneHot(trainTarget)
+            validTarget = convertOneHot(validTarget)
+            testTarget = convertOneHot(testTarget)
+            hiddenLayers = np.array([1000])
             tf.reset_default_graph()
             FullyConnectedNeuralNetwork(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate, hiddenLayers)
-        sys.exit(0)
+    endTime = datetime.datetime.now()
+    logElapsedTime(startTime, endTime, questionTitle)
+
+def logStdOut(message):
+    # Temporary print to std out
+    sys.stdout = sys.__stdout__
+    print message
+    # Continue editing same file
+    sys.stdout = open("result" + questionTitle + ".txt", "a")
+
+def logElapsedTime(startTime, endTime, message):
+    ''' Logs the elapsedTime with a given message '''
+    elapsedTime = endTime - startTime
+    hours, remainder = divmod(elapsedTime.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    totalDays = elapsedTime.days
+    timeStr = str(message) + ': Days: ' + str(totalDays) +  " hours: " + str(hours) + ' minutes: ' + str(minutes) +  ' seconds: ' + str(seconds)
+    logStdOut(timeStr)
+
+if __name__ == "__main__":
+    # 2.2
+    questionTitle = "2.2"
+    executeNeuralNetwork(questionTitle)
+
