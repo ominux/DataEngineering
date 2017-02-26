@@ -1,0 +1,39 @@
+NN
+HiddenLayer:  [1000]
+LearningRate:  0.01  Mini batch Size:  500
+NumEpoch:  30
+NumUpdate:  930
+Final Train MSE:  2.15011
+Final Train Acc:  0.266
+Final Valid MSE:  2.23463
+Final Test MSE:  2.2477
+Final Valid Acc:  0.237
+Final Test Acc:  0.23348
+2.4.1NN
+Max Test Accuracy is:  0.245962
+NN
+HiddenLayer:  [1000]
+LearningRate:  0.001  Mini batch Size:  500
+NumEpoch:  30
+NumUpdate:  930
+Final Train MSE:  2.30279
+Final Train Acc:  0.1
+Final Valid MSE:  2.3032
+Final Test MSE:  2.30309
+Final Valid Acc:  0.089
+Final Test Acc:  0.0980176
+2.4.1NN
+Max Test Accuracy is:  0.107195
+NN
+HiddenLayer:  [1000]
+LearningRate:  0.1  Mini batch Size:  500
+NumEpoch:  30
+NumUpdate:  930
+Final Train MSE:  1.66309
+Final Train Acc:  0.502
+Final Valid MSE:  1.60359
+Final Test MSE:  1.72416
+Final Valid Acc:  0.482
+Final Test Acc:  0.502937
+2.4.1NN
+Max Test Accuracy is:  0.653818
