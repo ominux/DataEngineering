@@ -365,13 +365,13 @@ class LogisticRegression(object):
 
         # Cross Entropy Softmax Error Multi-class Classification
         # note: Cross entropy only works with values from 0 to 1, so multi-class must be one hot encoded
-        crossEntropySoftmaxError = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_predicted, y_target))
+        crossEntropySoftmaxError = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = y_predicted, labels = y_target))
         crossEntropySoftmaxError = tf.add(crossEntropySoftmaxError, weightDecayError)
 
         # Don't train if don't have to for validation and test set
         #finalTrainingError = tf.select(needTrain, meanSquaredError, tf.constant(0.0))
         #finalTrainingError = tf.select(needTrain, crossEntropySigmoidError, tf.constant(0.0))
-        finalTrainingError = tf.select(needTrain, crossEntropySoftmaxError, tf.constant(0.0))
+        finalTrainingError = tf.where(needTrain, crossEntropySoftmaxError, tf.constant(0.0))
 
         # Training mechanism
         #gdOptimizer = tf.train.GradientDescentOptimizer(learning_rate = self.learningRate)
@@ -614,7 +614,6 @@ if __name__ == "__main__":
     logStdOut("Finished" + questionTitle)
     # '''
 
-    '''
     # Multi-class Classification, 10 labels
     # CrossEntropySoftmax Error, learningRate = 0.001
     questionTitle = "1.2.3" # Logistic Regression for multiclass
