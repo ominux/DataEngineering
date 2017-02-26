@@ -1,0 +1,37 @@
+1.2.3Multi
+Multi
+LearningRate:  0.01  Mini batch Size:  500
+NumEpoch:  1
+Iter:  30
+Final Train MSE:  2.29173
+Final Train Acc:  0.206
+Final Valid MSE:  2.2923
+Final Test MSE:  2.29193
+Final Valid Acc:  0.195
+Final Test Acc:  0.179148
+1.2.3Multi
+Max Test Accuracy is:  0.185389
+Multi
+LearningRate:  0.001  Mini batch Size:  500
+NumEpoch:  1
+Iter:  30
+Final Train MSE:  2.30362
+Final Train Acc:  0.088
+Final Valid MSE:  2.30344
+Final Test MSE:  2.30354
+Final Valid Acc:  0.096
+Final Test Acc:  0.0936123
+1.2.3Multi
+Max Test Accuracy is:  0.103891
+Multi
+LearningRate:  0.1  Mini batch Size:  500
+NumEpoch:  1
+Iter:  30
+Final Train MSE:  2.69271
+Final Train Acc:  0.818
+Final Valid MSE:  2.5543
+Final Test MSE:  2.80023
+Final Valid Acc:  0.848
+Final Test Acc:  0.842878
+1.2.3Multi
+Max Test Accuracy is:  0.848018
