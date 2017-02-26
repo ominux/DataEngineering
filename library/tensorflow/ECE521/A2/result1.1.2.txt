@@ -1,61 +1,61 @@
 1.1.2Binary
 Binary
-LearningRate:  1.0  Mini batch Size:  500
-NumEpoch:  200
-Iter:  1407
-Final Train MSE:  0.0347378
-Final Train Acc:  0.99
-Final Valid MSE:  0.018992
-Final Test MSE:  0.126436
-Final Valid Acc:  0.99
-Final Test Acc:  0.972414
-1.1.2
-Max Test Accuracy is:  0.97931
-Binary
 LearningRate:  0.1  Mini batch Size:  500
 NumEpoch:  200
-Iter:  1407
-Final Train MSE:  0.0645855
+Iter:  1400
+Final Train MSE:  0.0688066
 Final Train Acc:  0.974
-Final Valid MSE:  0.0821712
-Final Test MSE:  0.0520843
-Final Valid Acc:  0.96
-Final Test Acc:  0.986207
-1.1.2
-Max Test Accuracy is:  0.986207
+Final Valid MSE:  0.0639817
+Final Test MSE:  0.0644502
+Final Valid Acc:  0.97
+Final Test Acc:  0.965517
+1.1.2Binary
+Max Test Accuracy is:  0.97931
 Binary
 LearningRate:  0.01  Mini batch Size:  500
 NumEpoch:  200
-Iter:  1407
-Final Train MSE:  0.126968
-Final Train Acc:  0.966
-Final Valid MSE:  0.139677
-Final Test MSE:  0.124688
-Final Valid Acc:  0.95
-Final Test Acc:  0.958621
-1.1.2
-Max Test Accuracy is:  0.958621
+Iter:  1400
+Final Train MSE:  0.0997083
+Final Train Acc:  0.96
+Final Valid MSE:  0.118955
+Final Test MSE:  0.140849
+Final Valid Acc:  0.97
+Final Test Acc:  0.972414
+1.1.2Binary
+Max Test Accuracy is:  0.972414
 Binary
 LearningRate:  0.001  Mini batch Size:  500
 NumEpoch:  200
-Iter:  1407
-Final Train MSE:  0.263767
-Final Train Acc:  0.908
-Final Valid MSE:  0.203729
-Final Test MSE:  0.231069
-Final Valid Acc:  0.93
-Final Test Acc:  0.937931
-1.1.2
-Max Test Accuracy is:  0.937931
+Iter:  1400
+Final Train MSE:  0.23871
+Final Train Acc:  0.904
+Final Valid MSE:  0.338594
+Final Test MSE:  0.29092
+Final Valid Acc:  0.86
+Final Test Acc:  0.889655
+1.1.2Binary
+Max Test Accuracy is:  0.889655
 Binary
 LearningRate:  0.0001  Mini batch Size:  500
 NumEpoch:  200
-Iter:  1407
-Final Train MSE:  0.452231
-Final Train Acc:  0.862
-Final Valid MSE:  0.543131
-Final Test MSE:  0.465775
-Final Valid Acc:  0.81
-Final Test Acc:  0.875862
-1.1.2
-Max Test Accuracy is:  0.882759
+Iter:  1400
+Final Train MSE:  0.858314
+Final Train Acc:  0.7
+Final Valid MSE:  0.83389
+Final Test MSE:  1.02923
+Final Valid Acc:  0.64
+Final Test Acc:  0.641379
+1.1.2Binary
+Max Test Accuracy is:  0.641379
+Binary
+LearningRate:  1.0  Mini batch Size:  500
+NumEpoch:  200
+Iter:  1400
+Final Train MSE:  0.0239072
+Final Train Acc:  0.99
+Final Valid MSE:  0.0547311
+Final Test MSE:  0.153589
+Final Valid Acc:  0.98
+Final Test Acc:  0.972414
+1.1.2Binary
+Max Test Accuracy is:  0.986207
