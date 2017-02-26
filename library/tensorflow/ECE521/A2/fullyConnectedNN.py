@@ -259,8 +259,6 @@ def convertOneHot(targetValues):
     numClasses = np.max(targetValues) + 1
     return np.eye(numClasses)[targetValues]
 
-questionTitle = ""
-
 def executeNeuralNetwork(questionTitle):
     startTime = datetime.datetime.now()
     with np.load("notMNIST.npz") as data:
@@ -284,6 +282,10 @@ def executeNeuralNetwork(questionTitle):
     endTime = datetime.datetime.now()
     logElapsedTime(startTime, endTime, questionTitle)
 
+# Global for logging
+questionTitle = "" # Need to be global for logging to work
+startTime = datetime.datetime.now()
+
 def logStdOut(message):
     # Temporary print to std out
     sys.stdout = sys.__stdout__
@@ -291,14 +293,17 @@ def logStdOut(message):
     # Continue editing same file
     sys.stdout = open("result" + questionTitle + ".txt", "a")
 
-def logElapsedTime(startTime, endTime, message):
+def logElapsedTime(message):
     ''' Logs the elapsedTime with a given message '''
+    global startTime
+    endTime = datetime.datetime.now()
     elapsedTime = endTime - startTime
     hours, remainder = divmod(elapsedTime.seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
     totalDays = elapsedTime.days
     timeStr = str(message) + ': Days: ' + str(totalDays) +  " hours: " + str(hours) + ' minutes: ' + str(minutes) +  ' seconds: ' + str(seconds)
     logStdOut(timeStr)
+    startTime = datetime.datetime.now()
 
 if __name__ == "__main__":
     # 2.2

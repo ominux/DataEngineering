@@ -1,3 +1,4 @@
+import datetime
 import numpy as np
 import tensorflow as tf
 import sys
@@ -15,7 +16,13 @@ class LogisticRegression(object):
         self.numEpoch = numEpoch
         self.learningRate = learningRate
         self.weightDecay = weightDecay
+
+        # To not execute Linear Regression every time
         self.executeLinearRegression = executeLinearRegression
+        self.executedLinear = False
+        self.WNormalEquationSave = 0
+        self.accuracyNormalSave = 0
+    
         self.questionTitle = questionTitle
         self.classifierType = classifierType
         self.optimizer = 0
@@ -36,54 +43,119 @@ class LogisticRegression(object):
         print "Final Test MSE: ", errTest
         print "Final Valid Acc: ", accValid
         print "Final Test Acc: ", accTest
-        paramStr = "LearnRate"  + str(self.learningRate) + "Batch" + str(self.miniBatchSize)
+        paramStr = "LearnRate"  + str(self.learningRate) + "NumEpoch" + str(self.numEpoch)
         typeLossStr = "Loss"
         typeAccuracyStr = "Accuracy"
         figureCount = 1
+        iterationStr = "Iteration"
+        trainStr = "Train"
+        validStr = "Valid"
+        testStr = "Test"
+        trainLossStr = trainStr + typeLossStr
+        validLossStr = validStr + typeLossStr
+        testLossStr = testStr + typeLossStr
+
+        trainAccStr = trainStr + typeAccuracyStr
+        validAccStr = validStr + typeAccuracyStr
+        testAccStr = testStr + typeAccuracyStr
+
+        linearLabelStr = "LinearRegression"
 
         figureCount = figureCount + 1
         plt.figure(figureCount)
-        plt.plot(np.array(xAxis), np.array(yTrainErr))
-        title = self.classifierType + typeLossStr + "Train" + paramStr
+        title = self.classifierType + typeLossStr + trainStr + paramStr
+        plt.title(title)
+        plt.xlabel(iterationStr)
+        plt.ylabel(typeLossStr)
+        plt.plot(np.array(xAxis), np.array(yTrainErr), label = trainLossStr)
+        plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
 
         figureCount = figureCount + 1
         plt.figure(figureCount)
-        plt.plot(np.array(xAxis), np.array(yValidErr))
-        title = self.classifierType + typeLossStr + "Valid" + paramStr
+        title = self.classifierType + typeLossStr + validStr + paramStr
+        plt.title(title)
+        plt.xlabel(iterationStr)
+        plt.ylabel(typeLossStr)
+        plt.plot(np.array(xAxis), np.array(yValidErr), label = validLossStr)
+        plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
 
         figureCount = figureCount + 1
         plt.figure(figureCount)
-        plt.plot(np.array(xAxis), np.array(yTestErr))
-        title = self.classifierType + typeLossStr + "Test" + paramStr
+        title = self.classifierType + typeLossStr + testStr + paramStr
+        plt.title(title)
+        plt.xlabel(iterationStr)
+        plt.ylabel(typeLossStr)
+        plt.plot(np.array(xAxis), np.array(yTestErr), label = testLossStr)
+        plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
+
 
         figureCount = figureCount + 1
         plt.figure(figureCount)
-        plt.plot(np.array(xAxis), np.array(yTrainAcc))
+        title = self.classifierType + typeLossStr + trainStr + validStr + testStr + paramStr
+        plt.title(title)
+        plt.xlabel(iterationStr)
+        plt.ylabel(typeLossStr)
+        plt.plot(np.array(xAxis), np.array(yTrainErr), label = trainLossStr)
+        plt.plot(np.array(xAxis), np.array(yValidErr), label = validLossStr)
+        plt.plot(np.array(xAxis), np.array(yTestErr), label = testLossStr)
+        plt.legend()
+        plt.savefig(self.questionTitle + title + ".png")
+
+        # Accuracies
+        figureCount = figureCount + 1
+        plt.figure(figureCount)
+        title = self.classifierType + typeAccuracyStr + trainStr + paramStr
+        plt.title(title)
+        plt.xlabel(iterationStr)
+        plt.ylabel(typeAccuracyStr)
+        plt.plot(np.array(xAxis), np.array(yTrainAcc), label = trainAccStr)
+        accLabel = trainStr + typeAccuracyStr
         if self.executeLinearRegression:
-            plt.plot(np.array(xAxis), np.array(yTrainNormalAcc))
-        title = self.classifierType + typeAccuracyStr + "Train" + paramStr
+            plt.plot(np.array(xAxis), np.array(yTrainNormalAcc), label = linearLabelStr)
+        plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
 
         figureCount = figureCount + 1
         plt.figure(figureCount)
-        plt.plot(np.array(xAxis), np.array(yValidAcc))
+        title = self.classifierType + typeAccuracyStr + validStr + paramStr
+        plt.title(title)
+        plt.xlabel(iterationStr)
+        plt.ylabel(typeAccuracyStr)
+        plt.plot(np.array(xAxis), np.array(yValidAcc), label = validAccStr)
         if self.executeLinearRegression:
-            plt.plot(np.array(xAxis), np.array(yValidNormalAcc))
-        title = self.classifierType + typeAccuracyStr + "Valid" + paramStr
+            plt.plot(np.array(xAxis), np.array(yValidNormalAcc), label = linearLabelStr)
+        plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
 
         figureCount = figureCount + 1
+        title = self.classifierType + typeAccuracyStr + testStr + paramStr
         plt.figure(figureCount)
-        plt.plot(np.array(xAxis), np.array(yTestAcc))
+        plt.title(title)
+        plt.xlabel(iterationStr)
+        plt.ylabel(typeAccuracyStr)
+        plt.plot(np.array(xAxis), np.array(yTestAcc), label = testAccStr)
         if self.executeLinearRegression:
-            plt.plot(np.array(xAxis), np.array(yTestNormalAcc))
-        title = self.classifierType + typeAccuracyStr + "Test" + paramStr
+            plt.plot(np.array(xAxis), np.array(yTestNormalAcc), label = linearLabelStr)
+        plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
 
-        print self.questionTitle
+
+        figureCount = figureCount + 1
+        title = self.classifierType + typeAccuracyStr + trainStr + validStr + testStr + paramStr
+        plt.figure(figureCount)
+        plt.title(title)
+        plt.xlabel(iterationStr)
+        plt.ylabel(typeAccuracyStr)
+        plt.plot(np.array(xAxis), np.array(yTrainAcc), label = trainAccStr)
+        plt.plot(np.array(xAxis), np.array(yValidAcc), label = validAccStr)
+        plt.plot(np.array(xAxis), np.array(yTestAcc), label = testAccStr)
+        plt.legend()
+        plt.savefig(self.questionTitle + title + ".png")
+
+        print self.questionTitle + self.classifierType
         print "Max Test Accuracy is: ", max(np.array(yTestAcc))
 
     # Logistic Regression 
@@ -135,7 +207,7 @@ class LogisticRegression(object):
         accTrain = -1
         accValid = -1
         accTest = -1
-        while currEpoch <= self.numEpoch:
+        while currEpoch < self.numEpoch:
             self.trainData, self.trainTarget = self.ShuffleBatches(self.trainData, self.trainTarget)
             step = 0 
             while step*self.miniBatchSize < self.trainData.shape[0]: 
@@ -167,6 +239,7 @@ class LogisticRegression(object):
                 yTestAcc.append(accTest)
                 yTestNormalAcc.append(accTestNormal)
             currEpoch += 1
+            logStdOut("CurrEpoch" + str(currEpoch))
         self.printPlotResults(numUpdate, errTrain, accTrain, errValid, errTest, accValid, accTest, xAxis, yTrainErr, yValidErr, yTestErr, yTrainAcc, yValidAcc, yTestAcc, yTrainNormalAcc, yValidNormalAcc, yTestNormalAcc)
 
     '''
@@ -400,15 +473,22 @@ class LogisticRegression(object):
         if self.executeLinearRegression:
             # 1.1.3 Calculate Linear Regression using Normal Equation (analytical solution) 
             # Concatenate 1 to account for Bias
-            OnesForX = tf.ones(shape=tf.pack([tf.shape(Xall)[0], 1]))
-            Xnormal = tf.concat(1,[Xall , OnesForX])
-            WNormalEquation = tf.matmul(tf.matmul(tf.matrix_inverse(tf.matmul(tf.transpose(Xnormal), Xnormal)), tf.transpose(Xnormal)), y_targetAll)
-            OnesForCurrX = tf.ones(shape=tf.pack([tf.shape(X)[0], 1]))
-            currX = tf.concat(1,[X , OnesForCurrX])
-            y_predictedNormal = tf.matmul(currX, WNormalEquation)
+            if self.executedLinear:
+                WNormalEquation = self.WNormalEquationSave
+                accuracyNormal = self.accuracyNormalSave
 
-            correctPredNormal = tf.equal(tf.cast(tf.greater_equal(y_predictedNormal, 0.5), tf.float32), tf.floor(y_target))
-            accuracyNormal = tf.reduce_mean(tf.cast(correctPredNormal, "float"))
+            else: 
+                OnesForX = tf.ones(shape=tf.pack([tf.shape(Xall)[0], 1]))
+                Xnormal = tf.concat(1,[Xall , OnesForX])
+                WNormalEquation = tf.matmul(tf.matmul(tf.matrix_inverse(tf.matmul(tf.transpose(Xnormal), Xnormal)), tf.transpose(Xnormal)), y_targetAll)
+                OnesForCurrX = tf.ones(shape=tf.pack([tf.shape(X)[0], 1]))
+                currX = tf.concat(1,[X , OnesForCurrX])
+                y_predictedNormal = tf.matmul(currX, WNormalEquation)
+                correctPredNormal = tf.equal(tf.cast(tf.greater_equal(y_predictedNormal, 0.5), tf.float32), tf.floor(y_target))
+                accuracyNormal = tf.reduce_mean(tf.cast(correctPredNormal, "float"))
+                self.WNormalEquationSave = WNormalEquation
+                self.accuracyNormalSave = accuracyNormal
+                self.executedLinear = True
 
         return W, b, X, y_target, y_predicted, crossEntropySigmoidError, train, needTrain, accuracy, WNormalEquation, accuracyNormal, Xall, y_targetAll
 
@@ -451,22 +531,62 @@ def ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizer
             tf.reset_default_graph()
             l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget, numEpoch, learningRate, weightDecay, optimizerType, classifierType, executeLinearRegression, questionTitle)
             l.LogisticRegressionMethodBinary()
+            logElapsedTime(questionTitle  + classifierType + str(learningRate))
+
+# Global for logging
+questionTitle = "" # Need to be global for logging to work
+startTime = datetime.datetime.now()
+
+def logStdOut(message):
+    # Temporary print to std out
+    sys.stdout = sys.__stdout__
+    print message
+    # Continue editing same file
+    sys.stdout = open("result" + questionTitle + ".txt", "a")
+
+def logElapsedTime(message):
+    ''' Logs the elapsedTime with a given message '''
+    global startTime 
+    endTime = datetime.datetime.now()
+    elapsedTime = endTime - startTime
+    hours, remainder = divmod(elapsedTime.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    totalDays = elapsedTime.days
+    timeStr = str(message) + ': Days: ' + str(totalDays) +  " hours: " + str(hours) + ' minutes: ' + str(minutes) +  ' seconds: ' + str(seconds)
+    logStdOut(timeStr)
+    startTime = datetime.datetime.now()
 
 if __name__ == "__main__":
     print "LogisticRegression"
-    print "Takes about 90 seconds"
     # 0.0 LinearRegressionTraining
     # MeanSquareError learningRate = 0.001, otherwise overshoots 
 
+    # 1 Logistic Regression
+    # 1.1 Binary Classification
+    # CrossEntropyError, learningRate = 0.01, 98.6% test accuracy highest
     # Default Values
+    '''
     numEpoch = 1
     optimizerType = "adam"
-    learningRates = [0.01]
     executeLinearRegression = False
+    '''
 
     questionTitle = "1.1.1" # Learning with GD
-    numEpoch = 200
     optimizerType = "gd"
+    numEpoch = 200
+    learningRates = [1.0, 0.1, 0.01, 0.001, 0.0001]
+    weightDecay = 0.01
+    executeLinearRegression = False
+    print "Starting" + questionTitle
+    sys.stdout = open("result" + questionTitle + ".txt", "w") # write a new file from scratch
+    ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression)
+    sys.stdout = sys.__stdout__
+    print "Finished" + questionTitle
+
+    '''
+    questionTitle = "1.1.2" # Beyond plain SGD
+    optimizerType = "adam"
+    numEpoch = 200
     learningRates = [1.0, 0.1, 0.01, 0.001, 0.0001]
     weightDecay = 0.01
     executeLinearRegression = False
@@ -475,19 +595,22 @@ if __name__ == "__main__":
     ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression)
     sys.stdout = sys.__stdout__
     print "Finished" + questionTitle
+    '''
 
-    questionTitle = "1.1.2" # Beyond plain SGD
-    print "Starting" + questionTitle
+    '''
+    # 1.1.3 
+    questionTitle = "1.1.3" # Comparison With Linear Regression
+    weightDecay = 0.00
+    numEpoch = 200
     optimizerType = "adam"
+    learningRates = [0.01]
+    executeLinearRegression = True
+    print "Starting" + questionTitle
     sys.stdout = open("result" + questionTitle + ".txt", "w")
     ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression)
     sys.stdout = sys.__stdout__
     print "Finished" + questionTitle
-
-    # 1.1.3 
-    weightDecay = 0.00
-    numEpoch = 1
-    # CrossEntropyError, learningRate = 0.01, 98.6% test accuracy highest
+    '''
 
     # Multi
     # CrossEntropySoftmax Error, learningRate = 0.001
