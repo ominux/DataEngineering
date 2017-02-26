@@ -31,7 +31,7 @@ class LogisticRegression(object):
         else:
             self.optimizer = tf.train.GradientDescentOptimizer(learning_rate = self.learningRate)
 
-    def printPlotResults(self, numUpdate, errTrain, accTrain, errValid, errTest, accValid, accTest, xAxis, yTrainErr, yValidErr, yTestErr, yTrainAcc, yValidAcc, yTestAcc, yTrainNormalAcc, yValidNormalAcc, yTestNormalAcc):
+    def printPlotResults(self, numUpdate, errTrain, accTrain, errValid, errTest, accValid, accTest, xAxis, yTrainErr, yValidErr, yTestErr, yTrainAcc, yValidAcc, yTestAcc, yTrainNormalAcc = 0, yValidNormalAcc = 0, yTestNormalAcc = 0):
         global figureCount
         import matplotlib.pyplot as plt
         print self.classifierType
@@ -70,6 +70,8 @@ class LogisticRegression(object):
         plt.plot(np.array(xAxis), np.array(yTrainErr), label = trainLossStr)
         plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
+        plt.close()
+        plt.clf()
 
         figureCount = figureCount + 1
         plt.figure(figureCount)
@@ -80,6 +82,8 @@ class LogisticRegression(object):
         plt.plot(np.array(xAxis), np.array(yValidErr), label = validLossStr)
         plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
+        plt.close()
+        plt.clf()
 
         figureCount = figureCount + 1
         plt.figure(figureCount)
@@ -90,6 +94,8 @@ class LogisticRegression(object):
         plt.plot(np.array(xAxis), np.array(yTestErr), label = testLossStr)
         plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
+        plt.close()
+        plt.clf()
 
 
         figureCount = figureCount + 1
@@ -103,6 +109,8 @@ class LogisticRegression(object):
         plt.plot(np.array(xAxis), np.array(yTestErr), label = testLossStr)
         plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
+        plt.close()
+        plt.clf()
 
         # Accuracies
         figureCount = figureCount + 1
@@ -117,6 +125,8 @@ class LogisticRegression(object):
             plt.plot(np.array(xAxis), np.array(yTrainNormalAcc), label = linearLabelStr)
         plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
+        plt.close()
+        plt.clf()
 
         figureCount = figureCount + 1
         plt.figure(figureCount)
@@ -129,6 +139,8 @@ class LogisticRegression(object):
             plt.plot(np.array(xAxis), np.array(yValidNormalAcc), label = linearLabelStr)
         plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
+        plt.close()
+        plt.clf()
 
         figureCount = figureCount + 1
         title = self.classifierType + typeAccuracyStr + testStr + paramStr
@@ -141,6 +153,8 @@ class LogisticRegression(object):
             plt.plot(np.array(xAxis), np.array(yTestNormalAcc), label = linearLabelStr)
         plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
+        plt.close()
+        plt.clf()
 
 
         figureCount = figureCount + 1
@@ -154,11 +168,11 @@ class LogisticRegression(object):
         plt.plot(np.array(xAxis), np.array(yTestAcc), label = testAccStr)
         plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
+        plt.close()
+        plt.clf()
 
         print self.questionTitle + self.classifierType
         print "Max Test Accuracy is: ", max(np.array(yTestAcc))
-        plt.close()
-        plt.clf()
 
     # Logistic Regression 
     def LogisticRegressionMethodBinary(self):
@@ -181,7 +195,6 @@ class LogisticRegression(object):
 
         maxTestClassificationAccuracy = 0.0
         W, b, X, y_target, y_predicted, crossEntropyError, train , needTrain, accuracy, WNormalEquation, accuracyNormal, Xall, y_targetAll = self.buildGraphBinary()
-        figureCount = 1 
 
         # Session
         init = tf.global_variables_initializer()
@@ -244,7 +257,6 @@ class LogisticRegression(object):
             logStdOut("e" + str(currEpoch))
         self.printPlotResults(numUpdate, errTrain, accTrain, errValid, errTest, accValid, accTest, xAxis, yTrainErr, yValidErr, yTestErr, yTrainAcc, yValidAcc, yTestAcc, yTrainNormalAcc, yValidNormalAcc, yTestNormalAcc)
 
-    '''
     def LogisticRegressionMethodMulti(self):
         """
         Implements logistic regression and cross-entropy loss.
@@ -261,11 +273,10 @@ class LogisticRegression(object):
                 Cross-entropy Loss vs Number of updates
                 Classification Accuracy vs Number of Updates
             Best Test Classification Accuracy
+        """
 
         maxTestClassificationAccuracy = 0.0
-        self.numEpoch = self.numEpochMulti
         W, b, X, y_target, y_predicted, crossEntropyError, train , needTrain, accuracy = self.buildGraphMulti()
-        figureCount = 1 
 
         # Session
         init = tf.global_variables_initializer()
@@ -290,7 +301,7 @@ class LogisticRegression(object):
         accTrain = -1
         accValid = -1
         accTest = -1
-        while currEpoch <= self.numEpoch:
+        while currEpoch < self.numEpoch:
             self.trainData, self.trainTarget = self.ShuffleBatches(self.trainData, self.trainTarget)
             step = 0 
             while step*self.miniBatchSize < self.trainData.shape[0]: 
@@ -317,42 +328,8 @@ class LogisticRegression(object):
                 yValidAcc.append(accValid)
                 yTestAcc.append(accTest)
             currEpoch += 1
-        print "Multi-Class"
-        print "LearningRate: " , self.learningRate, " Mini batch Size: ", self.miniBatchSize
-        print "Iter: ", numUpdate
-        print "Final Train MSE: ", errTrain
-        print "Final Train Acc: ", accTrain
-        print "Final Valid MSE: ", errValid
-        print "Final Test MSE: ", errTest
-        print "Final Valid Acc: ", accValid
-        print "Final Test Acc: ", accTest
-        import matplotlib.pyplot as plt
-        plt.figure(figureCount)
-        figureCount = figureCount + 1
-        plt.plot(np.array(xAxis), np.array(yTrainErr))
-        plt.savefig("MultiTrainLossLearnRate" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
-        plt.figure(figureCount)
-        figureCount = figureCount + 1
-        plt.plot(np.array(xAxis), np.array(yValidErr))
-        plt.savefig("MultiValidLossLearnRate" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
-        plt.figure(figureCount)
-        figureCount = figureCount + 1
-        plt.plot(np.array(xAxis), np.array(yTestErr))
-        plt.savefig("MultiTestLossLearnRate" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
-
-        plt.figure(figureCount)
-        figureCount = figureCount + 1
-        plt.plot(np.array(xAxis), np.array(yTrainAcc))
-        plt.savefig("MultiTrainAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
-        plt.figure(figureCount)
-        figureCount = figureCount + 1
-        plt.plot(np.array(xAxis), np.array(yValidAcc))
-        plt.savefig("MultiValidAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
-        plt.figure(figureCount)
-        figureCount = figureCount + 1
-        plt.plot(np.array(xAxis), np.array(yTestAcc))
-        plt.savefig("MultiTestAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
-        return max(np.array(yTestAcc))
+            logStdOut("e" + str(currEpoch))
+        self.printPlotResults(numUpdate, errTrain, accTrain, errValid, errTest, accValid, accTest, xAxis, yTrainErr, yValidErr, yTestErr, yTrainAcc, yValidAcc, yTestAcc)
     
     def buildGraphMulti(self):
         # Parameters to train
@@ -405,7 +382,6 @@ class LogisticRegression(object):
         train = adamOptimizer.minimize(loss=finalTrainingError)
 
         return W, b, X, y_target, y_predicted, crossEntropySoftmaxError, train, needTrain, accuracy
-        '''
 
     # Build the computational graph
     def buildGraphBinary(self):
@@ -535,6 +511,31 @@ def ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizer
             l.LogisticRegressionMethodBinary()
             logElapsedTime(questionTitle  + classifierType + str(learningRate))
 
+def ExecuteMulti(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression):
+    classifierType = "Multi"
+    print questionTitle + classifierType
+    with np.load("notMNIST.npz") as data:
+        Data, Target = data ["images"], data["labels"]
+        for learningRate in learningRates:
+            np.random.seed(521)
+            randIndx = np.arange(len(Data))
+            np.random.shuffle(randIndx)
+            Data = Data[randIndx]/255.
+            Target = Target[randIndx]
+            trainData, trainTarget = Data[:15000], Target[:15000]
+            validData, validTarget = Data[15000:16000], Target[15000:16000]
+            # Target values are from 0 to 9
+            testData, testTarget = Data[16000:], Target[16000:]
+            trainTarget = convertOneHot(trainTarget)
+            validTarget = convertOneHot(validTarget)
+            testTarget = convertOneHot(testTarget)
+            # Multiclass Classification Logistic Regression Softmax = 0.01
+            tf.reset_default_graph()
+            l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget, numEpoch, learningRate, weightDecay, optimizerType, classifierType, executeLinearRegression, questionTitle)
+            l.LogisticRegressionMethodMulti()
+            logElapsedTime(questionTitle  + classifierType + str(learningRate))
+            l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate)
+
 # Global for logging
 questionTitle = "" # Need to be global for logging to work
 startTime = datetime.datetime.now()
@@ -560,12 +561,12 @@ def logElapsedTime(message):
     startTime = datetime.datetime.now()
 
 if __name__ == "__main__":
-    print "LogisticRegression"
+    logStdOut("LogisticRegression")
     # 0.0 LinearRegressionTraining
     # MeanSquareError learningRate = 0.001, otherwise overshoots 
 
     # 1 Logistic Regression
-    # 1.1 Binary Classification
+    # 1.1 Binary Classification, only 2 labels
     # CrossEntropyError, learningRate = 0.01, 98.6% test accuracy highest
     # Default Values
     '''
@@ -574,18 +575,17 @@ if __name__ == "__main__":
     executeLinearRegression = False
     '''
 
+    '''
     questionTitle = "1.1.1" # Learning with GD
     optimizerType = "gd"
     numEpoch = 201
-    #learningRates = [0.1, 0.01, 0.001, 0.0001]
-    learningRates = [0.1, 0.01]
+    learningRates = [0.1, 0.01, 0.001, 0.0001]
     weightDecay = 0.01
     executeLinearRegression = False
-    print "Starting" + questionTitle
+    logStdOut("Starting" + questionTitle)
     sys.stdout = open("result" + questionTitle + ".txt", "w") # write a new file from scratch
     ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression)
-    sys.stdout = sys.__stdout__
-    print "Finished" + questionTitle
+    logStdOut("Finished" + questionTitle)
     # '''
 
     '''
@@ -595,11 +595,10 @@ if __name__ == "__main__":
     learningRates = [0.1, 0.01, 0.001, 0.0001]
     weightDecay = 0.01
     executeLinearRegression = False
-    print "Starting" + questionTitle
+    logStdOut("Starting" + questionTitle)
     sys.stdout = open("result" + questionTitle + ".txt", "w")
     ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression)
-    sys.stdout = sys.__stdout__
-    print "Finished" + questionTitle
+    logStdOut("Finished" + questionTitle)
     # '''
 
     '''
@@ -610,40 +609,24 @@ if __name__ == "__main__":
     optimizerType = "adam"
     learningRates = [0.01]
     executeLinearRegression = True
-    print "Starting" + questionTitle
+    logStdOut("Starting" + questionTitle)
     sys.stdout = open("result" + questionTitle + ".txt", "w")
     ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression)
-    sys.stdout = sys.__stdout__
-    print "Finished" + questionTitle
+    logStdOut("Finished" + questionTitle)
     # '''
 
     # Multi
     # CrossEntropySoftmax Error, learningRate = 0.001
+    questionTitle = "1.2.3" # Logistic Regression for multiclass
+    weightDecay = 0.01
     numEpoch = 100 # Multi-class Classification
-
-    # Binary Classification
-    # Get only 2 labels
-    '''
+    optimizerType = "adam"
+    learningRates = [0.1, 0.01, 0.001]
+    executeLinearRegression = False
+    logStdOut("Starting" + questionTitle)
+    sys.stdout = open("result" + questionTitle + ".txt", "w")
+    ExecuteMulti(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression)
+    logStdOut("Finished" + questionTitle)
     # Multi-class Classification
     # Get all 10 labels
-    with np.load("notMNIST.npz") as data:
-        Data, Target = data ["images"], data["labels"]
-        np.random.seed(521)
-        randIndx = np.arange(len(Data))
-        np.random.shuffle(randIndx)
-        Data = Data[randIndx]/255.
-        Target = Target[randIndx]
-        trainData, trainTarget = Data[:15000], Target[:15000]
-        validData, validTarget = Data[15000:16000], Target[15000:16000]
-        # Target values are from 0 to 9
-        testData, testTarget = Data[16000:], Target[16000:]
-        trainTarget = convertOneHot(trainTarget)
-        validTarget = convertOneHot(validTarget)
-        testTarget = convertOneHot(testTarget)
-        # Multiclass Classification Logistic Regression Softmax = 0.01
-        for learningRate in [0.01]:
-            tf.reset_default_graph()
-            l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate)
-            maxTestAccuracy = l.LogisticRegressionMethodMulti()
-            print "Max Test Accuracy is: ", maxTestAccuracy
-    '''
+    # '''
