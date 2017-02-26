@@ -614,6 +614,7 @@ if __name__ == "__main__":
     logStdOut("Finished" + questionTitle)
     # '''
 
+    '''
     # Multi-class Classification, 10 labels
     # CrossEntropySoftmax Error, learningRate = 0.001
     questionTitle = "1.2.3" # Logistic Regression for multiclass

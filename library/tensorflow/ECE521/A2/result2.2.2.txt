@@ -1,11 +1,3 @@
-LearningRate:  0.001  Mini batch Size:  500
-numEpoch:  210
-Final Train MSE:  0.174244
-Final Valid MSE:  0.273062
-Final Test MSE:  0.325657
-Final Train Acc:  0.956
-Final Valid Acc:  0.925
-Final Test Acc:  0.915932
 NN
 LearningRate:  0.001  Mini batch Size:  500
 NumEpoch:  6
@@ -18,14 +10,6 @@ Final Valid Acc:  0.925
 Final Test Acc:  0.915932
 2.2.2NN
 Max Test Accuracy is:  0.915932
-LearningRate:  0.001  Mini batch Size:  500
-numEpoch:  630
-Final Train MSE:  0.0464575
-Final Valid MSE:  0.258114
-Final Test MSE:  0.328052
-Final Train Acc:  0.992
-Final Valid Acc:  0.938
-Final Test Acc:  0.921072
 NN
 LearningRate:  0.001  Mini batch Size:  500
 NumEpoch:  20
