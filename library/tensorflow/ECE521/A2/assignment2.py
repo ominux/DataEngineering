@@ -32,6 +32,7 @@ class LogisticRegression(object):
             self.optimizer = tf.train.GradientDescentOptimizer(learning_rate = self.learningRate)
 
     def printPlotResults(self, numUpdate, errTrain, accTrain, errValid, errTest, accValid, accTest, xAxis, yTrainErr, yValidErr, yTestErr, yTrainAcc, yValidAcc, yTestAcc, yTrainNormalAcc, yValidNormalAcc, yTestNormalAcc):
+        global figureCount
         import matplotlib.pyplot as plt
         print self.classifierType
         print "LearningRate: " , self.learningRate, " Mini batch Size: ", self.miniBatchSize
@@ -46,7 +47,6 @@ class LogisticRegression(object):
         paramStr = "LearnRate"  + str(self.learningRate) + "NumEpoch" + str(self.numEpoch)
         typeLossStr = "Loss"
         typeAccuracyStr = "Accuracy"
-        figureCount = 1
         iterationStr = "Iteration"
         trainStr = "Train"
         validStr = "Valid"
@@ -157,6 +157,8 @@ class LogisticRegression(object):
 
         print self.questionTitle + self.classifierType
         print "Max Test Accuracy is: ", max(np.array(yTestAcc))
+        plt.close()
+        plt.clf()
 
     # Logistic Regression 
     def LogisticRegressionMethodBinary(self):
@@ -239,7 +241,7 @@ class LogisticRegression(object):
                 yTestAcc.append(accTest)
                 yTestNormalAcc.append(accTestNormal)
             currEpoch += 1
-            logStdOut("CurrEpoch" + str(currEpoch))
+            logStdOut("e" + str(currEpoch))
         self.printPlotResults(numUpdate, errTrain, accTrain, errValid, errTest, accValid, accTest, xAxis, yTrainErr, yValidErr, yTestErr, yTrainAcc, yValidAcc, yTestAcc, yTrainNormalAcc, yValidNormalAcc, yTestNormalAcc)
 
     '''
@@ -536,6 +538,7 @@ def ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizer
 # Global for logging
 questionTitle = "" # Need to be global for logging to work
 startTime = datetime.datetime.now()
+figureCount = 1 # To not overwrite existing pictures
 
 def logStdOut(message):
     # Temporary print to std out
@@ -573,8 +576,9 @@ if __name__ == "__main__":
 
     questionTitle = "1.1.1" # Learning with GD
     optimizerType = "gd"
-    numEpoch = 200
-    learningRates = [1.0, 0.1, 0.01, 0.001, 0.0001]
+    numEpoch = 201
+    #learningRates = [0.1, 0.01, 0.001, 0.0001]
+    learningRates = [0.1, 0.01]
     weightDecay = 0.01
     executeLinearRegression = False
     print "Starting" + questionTitle
@@ -582,12 +586,13 @@ if __name__ == "__main__":
     ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression)
     sys.stdout = sys.__stdout__
     print "Finished" + questionTitle
+    # '''
 
     '''
     questionTitle = "1.1.2" # Beyond plain SGD
     optimizerType = "adam"
     numEpoch = 200
-    learningRates = [1.0, 0.1, 0.01, 0.001, 0.0001]
+    learningRates = [0.1, 0.01, 0.001, 0.0001]
     weightDecay = 0.01
     executeLinearRegression = False
     print "Starting" + questionTitle
@@ -595,7 +600,7 @@ if __name__ == "__main__":
     ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression)
     sys.stdout = sys.__stdout__
     print "Finished" + questionTitle
-    '''
+    # '''
 
     '''
     # 1.1.3 
@@ -610,7 +615,7 @@ if __name__ == "__main__":
     ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression)
     sys.stdout = sys.__stdout__
     print "Finished" + questionTitle
-    '''
+    # '''
 
     # Multi
     # CrossEntropySoftmax Error, learningRate = 0.001
