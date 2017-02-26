@@ -575,6 +575,7 @@ if __name__ == "__main__":
     executeLinearRegression = False
     '''
 
+    '''
     questionTitle = "1.1.1" # Learning with GD
     optimizerType = "gd"
     numEpoch = 201
@@ -585,7 +586,9 @@ if __name__ == "__main__":
     sys.stdout = open("result" + questionTitle + ".txt", "w") # write a new file from scratch
     ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression)
     logStdOut("Finished" + questionTitle)
+    # '''
 
+    '''
     questionTitle = "1.1.2" # Beyond plain SGD
     optimizerType = "adam"
     numEpoch = 200
