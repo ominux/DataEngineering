@@ -428,16 +428,16 @@ class LogisticRegression(object):
         '''
 
         # Cross Entropy Sigmoid Error Binary-class Calculation
-        crossEntropySigmoidError = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(y_predicted, y_target))
+        crossEntropySigmoidError = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = y_predicted, labels = y_target))
         crossEntropySigmoidError = tf.add(crossEntropySigmoidError, weightDecayError)
 
         # Don't train if don't have to for validation and test set
 
         # For 1.1.3 to be updated to normal equation instead
         # This was for your own gradient descent for MSE that was not needed in this assignment
-        #finalTrainingError = tf.select(needTrain, meanSquaredError, tf.constant(0.0))
+        #finalTrainingError = tf.where(needTrain, meanSquaredError, tf.constant(0.0))
 
-        finalTrainingError = tf.select(needTrain, crossEntropySigmoidError, tf.constant(0.0))
+        finalTrainingError = tf.where(needTrain, crossEntropySigmoidError, tf.constant(0.0))
 
         # Training mechanism
         
@@ -575,7 +575,6 @@ if __name__ == "__main__":
     executeLinearRegression = False
     '''
 
-    '''
     questionTitle = "1.1.1" # Learning with GD
     optimizerType = "gd"
     numEpoch = 201
@@ -586,9 +585,7 @@ if __name__ == "__main__":
     sys.stdout = open("result" + questionTitle + ".txt", "w") # write a new file from scratch
     ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression)
     logStdOut("Finished" + questionTitle)
-    # '''
 
-    '''
     questionTitle = "1.1.2" # Beyond plain SGD
     optimizerType = "adam"
     numEpoch = 200
@@ -615,6 +612,7 @@ if __name__ == "__main__":
     logStdOut("Finished" + questionTitle)
     # '''
 
+    '''
     # Multi-class Classification, 10 labels
     # CrossEntropySoftmax Error, learningRate = 0.001
     questionTitle = "1.2.3" # Logistic Regression for multiclass
