@@ -470,12 +470,23 @@ if __name__ == "__main__":
     learningRates = [1.0, 0.1, 0.01, 0.001, 0.0001]
     weightDecay = 0.01
     executeLinearRegression = False
+    print "Starting" + questionTitle
+    sys.stdout = open("result" + questionTitle + ".txt", "w")
     ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression)
+    sys.stdout = sys.__stdout__
+    print "Finished" + questionTitle
+
+    questionTitle = "1.1.2" # Beyond plain SGD
+    print "Starting" + questionTitle
+    optimizerType = "adam"
+    sys.stdout = open("result" + questionTitle + ".txt", "w")
+    ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression)
+    sys.stdout = sys.__stdout__
+    print "Finished" + questionTitle
 
     # 1.1.3 
     weightDecay = 0.00
     numEpoch = 1
-
     # CrossEntropyError, learningRate = 0.01, 98.6% test accuracy highest
 
     # Multi
