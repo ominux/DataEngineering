@@ -534,7 +534,6 @@ def ExecuteMulti(questionTitle, numEpoch, learningRates, weightDecay, optimizerT
             l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget, numEpoch, learningRate, weightDecay, optimizerType, classifierType, executeLinearRegression, questionTitle)
             l.LogisticRegressionMethodMulti()
             logElapsedTime(questionTitle  + classifierType + str(learningRate))
-            l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate)
 
 # Global for logging
 questionTitle = "" # Need to be global for logging to work
@@ -615,7 +614,7 @@ if __name__ == "__main__":
     logStdOut("Finished" + questionTitle)
     # '''
 
-    # Multi
+    # Multi-class Classification, 10 labels
     # CrossEntropySoftmax Error, learningRate = 0.001
     questionTitle = "1.2.3" # Logistic Regression for multiclass
     weightDecay = 0.01
@@ -627,6 +626,4 @@ if __name__ == "__main__":
     sys.stdout = open("result" + questionTitle + ".txt", "w")
     ExecuteMulti(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression)
     logStdOut("Finished" + questionTitle)
-    # Multi-class Classification
-    # Get all 10 labels
     # '''
