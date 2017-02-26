@@ -486,16 +486,17 @@ def convertOneHot(targetValues):
 def ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression):
     classifierType = "Binary"
     print questionTitle + classifierType
-    with np.load("notMNIST.npz") as data :
-        Data, Target = data ["images"], data["labels"]
-        posClass = 2
-        negClass = 9
-        dataIndx = (Target==posClass) + (Target==negClass)
-        Data = Data[dataIndx]/255.
-        Target = Target[dataIndx].reshape(-1, 1)
-        Target[Target==posClass] = 1
-        Target[Target==negClass] = 0
-        for learningRate in learningRates:
+    for learningRate in learningRates:
+        with np.load("notMNIST.npz") as data :
+            # Need to get new data from scratch everything for a new learning rate
+            Data, Target = data ["images"], data["labels"]
+            posClass = 2
+            negClass = 9
+            dataIndx = (Target==posClass) + (Target==negClass)
+            Data = Data[dataIndx]/255.
+            Target = Target[dataIndx].reshape(-1, 1)
+            Target[Target==posClass] = 1
+            Target[Target==negClass] = 0
             np.random.seed(521)
             randIndx = np.arange(len(Data))
             np.random.shuffle(randIndx)
