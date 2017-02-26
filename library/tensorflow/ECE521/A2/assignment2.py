@@ -4,29 +4,87 @@ import sys
 
 # TODO: Replace all 784 with some automatic calculation for pixel size
 class LogisticRegression(object):
-    def __init__(self, trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate = 0.0001):
+    def __init__(self, trainData, trainTarget, validData, validTarget, testData, testTarget, numEpoch = 1, learningRate = 0.0001, weightDecay = 0.01, optimizerType = "adam", classifierType = "Binary", executeLinearRegression = False, questionTitle = ""):
         self.trainData = trainData
         self.trainTarget = trainTarget
         self.validData = validData
         self.validTarget = validTarget
         self.testData = testData
         self.testTarget = testTarget
-        # For 1.1.3, weight decay is 0
-        self.weightDecay = 0.00
-        # For 1.1.3, should use entire batch instead of miniBatchSize, and already hard-coded as 3500 when fed in
         self.miniBatchSize = 500
-        # Default hyperparameter values
-        self.weightDecay = 0.01
-        # MeanSquareError learningRate = 0.001, otherwise overshoots 
-        # CrossEntropyError, learningRate = 0.01, 98.6% test accuracy highest
-        # CrossEntropySoftmax Error, learningRate = 0.001
+        self.numEpoch = numEpoch
         self.learningRate = learningRate
-        self.numEpoch = 0 
-        self.numEpochBinary = 200
-        # Normal Equation method really slow
-        self.numEpochBinary = 1
-        self.numEpochMulti = 100 # Multi-class Classification
-        # self.numEpoch = 5000
+        self.weightDecay = weightDecay
+        self.executeLinearRegression = executeLinearRegression
+        self.questionTitle = questionTitle
+        self.classifierType = classifierType
+        self.optimizer = 0
+        if optimizerType == "gd":
+            self.optimizer = tf.train.AdamOptimizer(learning_rate = self.learningRate)
+        else:
+            self.optimizer = tf.train.GradientDescentOptimizer(learning_rate = self.learningRate)
+
+    def printPlotResults(self, numUpdate, errTrain, accTrain, errValid, errTest, accValid, accTest, xAxis, yTrainErr, yValidErr, yTestErr, yTrainAcc, yValidAcc, yTestAcc, yTrainNormalAcc, yValidNormalAcc, yTestNormalAcc):
+        import matplotlib.pyplot as plt
+        print self.classifierType
+        print "LearningRate: " , self.learningRate, " Mini batch Size: ", self.miniBatchSize
+        print "NumEpoch: ", self.numEpoch
+        print "Iter: ", numUpdate
+        print "Final Train MSE: ", errTrain
+        print "Final Train Acc: ", accTrain
+        print "Final Valid MSE: ", errValid
+        print "Final Test MSE: ", errTest
+        print "Final Valid Acc: ", accValid
+        print "Final Test Acc: ", accTest
+        paramStr = "LearnRate"  + str(self.learningRate) + "Batch" + str(self.miniBatchSize)
+        typeLossStr = "Loss"
+        typeAccuracyStr = "Accuracy"
+        figureCount = 1
+
+        figureCount = figureCount + 1
+        plt.figure(figureCount)
+        plt.plot(np.array(xAxis), np.array(yTrainErr))
+        title = self.classifierType + typeLossStr + "Train" + paramStr
+        plt.savefig(self.questionTitle + title + ".png")
+
+        figureCount = figureCount + 1
+        plt.figure(figureCount)
+        plt.plot(np.array(xAxis), np.array(yValidErr))
+        title = self.classifierType + typeLossStr + "Valid" + paramStr
+        plt.savefig(self.questionTitle + title + ".png")
+
+        figureCount = figureCount + 1
+        plt.figure(figureCount)
+        plt.plot(np.array(xAxis), np.array(yTestErr))
+        title = self.classifierType + typeLossStr + "Test" + paramStr
+        plt.savefig(self.questionTitle + title + ".png")
+
+        figureCount = figureCount + 1
+        plt.figure(figureCount)
+        plt.plot(np.array(xAxis), np.array(yTrainAcc))
+        if self.executeLinearRegression:
+            plt.plot(np.array(xAxis), np.array(yTrainNormalAcc))
+        title = self.classifierType + typeAccuracyStr + "Train" + paramStr
+        plt.savefig(self.questionTitle + title + ".png")
+
+        figureCount = figureCount + 1
+        plt.figure(figureCount)
+        plt.plot(np.array(xAxis), np.array(yValidAcc))
+        if self.executeLinearRegression:
+            plt.plot(np.array(xAxis), np.array(yValidNormalAcc))
+        title = self.classifierType + typeAccuracyStr + "Valid" + paramStr
+        plt.savefig(self.questionTitle + title + ".png")
+
+        figureCount = figureCount + 1
+        plt.figure(figureCount)
+        plt.plot(np.array(xAxis), np.array(yTestAcc))
+        if self.executeLinearRegression:
+            plt.plot(np.array(xAxis), np.array(yTestNormalAcc))
+        title = self.classifierType + typeAccuracyStr + "Test" + paramStr
+        plt.savefig(self.questionTitle + title + ".png")
+
+        print self.questionTitle
+        print "Max Test Accuracy is: ", max(np.array(yTestAcc))
 
     # Logistic Regression 
     def LogisticRegressionMethodBinary(self):
@@ -48,7 +106,6 @@ class LogisticRegression(object):
         """
 
         maxTestClassificationAccuracy = 0.0
-        self.numEpoch = self.numEpochBinary
         W, b, X, y_target, y_predicted, crossEntropyError, train , needTrain, accuracy, WNormalEquation, accuracyNormal, Xall, y_targetAll = self.buildGraphBinary()
         figureCount = 1 
 
@@ -110,46 +167,9 @@ class LogisticRegression(object):
                 yTestAcc.append(accTest)
                 yTestNormalAcc.append(accTestNormal)
             currEpoch += 1
-        print "Binary-Class"
-        print "LearningRate: " , self.learningRate, " Mini batch Size: ", self.miniBatchSize
-        print "Iter: ", numUpdate
-        print "Final Train MSE: ", errTrain
-        print "Final Train Acc: ", accTrain
-        print "Final Valid MSE: ", errValid
-        print "Final Test MSE: ", errTest
-        print "Final Valid Acc: ", accValid
-        print "Final Test Acc: ", accTest
-        import matplotlib.pyplot as plt
-        plt.figure(figureCount)
-        figureCount = figureCount + 1
-        plt.plot(np.array(xAxis), np.array(yTrainErr))
-        plt.savefig("BinaryTrainLossLearnRate" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
-        plt.figure(figureCount)
-        figureCount = figureCount + 1
-        plt.plot(np.array(xAxis), np.array(yValidErr))
-        plt.savefig("BinaryValidLossLearnRate" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
-        plt.figure(figureCount)
-        figureCount = figureCount + 1
-        plt.plot(np.array(xAxis), np.array(yTestErr))
-        plt.savefig("BinaryTestLossLearnRate" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
+        self.printPlotResults(numUpdate, errTrain, accTrain, errValid, errTest, accValid, accTest, xAxis, yTrainErr, yValidErr, yTestErr, yTrainAcc, yValidAcc, yTestAcc, yTrainNormalAcc, yValidNormalAcc, yTestNormalAcc)
 
-        plt.figure(figureCount)
-        figureCount = figureCount + 1
-        plt.plot(np.array(xAxis), np.array(yTrainAcc))
-        plt.plot(np.array(xAxis), np.array(yTrainNormalAcc))
-        plt.savefig("BinaryTrainAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
-        plt.figure(figureCount)
-        figureCount = figureCount + 1
-        plt.plot(np.array(xAxis), np.array(yValidAcc))
-        plt.plot(np.array(xAxis), np.array(yValidNormalAcc))
-        plt.savefig("BinaryValidAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
-        plt.figure(figureCount)
-        figureCount = figureCount + 1
-        plt.plot(np.array(xAxis), np.array(yTestAcc))
-        plt.plot(np.array(xAxis), np.array(yTestNormalAcc))
-        plt.savefig("BinaryTestAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
-        return max(np.array(yTestAcc))
-
+    '''
     def LogisticRegressionMethodMulti(self):
         """
         Implements logistic regression and cross-entropy loss.
@@ -166,7 +186,6 @@ class LogisticRegression(object):
                 Cross-entropy Loss vs Number of updates
                 Classification Accuracy vs Number of Updates
             Best Test Classification Accuracy
-        """
 
         maxTestClassificationAccuracy = 0.0
         self.numEpoch = self.numEpochMulti
@@ -259,7 +278,7 @@ class LogisticRegression(object):
         plt.plot(np.array(xAxis), np.array(yTestAcc))
         plt.savefig("MultiTestAccuracy" + str(self.learningRate) + "Batch" + str(self.miniBatchSize) + '.png')
         return max(np.array(yTestAcc))
-
+    
     def buildGraphMulti(self):
         # Parameters to train
         # Images are 28*28 = 784 pixels
@@ -311,24 +330,25 @@ class LogisticRegression(object):
         train = adamOptimizer.minimize(loss=finalTrainingError)
 
         return W, b, X, y_target, y_predicted, crossEntropySoftmaxError, train, needTrain, accuracy
+        '''
 
     # Build the computational graph
     def buildGraphBinary(self):
         # Parameters to train
         # Images are 28*28 = 784 pixels
 
-        # TODO: Update the W and b initialization so it depends on inputTarget size
+        # TODO: Update the W and b initialization so it depends on inputTarget size instead of 784
         # Binary Classification
         W = tf.Variable(tf.truncated_normal(shape=[784, 1], stddev=0.5), name='weights')
         b = tf.Variable(0.0, name='biases')
         # Supervised Inputs
         X = tf.placeholder(tf.float32, [None, 784], name='input_x')
-        # Need all for 1.1.3
-        Xall = tf.placeholder(tf.float32, [None, 784], name='input_x')
 
         # y_target for binary class classification
         y_target = tf.placeholder(tf.float32, [None,1], name='target_y')
+
         # Need all for 1.1.3
+        Xall = tf.placeholder(tf.float32, [None, 784], name='input_x')
         y_targetAll = tf.placeholder(tf.float32, [None,1], name='target_y')
 
         # Label to know if it should train or simply return the errors
@@ -342,11 +362,11 @@ class LogisticRegression(object):
         correctPred = tf.equal(tf.cast(tf.greater_equal(y_predicted, 0.5), tf.float32), tf.floor(y_target))
         accuracy = tf.reduce_mean(tf.cast(correctPred, "float"))
 
-
         # Weight Decay Error calculation
         weightDecayMeanSquareError = tf.reduce_mean(tf.square(W))
         weightDecayError = tf.multiply(weightDecayCoeff, weightDecayMeanSquareError)
 
+        '''
         # Mean Square Error Calculation
         # Divide by 2M instead of M
         meanSquaredError = tf.div(tf.reduce_mean(tf.reduce_mean(tf.square(y_predicted - y_target), 
@@ -354,6 +374,7 @@ class LogisticRegression(object):
                                                     name='squared_error'), 
                                       name='mean_squared_error'), tf.constant(2.0))
         meanSquaredError = tf.add(meanSquaredError, weightDecayError)
+        '''
 
         # Cross Entropy Sigmoid Error Binary-class Calculation
         crossEntropySigmoidError = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(y_predicted, y_target))
@@ -368,31 +389,26 @@ class LogisticRegression(object):
         finalTrainingError = tf.select(needTrain, crossEntropySigmoidError, tf.constant(0.0))
 
         # Training mechanism
-
-        # For 1.1.1
-        # TODO: Plot by manually tweaking between both optimizers
-        #gdOptimizer = tf.train.GradientDescentOptimizer(learning_rate = self.learningRate)
-
-        # For 1.1.2 onwards
-        adamOptimizer = tf.train.AdamOptimizer(learning_rate = self.learningRate)
         
         # Train and update the parameters defined
         # sess.run(train) will execute the optimized function
-        # train = optimizer.minimize(loss=finalTrainingError)
-        train = adamOptimizer.minimize(loss=finalTrainingError)
+        train = self.optimizer.minimize(loss=finalTrainingError)
 
         # Return both errors for plotting for 1.1.3 and set weight to 0 for LogisticRegression for plotting when comparing
-        # 1.1.3 Calculate Linear Regression using Normal Equation (analytical solution) 
-        # Concatenate 1 to account for Bias
-        OnesForX = tf.ones(shape=tf.pack([tf.shape(Xall)[0], 1]))
-        Xnormal = tf.concat(1,[Xall , OnesForX])
-        WNormalEquation = tf.matmul(tf.matmul(tf.matrix_inverse(tf.matmul(tf.transpose(Xnormal), Xnormal)), tf.transpose(Xnormal)), y_targetAll)
-        OnesForCurrX = tf.ones(shape=tf.pack([tf.shape(X)[0], 1]))
-        currX = tf.concat(1,[X , OnesForCurrX])
-        y_predictedNormal = tf.matmul(currX, WNormalEquation)
+        WNormalEquation = W
+        accuracyNormal = accuracy
+        if self.executeLinearRegression:
+            # 1.1.3 Calculate Linear Regression using Normal Equation (analytical solution) 
+            # Concatenate 1 to account for Bias
+            OnesForX = tf.ones(shape=tf.pack([tf.shape(Xall)[0], 1]))
+            Xnormal = tf.concat(1,[Xall , OnesForX])
+            WNormalEquation = tf.matmul(tf.matmul(tf.matrix_inverse(tf.matmul(tf.transpose(Xnormal), Xnormal)), tf.transpose(Xnormal)), y_targetAll)
+            OnesForCurrX = tf.ones(shape=tf.pack([tf.shape(X)[0], 1]))
+            currX = tf.concat(1,[X , OnesForCurrX])
+            y_predictedNormal = tf.matmul(currX, WNormalEquation)
 
-        correctPredNormal = tf.equal(tf.cast(tf.greater_equal(y_predictedNormal, 0.5), tf.float32), tf.floor(y_target))
-        accuracyNormal = tf.reduce_mean(tf.cast(correctPredNormal, "float"))
+            correctPredNormal = tf.equal(tf.cast(tf.greater_equal(y_predictedNormal, 0.5), tf.float32), tf.floor(y_target))
+            accuracyNormal = tf.reduce_mean(tf.cast(correctPredNormal, "float"))
 
         return W, b, X, y_target, y_predicted, crossEntropySigmoidError, train, needTrain, accuracy, WNormalEquation, accuracyNormal, Xall, y_targetAll
 
@@ -404,16 +420,14 @@ class LogisticRegression(object):
         np.random.shuffle(trainTarget)
         return trainData, trainTarget
 
+#---------------------------------------------------------------------------------------------
 def convertOneHot(targetValues):
     numClasses = np.max(targetValues) + 1
     return np.eye(numClasses)[targetValues]
 
-if __name__ == "__main__":
-    print "LogisticRegression"
-    print "Takes about 90 seconds"
-
-    # Binary Classification
-    # Get only 2 labels
+def ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression):
+    classifierType = "Binary"
+    print questionTitle + classifierType
     with np.load("notMNIST.npz") as data :
         Data, Target = data ["images"], data["labels"]
         posClass = 2
@@ -423,22 +437,54 @@ if __name__ == "__main__":
         Target = Target[dataIndx].reshape(-1, 1)
         Target[Target==posClass] = 1
         Target[Target==negClass] = 0
-        np.random.seed(521)
-        randIndx = np.arange(len(Data))
-        np.random.shuffle(randIndx)
-        Data, Target = Data[randIndx], Target[randIndx]
-        trainData, trainTarget = Data[:3500], Target[:3500]
-        validData, validTarget = Data[3500:3600], Target[3500:3600]
-        testData, testTarget = Data[3600:], Target[3600:]
-        # Binary Class Linear Regression =  0.001
-        # Binary Class Logistic Regression Sigmoid = 0.01
-        # Cross entropy loss only works from 0 to 1! Not from 0 to 9 for multi-class
-        for learningRate in [0.01]:
+        for learningRate in learningRates:
+            np.random.seed(521)
+            randIndx = np.arange(len(Data))
+            np.random.shuffle(randIndx)
+            Data, Target = Data[randIndx], Target[randIndx]
+            trainData, trainTarget = Data[:3500], Target[:3500]
+            validData, validTarget = Data[3500:3600], Target[3500:3600]
+            testData, testTarget = Data[3600:], Target[3600:]
+            # Binary Class Linear Regression =  0.001
+            # Binary Class Logistic Regression Sigmoid = 0.01
+            # Cross entropy loss only works from 0 to 1! Not from 0 to 9 for multi-class
             tf.reset_default_graph()
-            l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate)
-            maxTestAccuracy = l.LogisticRegressionMethodBinary()
-            print "Max Test Accuracy is: ", maxTestAccuracy
+            l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget, numEpoch, learningRate, weightDecay, optimizerType, classifierType, executeLinearRegression, questionTitle)
+            l.LogisticRegressionMethodBinary()
 
+if __name__ == "__main__":
+    print "LogisticRegression"
+    print "Takes about 90 seconds"
+    # 0.0 LinearRegressionTraining
+    # MeanSquareError learningRate = 0.001, otherwise overshoots 
+
+    # Default Values
+    numEpoch = 1
+    optimizerType = "adam"
+    learningRates = [0.01]
+    executeLinearRegression = False
+
+    questionTitle = "1.1.1" # Learning with GD
+    numEpoch = 200
+    optimizerType = "gd"
+    learningRates = [1.0, 0.1, 0.01, 0.001, 0.0001]
+    weightDecay = 0.01
+    executeLinearRegression = False
+    ExecuteBinary(questionTitle, numEpoch, learningRates, weightDecay, optimizerType, executeLinearRegression)
+
+    # 1.1.3 
+    weightDecay = 0.00
+    numEpoch = 1
+
+    # CrossEntropyError, learningRate = 0.01, 98.6% test accuracy highest
+
+    # Multi
+    # CrossEntropySoftmax Error, learningRate = 0.001
+    numEpoch = 100 # Multi-class Classification
+
+    # Binary Classification
+    # Get only 2 labels
+    '''
     # Multi-class Classification
     # Get all 10 labels
     with np.load("notMNIST.npz") as data:
@@ -461,3 +507,4 @@ if __name__ == "__main__":
             l = LogisticRegression(trainData, trainTarget, validData, validTarget, testData, testTarget, learningRate)
             maxTestAccuracy = l.LogisticRegressionMethodMulti()
             print "Max Test Accuracy is: ", maxTestAccuracy
+    '''
