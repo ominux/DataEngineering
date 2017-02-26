@@ -22,3 +22,15 @@ Final Valid Acc:  0.938
 Final Test Acc:  0.921072
 2.2.2NN
 Max Test Accuracy is:  0.924743
+NN
+LearningRate:  0.001  Mini batch Size:  500
+NumEpoch:  30
+NumUpdate:  930
+Final Train MSE:  0.0118518
+Final Train Acc:  1.0
+Final Valid MSE:  0.292205
+Final Test MSE:  0.374533
+Final Valid Acc:  0.931
+Final Test Acc:  0.922907
+2.2.2tempNN
+Max Test Accuracy is:  0.926579
