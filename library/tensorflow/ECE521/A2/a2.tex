@@ -1,0 +1,458 @@
+\documentclass[a4paper,12pt]{article} 
+%Packages included by Soon Chee Loong
+\usepackage{amssymb}  % For \therefore
+\usepackage{fullpage} % Package to use full page
+\usepackage{parskip} % Package to tweak paragraph skipping
+\usepackage{tikz} % Package for drawing
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{palatino}
+\usepackage{minted} % For code highlighting 
+\usepackage{amsmath} % To split long equations
+% More custom packages (default or by Christopher) 
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{multirow} % Used to merge multiple tables cells along a row
+\usepackage{mathtools} % Double vertical bars for norms
+\usepackage{physics} % Partial derivatives
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{relsize}
+\usepackage{wrapfig}
+\usepackage{cite}
+%------------------------------------------------------------------
+% Adjust line spacing
+\renewcommand{\baselinestretch}{1.5}
+%------------------------------------------------------------------
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+%------------------------------------------------------------------
+% Colour Definitions
+\definecolor{blue}{HTML}{1f77b4}
+\definecolor{orange}{HTML}{ff7f0e}
+\definecolor{green}{HTML}{2ca02c}
+\definecolor{bg}{rgb}{0.95, 0.95, 0.95}
+%------------------------------------------------------------------
+% Collaboration Notes 
+% 0. Ensure tex always compiles, fix any errors immediately
+%		This doesn't have version control. So don't mess up.  
+% 1. Work on 1 main.tex file only 
+% 	Easier to back-up to local
+% 	Easier to work on local if needed. 
+% 2. TODO: Mark anything important to do as TODO
+% 	so we can easily search for all TODO: comments before submitting. 
+%------------------------------------------------------------------
+\title{ECE521 Winter 2017: Assignment 2}
+\author{FuYuan Tee, (999295837)
+  \thanks{Equal Contribution (50\%), fuyuan.tee@mail.utoronto.ca}
+\and Chee Loong Soon, (999295793) \thanks{Equal Contribution (50\%),  cheeloong.soon@mail.utoronto.ca}} 
+\date{February 27th, 2017}
+\begin{document}
+\maketitle
+\tableofcontents
+\clearpage
+%------------------------------------------------------------------
+\section{Logistic Regression}
+\subsection{Binary cross-entropy loss}
+\subsubsection{Learning}
+
+\clearpage
+%------------------------------------------------------------------
+\subsubsection{Beyond plain SGD}
+
+\clearpage
+%------------------------------------------------------------------
+\subsubsection{Comparison with linear regression}
+
+\clearpage
+%------------------------------------------------------------------
+\subsubsection{Maximum likelihood estimation}
+Binary Classification means there are 2 outputs, 0 or w. In other words, $y \in \{0,1\}$. 
+Logistic function  makes prediction of the outputs using equation \ref{equation:SigmoidOutput}. This equation makes the predicted value lie between $[0,1]$. 
+This equation assumes the bias is incorporated within the weights $W$ where an additional dimension in the input $x$ is filled with ones. 
+
+\begin{equation}
+\label{equation:SigmoidOutput}
+\hat{y}(\bf{x}) = \sigma(W^{T}\mathbf{x}) = \frac{1}{1+e^{-(W^{T}\mathbf{x})}}
+\end{equation}
+
+
+The combination of Cross Entropy Loss with Sigmoid Function is known as Logistic Regression shown in \ref{equation:LogisticRegression}. 
+
+\begin{equation}
+\label{equation:LogisticRegression}
+\sum_{m=1}^{M}\frac{1}{M}[-y^{(m)}log(\hat{y}(\mathbf{x}^{m})) - (1-y^{m})log(1-\hat{y}(\bf{x}^{m}))]
+\end{equation}
+
+We can derive the cross entropy loss from Maximum Likelihood Estimation Principle by assuming a Bernoulli distribution for the likelihood of the training labels as shown in equation \ref{equation:BernoulliDistribution}. 
+
+\begin{equation}
+\label{equation:BernoulliDistribution}
+\Pr(y=1|x, W) = 1 - \Pr(y=0|x, W) = \hat{y}(x)
+\end{equation}
+
+The Bernoulli Distribution for the likelihood can also be re-written more concisely as equation \ref{equation:BernoulliDistributionParameterized}. 
+
+\begin{equation}
+\label{equation:BernoulliDistributionParameterized}
+\Pr(y|x, W) = \hat{y}(x)^{y}(1-\hat{y}(x))^{(1-y)}
+\end{equation}
+
+Since maximizing the log-likelihood is same as maximizing the likelihood in equation \ref{equation:BernoulliDistributionParameterized}, we take the log instead as it makes the computation easier as shown in equation \ref{equation:LogLikelihoodBernoulli}. 
+
+\begin{equation}
+\label{equation:LogLikelihoodBernoulli}
+\Pr(y|x, W) = ylog(\hat{y}(x)) + (1-y)log(1-\hat{y}(x))
+\end{equation}
+
+Instead of maximizing the log-likelihood, we can instead minimize the negative log-likelihood by multiplying equation \ref{equation:LogLikelihoodBernoulli} with $-1$ as shown in equation
+\ref{equation:NegativeLogLikelihoodBernoulli}. 
+
+\begin{equation}
+\label{equation:NegativeLogLikelihoodBernoulli}
+\Pr(y|x, W) = -ylog(\hat{y}(x)) - (1-y)log(1-\hat{y}(x))
+\end{equation}
+
+Doing this for every $M$ training case, where $m$ reprents a single training case, we get back to our original Logistic Regression equation \ref{equation:LogisticRegression}. 
+
+Therefore, it is proven that maximizing the likelihood of training labels assuming a Bernoulli Distribution derives the Logistic Regression equation. 
+
+\clearpage
+%------------------------------------------------------------------
+%------------------------------------------------------------------
+\subsection{Multi-class classification}
+%------------------------------------------------------------------
+\subsubsection{Minimum-loss system for equal misclassification penalty}
+If a classifier assigns each input, $x$ to a class with largest aposterior probability,
+in other words, assign x to class $k$ if $\Pr{C_{k}|x} \ge \Pr{C_{j}|x}$ $\forall j \neq k$. 
+We can show that this represents a minimum-loss system if the penalty for misclassification is equal for each class. 
+
+The proof for minimum-loss for equal misclassification penalty is just a more specific case for a more general case for the proof for unequal misclassification penalty in section \ref{section:MinimumLossGeneral}. 
+
+Equal misclassification penalty simply means a Loss Matrix where the diagonals are 0 or the trace of the loss matrix is 0. Also it means every non-diagonal elements would be an equal positive constant. For simplicity, we can assume that positive constant is $1.0$. 
+
+This results in the Loss Matrix shown in matrix \ref{equation:LossMatrixEqual}. The loss matrix is square matrix of size $(K,K)$ where $K$ represents the number of classes. 
+The $(j,k)$ entries of the loss matrix, $L_{jk}$ represents the penalty for misclassification to a class $j$ when the pattern in fact belongs to class $k$. 
+
+\begin{equation}
+\label{equation:LossMatrixEqual}
+\mathbf{L} =
+  \begin{bmatrix}
+    0 & 1 & ... & ... & 1 \\
+    1 & 0 & 1 & ... & 1 \\
+    ... & ... & ... & ... & ... \\
+    1 & ... & ... & 1 & 0
+  \end{bmatrix}
+\end{equation}
+
+If you refer to the proof for section \ref{section:MinimumLossGeneral}, you will understand that picking the  class with largest aposterior probability is the same as getting rid of the term with the largest posterior probability from the loss equation in \ref{equation:MisclassificationPenalty}.
+
+This therefore represents the minimum loss for a specific region that the input belongs to. Repeat this for every input and you get a minimal-loss system for misclassification. This proofs this specific case where the penalty for misclassification is equal. However, I will present a more specific proof below for that only works if the misclassification penalty is equal, resulting in the loss matrix shown in \ref{equation:LossMatrixEqual}. 
+
+I will now explain why equation \ref{equation:minimumSum} represents picking the class with largest posterior probability for this specific case of equal misclassification penalty. 
+
+The a posterior probability of a class $j$ is defined using Bayes Rule as shown in equation \ref{equation:BayesRule}.
+\begin{equation}
+\label{equation:BayesRule}
+\Pr{C_{j} | x} = \frac{\Pr{x | C_{j}} \Pr{C_{j}}}{\sum_{k=1}^{K}  \Pr{x | C_{k}} \Pr{C_{k}}} = 
+\frac{\Pr{x \in C_{j}}}{\sum_{k=1}^{K}  \Pr{x | C_{k}} \Pr{C_{k}}}
+\end{equation}
+
+The denominator for the Bayes Rule in equation \ref{equation:BayesRule}, 
+$\sum_{k=1}^{K}  \Pr{x | C_{k}} \Pr{C_{k}}$ is simply a normalization constant. 
+
+Therefore, picking the class with largest posterior probability $\Pr{C_{j} | x}$ is equivalent to picking the class with largest joint probability $\Pr{x \in C_{j}}$. 
+
+The error for misclassification of picking a class $j$ is shown in equation \ref{equation:Misclassification}. 
+The first term is all the input in that region that does not belong to the assigned class $j$ and the second term is all the input that does belong to class $j$ but was not assigned to this class outside this region $R_{j}$. 
+
+\begin{equation}
+\label{equation:Misclassification}
+\Pr{mistake} = (\sum_{k=1, k \neq j}^{K} \int_{R_{j}} \Pr{x \in (R_{j}, C_{k})})  + \int_{R - R_{j}} \Pr{x \in (R -R_{j}, C_{j})}
+\end{equation}
+
+By definition of $j$ being the largest posterior probability class, which is the largest joint probability class as shown in equation \ref{equation:largestPosterior}. 
+
+\begin{equation}
+\begin{split}
+\label{equation:largestPosterior}
+\Pr{x \in (R_{x}, C_{j})} \ge  \Pr{x \in (R_{x}, C_{i})} \\
+\forall i \neq j
+\end{split}
+\end{equation}
+
+Thus, for an input that belongs to its region, $R_{x}$ to be assigned to a class, picking the class with largest posterior probability is equivalent to picking the class with largest joint probability, which gets rid of that integral term from the sum of integrals in equation \ref{equation:Misclassification} in its region, therefore minimizes the loss and represents a minimum loss system. This further explained in the proof for section \ref{section:MinimumLossGeneral} below. 
+
+where equation \ref{equation:conditionZeroSpecific} is a specific case of equation \ref{equation:conditionZero}. 
+
+\begin{equation}
+\label{equation:conditionZeroSpecific}
+\argmax_j \mathbf{L}_{jk} \Pr{C_{k} | \mathbf{x} \in R_{j}} 
+\end{equation}
+
+\clearpage
+%------------------------------------------------------------------
+\subsubsection{Minimum-loss system for unequal misclassification penalty}
+\label{section:MinimumLossGeneral}
+
+Here we use a more general Loss Matrix shown in \ref{equation:LossMatrix}, where the entries can be any real number.  
+
+The loss matrix is square matrix of size $(K,K)$ where $K$ represents the number of classes. 
+The $(j,k)$ entries of the loss matrix, $L_{jk}$ represents the penalty for misclassification to a class $j$ when the pattern in fact belongs to class $k$. 
+
+\begin{equation}
+\label{equation:LossMatrix}
+\mathbf{L} =
+  \begin{bmatrix}
+    L_{11} & L_{12} & ... & L_{1K} \\
+    L_{21} & L_{22} & ... & L_{2K} \\
+    ... & ... & ... & ... \\
+    L_{K1} & ... & ... & L_{KK}
+  \end{bmatrix}
+\end{equation}
+
+We can define the entire domain of the entire input training data to be the entire region $R$. 
+Given a specific region, $R_{specific}$, we need to classify any input in this specific region $R_{specific}$ to a certain class. Lets just assume we assign every input in $R_{specific}$  to a class $\alpha$. Then, we can re-define this specific region to be the assigned region $R_{\alpha}$. 
+
+To be clear, we define $R_{\alpha}$ as the region where all inputs will be classified as class $\alpha$, where $\alpha$ is a class in the $K$ different classes.
+Obviously, we need to assign every domain of the region $R$ to a class in the $K$ classes. Otherwise, the loss penalty in \ref{equation:MisclassificationPenalty} will be maximized and this is bad. However, we do not necessary need to assign to every single class that is available, although we must be using at least one of the K classes as explained. 
+
+We define $C_{k}$ to be the class that a given input $x$ actually belongs to. In this case, the input $x$ belongs to the target class $k$ and this cannot be changed by the algorithm as it is given as an input. 
+
+To be clear, we are only able to assign the regions $R_{specific}$ to a class $j$. In other words $R_{specific} = R_{j}$. Only the inputs in this region $R_{specific}$ will be classified as a result of this assignment. This input can be written as $x \in (R_{specific}, C_{k})$. However, the input in this region $R_{specific}$ already belongs to its actual class $C_{k}$.
+
+Therefore, the penalty for the classification of a region $R_{specific} = R_{j}$ will be $L_{jk}$. This results in $x$ being assigned to class $j$ but actually belongs to class $k$. $j=k$ implies correct classification assignments whereas $j \neq k$ implies misclassification. This is shown as $x \in (R_{j}, C_{k})$. 
+
+The penalty for misclassification for entire region $R$ for all $K$ classes is defined in equation \ref{equation:MisclassificationPenalty}. 
+
+\begin{equation}
+\label{equation:MisclassificationPenalty}
+\mathbf{E}[Error] = \sum_{k=1}^{K} \sum_{j=1}^{K} L_{jk} \Pr{x \in (R_{j}, C_{k})}
+\end{equation}
+
+The total loss equation \ref{equation:MisclassificationPenalty} sums over region for every assigned class $R_{j}$. We can simplify this to represent the loss equation for a single region assignment, $R_{specific}$ as shown in \ref{equation:MisclassificationPenaltySpecific}.
+
+\begin{equation}
+\label{equation:MisclassificationPenaltySpecific}
+\mathbf{E}[Error | R_{specific}]  = \sum_{k=1}^{K} L_{specific,k} \Pr{x \in (R_{specific}, C_{k})}
+\end{equation}
+
+For a specific region, $R_{specific}$, the inputs in this region can belong to any of the $K$ classes. We represent these inputs as a vector shown in \ref{equation:InputVector}. 
+
+\begin{equation}
+\label{equation:InputVector}
+\mathbf{X}_{R_{specific}} =
+  \begin{bmatrix}
+    x \in (R_{specific}, C_{1}) \\
+    x \in (R_{specific}, C_{2})  \\
+    ... \\
+    x \in (R_{specific}, C_{K})  
+  \end{bmatrix}
+\end{equation}
+
+Therefore, selecting a region for $R_{specific}$ is same as selecting a row $j$ from the Loss Matrix in \ref{equation:LossMatrix} to be dot product with the input vector \ref{equation:InputVector}.
+
+The selected row $j$ from the Loss Matrix is shown in \ref{equation:LossRow}. 
+
+\begin{equation}
+\label{equation:LossRow}
+\mathbf{L}_{j} =
+  \begin{bmatrix}
+    L_{j1} & L_{j2} & ... & L_{jK}
+  \end{bmatrix}
+\end{equation}
+
+Thus, equation \ref{equation:MisclassificationPenaltySpecific} can be represented as this dot product as shown in \ref{equation:dotProduct}
+\begin{equation}
+\label{equation:dotProduct}
+\Pr{Error | R_{j}} = \mathbf{L}_{j} \cdot \mathbf{X}_{R_{specific}} = \mathbf{L}_{j} \cdot \mathbf{X}_{R_{j}}
+\end{equation}
+
+Therefore, the condition to minimize the penalty for misclassification is to select the row $j$ such that we minimize the dot product in \ref{equation:dotProduct}. 
+This is shown in equation \ref{equation:minimumRow}
+
+\begin{equation}
+\label{equation:minimumRow}
+ \argmin_j \Pr{Error | R_{j}} = \mathbf{L}_{j} \cdot \mathbf{X}_{R_{specific}} =  \mathbf{L}_{j} \cdot \mathbf{X}_{R_{j}}
+\end{equation}
+
+This equation can be re-written as equation \ref{equation:minimumSum}. I replaced the joint probabilities with posterior probabilities since it does not change the $j$ that is picked as explained on the paragraph below equation \ref{equation:BayesRule}. 
+
+\begin{equation}
+\label{equation:minimumSum}
+ \argmin_j \Pr{Error | R_{j}} = \sum_{k=1}^{K} \mathbf{L}_{jk} \Pr{C_{k} | \mathbf{x} \in R_{specific}} = \sum_{k=1}^{K} \mathbf{L}_{jk} \Pr{C_{k} | \mathbf{x} \in R_{j}}
+\end{equation}
+
+Therefore, the condition for minimum classification for an input in the region $R_{specific}$ to a class $C_{j}$ to minimize total loss is to pick the class $j$ that results in the lowest $\sum_{k=1}^{K} \mathbf{L}_{jk} \Pr{C_{k} | \mathbf{x} \in R_{specific}}$ for the region that the input belongs to. 
+
+For the special case where the diagonals of \ref{equation:LossMatrix} is 0. i.e. $L_{ii} = 0$ $\forall i$  is 0. This means the dot product in \ref{equation:dotProduct} gets rid of one of the terms in the input vector \ref{equation:InputVector} and it simply gets rid of that term in the sum in equation \ref{equation:MisclassificationPenaltySpecific}. We therefore pick the class $j$ with the largest value for equation \ref{equation:conditionZero}. 
+
+\begin{equation}
+\label{equation:conditionZero}
+\argmax_j \mathbf{L}_{jk} \Pr{C_{k} | \mathbf{x} \in R_{j}} 
+\end{equation}
+
+to get rid of that largest term, $\mathbf{L}_{jk} \Pr{C_{k} | \mathbf{x} \in R_{j}}$ from 
+the loss equation in \ref{equation:MisclassificationPenaltySpecific}. This will minimize the loss. 
+
+\clearpage
+%------------------------------------------------------------------
+\subsubsection{Multi-class classification on \textit{notMNIST} dataset}
+
+\clearpage
+%------------------------------------------------------------------
+%------------------------------------------------------------------
+%------------------------------------------------------------------
+\section{Neural Networks}
+\subsection{Geometry of neural networks}
+\subsubsection{Logistic regression weights on linearly separable dataset}
+
+From the cross-entropy loss function:
+\begin{align}
+\mathcal{L} = - \frac{1}{M} \sum_m^M \left[ t^{(m)} \log y^{(m)} +
+	\left(1 - t^{(m)} \right) \log \left( 1 - y^{(m)} \right) \right]
+\end{align}
+
+Let the bias, $b$, be lumped in as the zeroth weight, $w_0$ in the weight vector, $\mathbf{W}$.
+
+Taking the derivative with respect to the weights, $\mathbf{W}$:
+\begin{align}
+\begin{split}
+\pdv{\mathcal{L}}{\mathbf{W}} =& \pdv{\mathcal{L}}{y} \cdot \pdv{y}{\mathbf{z}} \cdot 
+	\pdv{\mathbf{z}}{\mathbf{W}} \\
+=& - \frac{1}{M} \sum_m^M \left[ \frac{t^{(m)}}{y^{(m)}} -
+	\frac{1 - t^{(m)}}{1 - y^{(m)}} \right] \cdot 
+    \left[ y^{(m)} \left(1 - y^{(m)} \right) \right] \cdot
+    \mathbf{x}^{(m)'} \\
+=& - \frac{1}{M} \sum_m^M \left[ t^{(m)} \left( 1 - y^{(m)} \right) -
+	\left( 1 - t^{(m)} \right) y^{(m)} \right] \cdot 
+    \mathbf{x}^{(m)'} \\
+=& \frac{1}{M} \sum_m^M \left[ y^{(m)} - t^{(m)} \right] \cdot 
+    \mathbf{x}^{(m)'} \\
+=& \frac{1}{M} \sum_m^M \left[ \frac{1}{1 + e^{- (\mathbf{W'x}^{(m)}) }} 
+	- t^{(m)} \right] \cdot \mathbf{x}^{(m)'} \\
+\end{split}
+\end{align}
+
+Let the sets $\mathbb{X}_0 = \{\mathbf{x}_0^{(1)}, \cdots, \mathbf{x}_0^{(M_0)} \}$ and $\mathbb{X}_1 = \{\mathbf{x}_1^{(1)}, \cdots, \mathbf{x}_1^{(M_1)} \}$ be the sets of inputs with target values of $t_0 = 0$ and $t_1 = 1$ respectively, where $M = M_0 + M_1$. The partial derivative above can  then be broken down into terms involving $\mathbb{X}_0$ and $\mathbb{X}_1$, as follows:
+
+\begin{align}
+\begin{split}
+\pdv{\mathcal{L}}{\mathbf{W}} =& \frac{1}{M}  \left\{ \sum_{m_0}^{M_0} \left[ \frac{1}{1 + e^{- 
+	(\mathbf{W'x}_0^{(m)}) }} - t_0^{(m)} \right] \mathbf{x}_0^{(m)'} +
+    \sum_{m_1}^{M_1} \left[ \frac{1}{1 + e^{- (\mathbf{W'x}_1^{(m)}) }} - t_1^{(m)} \right] 
+    \mathbf{x}_1^{(m)'} \right\} \\
+=& \frac{1}{M}  \left\{ \sum_{m_0}^{M_0} \left[ \frac{1}{1 + e^{- 
+	(\mathbf{W'x}_0^{(m)}) }} \right] \mathbf{x}_0^{(m)'} +
+    \sum_{m_1}^{M_1} \left[ \frac{1}{1 + e^{- (\mathbf{W'x}_1^{(m)}) }} - 1 \right] 
+    \mathbf{x}_1^{(m)'} \right\}
+\end{split} \\
+\label{equation:SimplifiedGrad}
+=& \frac{1}{M}  \left\{ \sum_{m_0}^{M_0} \left[ \frac{1}{1 + e^{- 
+	(\mathbf{W'x}_0^{(m)}) }} \right] \mathbf{x}_0^{(m)'} +
+    \sum_{m_1}^{M_1} \left[ \frac{1}{1 + e^{\mathbf{W'x}_1^{(m)}}} \right] 
+    \mathbf{x}_1^{(m)'} \right\}
+\end{align}
+
+
+A dataset is linearly separable when there exists $w_1, \cdots, w_n, k \in \mathbb{R}$ such that $ \sum_i^n w_i x_i < k \quad \forall x_i \in \mathbb{X}_0 $ and $ \sum_i^n w_i x_i > k \quad \forall x_i \in \mathbb{X}_1 $, using the sets definition for $\mathbb{X}_0$ and $\mathbb{X}_1$ above. Since the dataset is linearly separable, it is possible to select values for the optimal weight vector $\mathbf{W}^{*}$, such that:
+\begin{align}
+\label{equation:DotProductLimits}
+\begin{cases}
+\mathbf{W^{*'}x}_0^{(m)} \ll 0\\
+\mathbf{W^{*'}x}_1^{(m)} \gg 0
+\end{cases} \ \text{or} \quad
+\begin{cases}
+\mathbf{W^{*'}x}_0^{(m)} = - \infty \\
+\mathbf{W^{*'}x}_1^{(m)} = + \infty
+\end{cases}
+\forall m = 1, \cdots, M
+\end{align}
+
+This in turn forces the coefficients of $\mathbf{x}_0^{(m)'}$ and $\mathbf{x}_1^{(m)'}$ in Equation \ref{equation:SimplifiedGrad} to be 0, leading to gradients for each individual training example to go to 0, leading to an optimal solution.
+
+Since the inputs $\mathbf{x}^{(m)}$ is finite, for Equation \ref{equation:DotProductLimits} to occur:
+\begin{align}
+|w_i| = \infty \quad \forall i = 1, \cdots, ..., n
+\end{align}
+
+and by extension, $\|W\|_2 = \infty$.
+
+%------------------------------------------------------------------
+\subsubsection{Logistic regression weights on linearly inseparable dataset}
+
+For a linearly inseparable case, Equation \ref{equation:DotProductLimits} cannot occur by definition. As a result, the coefficients of $\mathbf{x}_0^{(m)'}$ and $\mathbf{x}_1^{(m)'}$ will never be zero. This fact extends to the individual gradient of each training example being non-zero. As a result, the only way for an optimal solution to be reached is for the individual gradients of various training example canceling each other out to obtain an overall gradient value of 0. 
+
+Similarly, the optimal solution is reached without having $\mathbf{W}^{*'} \mathbf{x}^{(m)} = \pm \infty$. As a result, $\|W\|_2 < \infty$.
+
+\clearpage
+%------------------------------------------------------------------
+\subsubsection{Neural network weights on linearly inseparable dataset}
+
+\clearpage
+%------------------------------------------------------------------
+%------------------------------------------------------------------
+\subsection{Feedforward fully connected neural networks}
+\subsubsection{Layer-wise building block}
+
+\clearpage
+%------------------------------------------------------------------
+\subsubsection{Learning}
+
+\clearpage
+%------------------------------------------------------------------
+\subsubsection{Early stopping}
+
+\clearpage
+%------------------------------------------------------------------
+%------------------------------------------------------------------
+\subsection{Effect of hyperparameters}
+
+\clearpage
+%------------------------------------------------------------------
+\subsubsection{Number of hidden units}
+
+
+\clearpage
+%------------------------------------------------------------------
+\subsubsection{Number of layers}
+
+\clearpage
+%------------------------------------------------------------------
+%------------------------------------------------------------------
+\subsection{Regularization and visualization}
+
+\clearpage
+%------------------------------------------------------------------
+\subsubsection{Dropout}
+
+
+\clearpage
+%------------------------------------------------------------------
+\subsubsection{Visualization}
+
+\clearpage
+%------------------------------------------------------------------
+\subsection{Exhaustive search for the best set of hyperparameters}
+
+\clearpage
+%------------------------------------------------------------------
+\subsubsection{Random search}
+
+\clearpage
+%------------------------------------------------------------------
+\subsubsection{Exchange ideas among the groups}
+
+\clearpage
+%------------------------------------------------------------------
+%------------------------------------------------------------------
+%------------------------------------------------------------------
+\section{Appendices}
+\subsection{Entire Code: Chee Loong Soon's version}
+
+\clearpage
+%------------------------------------------------------------------
+%------------------------------------------------------------------
+\subsection{Entire Code: FuYuan Tee's version}
+
+\end{document}
