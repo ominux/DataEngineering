@@ -48,6 +48,9 @@ class FullyConnectedNeuralNetwork(object):
         global figureCount
         import matplotlib.pyplot as plt
         print self.classifierType
+
+        removeFinalLayer = self.hiddenLayers[:-1]
+        print "HiddenLayer: ", str(removeFinalLayer)
         print "LearningRate: " , self.learningRate, " Mini batch Size: ", self.miniBatchSize
         print "NumEpoch: ", self.numEpoch
         print "NumUpdate: ", numUpdate
@@ -310,7 +313,7 @@ class FullyConnectedNeuralNetwork(object):
 
         # Session
         init = tf.global_variables_initializer()
-        sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True))
+        sess = tf.InteractiveSession()
         sess.run(init)
         currEpoch = 0
         xAxis = []
@@ -368,21 +371,22 @@ def executeNeuralNetwork(questionTitle, numEpoch, learningRates, weightDecay, do
     with np.load("notMNIST.npz") as data:
         Data, Target = data ["images"], data["labels"]
         for learningRate in learningRates:
-            np.random.seed(521)
-            randIndx = np.arange(len(Data))
-            np.random.shuffle(randIndx)
-            Data = Data[randIndx]/255.
-            Target = Target[randIndx]
-            trainData, trainTarget = Data[:15000], Target[:15000]
-            validData, validTarget = Data[15000:16000], Target[15000:16000]
-            # Target values are from 0 to 9
-            testData, testTarget = Data[16000:], Target[16000:]
-            trainTarget = convertOneHot(trainTarget)
-            validTarget = convertOneHot(validTarget)
-            testTarget = convertOneHot(testTarget)
-            tf.reset_default_graph()
-            FullyConnectedNeuralNetwork(trainData, trainTarget, validData, validTarget, testData, testTarget, numEpoch, learningRate, weightDecay, doDropout, doVisualization, hiddenLayers, questionTitle)
-            logElapsedTime(questionTitle + str(learningRate))
+            for hiddenLayer in hiddenLayers:
+                np.random.seed(521)
+                randIndx = np.arange(len(Data))
+                np.random.shuffle(randIndx)
+                Data = Data[randIndx]/255.
+                Target = Target[randIndx]
+                trainData, trainTarget = Data[:15000], Target[:15000]
+                validData, validTarget = Data[15000:16000], Target[15000:16000]
+                # Target values are from 0 to 9
+                testData, testTarget = Data[16000:], Target[16000:]
+                trainTarget = convertOneHot(trainTarget)
+                validTarget = convertOneHot(validTarget)
+                testTarget = convertOneHot(testTarget)
+                tf.reset_default_graph()
+                FullyConnectedNeuralNetwork(trainData, trainTarget, validData, validTarget, testData, testTarget, numEpoch, learningRate, weightDecay, doDropout, doVisualization, hiddenLayer, questionTitle)
+                logElapsedTime(questionTitle + str(learningRate) + str(hiddenLayer))
 
 # Global for logging
 questionTitle = "" # Need to be global for logging to work
@@ -409,6 +413,7 @@ def logElapsedTime(message):
     startTime = datetime.datetime.now()
 
 if __name__ == "__main__":
+    '''
     # 2.2
     questionTitle = "2.2.2" # No Dropout
     numEpoch = 30 # Start to early stop at 5 for valid and 8 for test 
@@ -417,13 +422,43 @@ if __name__ == "__main__":
     weightDecay = 3e-4
     doDropout = False
     doVisualization = False
-    hiddenLayers = [1000]
+    hiddenLayers = [[1000]]
     logStdOut("Starting" + questionTitle)
-    sys.stdout = open("result" + questionTitle + ".txt", "w") # write a new file from scratch
-    #sys.stdout = open("result" + questionTitle + ".txt", "a") # append to file 
+    sys.stdout = open("result" + questionTitle + ".txt", "a") # append to file 
     executeNeuralNetwork(questionTitle, numEpoch, learningRates, weightDecay, doDropout, doVisualization, hiddenLayers)
     logStdOut("Finished" + questionTitle)
     # '''
+
+    '''
+    # 2.3.1
+    questionTitle = "2.3.1" # Number of hidden units
+    numEpoch = 30 # Start to early stop at 5 for valid and 8 for test 
+    learningRates = [0.1, 0.01, 0.001]
+    learningRates = [0.001] # Works better when you run them one by one
+    weightDecay = 3e-4
+    doDropout = False
+    doVisualization = False
+    hiddenLayers = [[100], [500], [1000]]
+    logStdOut("Starting" + questionTitle)
+    #sys.stdout = open("result" + questionTitle + ".txt", "w") # write a new file from scratch
+    sys.stdout = open("result" + questionTitle + ".txt", "a") # append to file 
+    executeNeuralNetwork(questionTitle, numEpoch, learningRates, weightDecay, doDropout, doVisualization, hiddenLayers)
+    logStdOut("Finished" + questionTitle)
+    # '''
+
+    # 2.3.2
+    questionTitle = "2.3.2" # Number of Layers
+    numEpoch = 30 # Start to early stop at 5 for valid and 8 for test 
+    learningRates = [0.1, 0.01, 0.001]
+    learningRates = [0.001] # Works better when you run them one by one
+    weightDecay = 3e-4
+    doDropout = False
+    doVisualization = False
+    hiddenLayers = [[500, 500]]
+    logStdOut("Starting" + questionTitle)
+    sys.stdout = open("result" + questionTitle + ".txt", "a") # append to file 
+    executeNeuralNetwork(questionTitle, numEpoch, learningRates, weightDecay, doDropout, doVisualization, hiddenLayers)
+    logStdOut("Finished" + questionTitle)
 
     '''
     # 2.4 Regularization
@@ -434,7 +469,7 @@ if __name__ == "__main__":
     weightDecay = 3e-4
     doDropout = True
     doVisualization = False
-    hiddenLayers = [1000]
+    hiddenLayers = [[1000]]
     logStdOut("Starting" + questionTitle)
     sys.stdout = open("result" + questionTitle + ".txt", "w") # write a new file from scratch
     executeNeuralNetwork(questionTitle, numEpoch, learningRates, weightDecay, doDropout, doVisualization, hiddenLayers)
