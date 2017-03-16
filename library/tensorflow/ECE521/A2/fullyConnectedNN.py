@@ -368,10 +368,10 @@ def convertOneHot(targetValues):
 
 def executeNeuralNetwork(questionTitle, numEpoch, learningRates, weightDecay, doDropout, doVisualization, hiddenLayers):
     startTime = datetime.datetime.now()
-    with np.load("notMNIST.npz") as data:
-        Data, Target = data ["images"], data["labels"]
-        for learningRate in learningRates:
-            for hiddenLayer in hiddenLayers:
+    for learningRate in learningRates:
+        for hiddenLayer in hiddenLayers:
+            with np.load("notMNIST.npz") as data:
+                Data, Target = data["images"], data["labels"]
                 np.random.seed(521)
                 randIndx = np.arange(len(Data))
                 np.random.shuffle(randIndx)
@@ -429,12 +429,10 @@ if __name__ == "__main__":
     logStdOut("Finished" + questionTitle)
     # '''
 
-    '''
     # 2.3.1
     questionTitle = "2.3.1" # Number of hidden units
     numEpoch = 30 # Start to early stop at 5 for valid and 8 for test 
     learningRates = [0.1, 0.01, 0.001]
-    learningRates = [0.001] # Works better when you run them one by one
     weightDecay = 3e-4
     doDropout = False
     doVisualization = False
@@ -450,7 +448,6 @@ if __name__ == "__main__":
     questionTitle = "2.3.2" # Number of Layers
     numEpoch = 30 # Start to early stop at 5 for valid and 8 for test 
     learningRates = [0.1, 0.01, 0.001]
-    learningRates = [0.001] # Works better when you run them one by one
     weightDecay = 3e-4
     doDropout = False
     doVisualization = False
@@ -459,19 +456,20 @@ if __name__ == "__main__":
     sys.stdout = open("result" + questionTitle + ".txt", "a") # append to file 
     executeNeuralNetwork(questionTitle, numEpoch, learningRates, weightDecay, doDropout, doVisualization, hiddenLayers)
     logStdOut("Finished" + questionTitle)
+    # '''
 
     '''
     # 2.4 Regularization
-    # Early Stops at about 12 for both valid at test
+    # Early Stops at about 12-14 for both valid at test
     questionTitle = "2.4.1" # Dropout
-    numEpoch = 12
+    numEpoch = 30
     learningRates = [0.1, 0.01, 0.001]
     weightDecay = 3e-4
     doDropout = True
     doVisualization = False
     hiddenLayers = [[1000]]
     logStdOut("Starting" + questionTitle)
-    sys.stdout = open("result" + questionTitle + ".txt", "w") # write a new file from scratch
+    sys.stdout = open("result" + questionTitle + ".txt", "a")
     executeNeuralNetwork(questionTitle, numEpoch, learningRates, weightDecay, doDropout, doVisualization, hiddenLayers)
     logStdOut("Finished" + questionTitle)
     # '''

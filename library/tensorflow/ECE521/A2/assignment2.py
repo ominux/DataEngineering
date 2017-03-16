@@ -620,9 +620,9 @@ if __name__ == "__main__":
     # CrossEntropySoftmax Error, learningRate = 0.001
     questionTitle = "1.2.3" # Logistic Regression for multiclass
     weightDecay = 0.01
-    numEpoch = 100 # Multi-class Classification
+    numEpoch = 200 # Multi-class Classification
     optimizerType = "adam"
-    learningRates = [0.1, 0.01, 0.001]
+    learningRates = [1.0, 0.1, 0.01, 0.001, 0.0001]
     executeLinearRegression = False
     logStdOut("Starting" + questionTitle)
     sys.stdout = open("result" + questionTitle + ".txt", "w")
