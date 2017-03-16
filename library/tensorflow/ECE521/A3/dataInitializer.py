@@ -66,7 +66,7 @@ class DataInitializer(object):
         np.random.shuffle(randIdx)
         if hasValid:
             trainStopPoint = int(np.ceil((2.0/3.0)*len(data)))
-            print trainStopPoint
+            # print trainStopPoint
             trainData, validData = data[randIdx[:trainStopPoint]], data[randIdx[trainStopPoint:]]
             return trainData, validData
         else:
