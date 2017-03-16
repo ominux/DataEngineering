@@ -3,7 +3,7 @@ import numpy as np
 from dataInitializer import DataInitializer
 
 class KMeans(object):
-    def __init__(self, K, trainData, validData, hasValid, numEpoch = 300, learningRate = 0.01, questionTitle = ""):
+    def __init__(self, questionTitle, K, trainData, validData, hasValid, numEpoch = 300, learningRate = 0.01):
         """
         Constructor
         """
@@ -12,19 +12,20 @@ class KMeans(object):
         self.validData = validData 
         #self.trainData = trainData[0:100] # TODO: TEMP DEBUG
         #numEpoch = 1
+        #numEpoch = 50
         self.D = self.trainData[0].size # Dimension of each data
         self.hasValid = hasValid
         self.learningRate = learningRate
         self.numEpoch = numEpoch
-        self.miniBatchSize = self.trainData.shape[0] # TODO: Implement this or jsust entire gradient descent?
+        # miniBatchSize is entire data size
+        self.miniBatchSize = self.trainData.shape[0]
         print 'minibatchsize', self.miniBatchSize
         self.questionTitle = questionTitle
         self.optimizer = tf.train.AdamOptimizer(learning_rate = self.learningRate, beta1=0.9, beta2=0.99, epsilon=1e-5)
         # Execute KMeans
         self.KMeansMethod()
 
-    def printPlotResults(self, xAxis, yTrainErr, numUpdate, minAssign, currTrainData):
-        # TODO: To print graphs
+    def printPlotResults(self, xAxis, yTrainErr, numUpdate, minAssign, currTrainData, numAssignEachClass):
         figureCount = 0 # TODO: Make global
         import matplotlib.pyplot as plt
 
@@ -38,7 +39,7 @@ class KMeans(object):
         iterationStr = "Iteration"
         dimensionOneStr = "D1"
         dimensionTwoStr = "D2"
-        paramStr = "LearninRate" + str(self.learningRate) + "NumEpoch" + str(self.numEpoch)
+        paramStr = "Learn" + str(self.learningRate) + "NumEpoch" + str(self.numEpoch)
 
         # Train Loss
         figureCount = figureCount + 1
@@ -54,24 +55,20 @@ class KMeans(object):
         plt.clf()
 
         # Plot percentage in each different classes as well
-        # TODO: Plot percentage as part of it as well
-        # 2.1.3
-        # all the trainData dimensions after assigning into the different K's
-
         # Scatter plot based on assignment colors
+        # Including percentage as the label
         figureCount = figureCount + 1
         plt.figure(figureCount)
         title = trainStr + typeScatterStr + paramStr
         plt.title(title)
         plt.xlabel(dimensionOneStr)
         plt.ylabel(dimensionTwoStr)
-        k = 0
-        # TODO: Loop through the different classes and scatter one by one
-        plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=minAssign, s=50, alpha=0.5)
+        percentageAssignEachClass = numAssignEachClass/float(sum(numAssignEachClass))
+        plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=minAssign, s=50, alpha=0.5, label=percentageAssignEachClass)
+        plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
         plt.close()
         plt.clf()
-        # '''
 
 
     def KMeansMethod(self):
@@ -81,7 +78,7 @@ class KMeans(object):
         Bad Coding Style but higher programmer productivity
         '''
         # Build Graph 
-        U = tf.Variable(tf.truncated_normal([self.K, self.D])) # TODO: Set own std. deviation ?
+        U = tf.Variable(tf.truncated_normal([self.K, self.D]))
 
         train_data = tf.placeholder(tf.float32, shape=[None, self.D], name="trainingData")
         batchSizing = tf.shape(train_data)[0]
@@ -121,7 +118,7 @@ class KMeans(object):
                 feedDicts = {train_data: self.trainData, valid_data: self.validData}
             while step*self.miniBatchSize < self.trainData.shape[0]:
                 _, minAssign, errTrain = sess.run([train, minAssignments, loss], feed_dict = feedDicts)
-                # TEMP DEBUG, uncomment above once done
+                # TODO: TEMP DEBUG, uncomment above once done
                 '''
                 _, errTrain, u, d, sqr, sumSqr, minSqr, minAssign, x = sess.run([train, loss, U, deduct, square, sumOfSquare, minSquare, minAssignments, train_data_broad], feed_dict = feedDicts)
                 print 'x', x
@@ -140,8 +137,11 @@ class KMeans(object):
             currEpoch += 1
             if currEpoch%50 == 0:
                 print("e", str(currEpoch))
-        # TODO: Print Plots
-        self.printPlotResults(xAxis, yTrainErr, numUpdate, minAssign, currTrainDataShuffle)
+        # Count how many assigned to each class
+        numAssignEachClass = np.bincount(minAssign)
+        print "Assignments To Classes:", numAssignEachClass
+        print "Percentage Assignment To Classes:", numAssignEachClass/float(sum(numAssignEachClass))
+        self.printPlotResults(xAxis, yTrainErr, numUpdate, minAssign, currTrainDataShuffle, numAssignEachClass)
 
 def executeKMeans(questionTitle, K, dataType, hasValid):
     """
@@ -158,7 +158,7 @@ def executeKMeans(questionTitle, K, dataType, hasValid):
         trainData = dataInitializer.getData(dataType, hasValid)
     # Execute algorithm 
     print "K:", K
-    kObject = KMeans(K, trainData, validData, hasValid)
+    kObject = KMeans(questionTitle, K, trainData, validData, hasValid)
 
 if __name__ == "__main__":
     print "ECE521 Assignment 3: Unsupervised Learning: K Means"
