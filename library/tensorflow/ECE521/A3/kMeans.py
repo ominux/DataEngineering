@@ -100,18 +100,19 @@ class KMeans(object):
         train_data = tf.placeholder(tf.float32, shape=[None, self.D], name="trainingData")
         batchSizing = tf.shape(train_data)[0]
 
-        if self.hasValid: 
-            valid_data = tf.placeholder(tf.float32, shape=[None, self.D], name="validationData")
-            validBatchSizing = tf.shape(valid_data)[0]
-            valid_data_broad = tf.reshape(valid_data, (validBatchSizing, 1, self.D))
-            validLoss = tf.reduce_sum(tf.reduce_min(tf.reduce_sum(tf.square(valid_data_broad-U), 2), 1))
-
         train_data_broad = tf.reshape(train_data, (batchSizing, 1, self.D))
         deduct = train_data_broad - U
         square = tf.square(deduct)
         sumOfSquare =  tf.reduce_sum(square, 2)
         minSquare = tf.reduce_min(sumOfSquare, 1)
         loss = tf.reduce_sum(minSquare)
+        validLoss = loss
+
+        if self.hasValid: 
+            valid_data = tf.placeholder(tf.float32, shape=[None, self.D], name="validationData")
+            validBatchSizing = tf.shape(valid_data)[0]
+            valid_data_broad = tf.reshape(valid_data, (validBatchSizing, 1, self.D))
+            validLoss = tf.reduce_sum(tf.reduce_min(tf.reduce_sum(tf.square(valid_data_broad-U), 2), 1))
 
         train = self.optimizer.minimize(loss)
 
@@ -182,7 +183,7 @@ def executeKMeans(questionTitle, K, dataType, hasValid):
 
 if __name__ == "__main__":
     print "ECE521 Assignment 3: Unsupervised Learning: K Means"
-    '''
+
     # Unsupervised => Data has no label or target
     questionTitle = "1.1.2"
     dataType = "2D"
@@ -191,7 +192,6 @@ if __name__ == "__main__":
     executeKMeans(questionTitle, K, dataType, hasValid)
     # '''
 
-    '''
     questionTitle = "1.1.3"
     diffK = [1, 2, 3, 4, 5]
     dataType = "2D"
