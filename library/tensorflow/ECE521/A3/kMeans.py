@@ -3,7 +3,7 @@ import numpy as np
 from dataInitializer import DataInitializer
 
 class KMeans(object):
-    def __init__(self, questionTitle, K, trainData, validData, hasValid, numEpoch = 300, learningRate = 0.01):
+    def __init__(self, questionTitle, K, trainData, validData, hasValid, numEpoch = 100, learningRate = 0.1):
         """
         Constructor
         """
@@ -17,9 +17,7 @@ class KMeans(object):
         self.hasValid = hasValid
         self.learningRate = learningRate
         self.numEpoch = numEpoch
-        # miniBatchSize is entire data size
-        self.miniBatchSize = self.trainData.shape[0]
-        print 'minibatchsize', self.miniBatchSize
+        self.miniBatchSize = self.trainData.shape[0] # miniBatchSize is entire data size
         self.questionTitle = questionTitle
         self.optimizer = tf.train.AdamOptimizer(learning_rate = self.learningRate, beta1=0.9, beta2=0.99, epsilon=1e-5)
         # Execute KMeans
@@ -29,7 +27,11 @@ class KMeans(object):
         figureCount = 0 # TODO: Make global
         import matplotlib.pyplot as plt
 
+        print "K: ", self.K
         print "Iter: ", numUpdate
+        print "Assignments To Classes:", numAssignEachClass
+        percentageAssignEachClass = numAssignEachClass/float(sum(numAssignEachClass))
+        print "Percentage Assignment To Classes:", percentageAssignEachClass
 
         trainStr = "Train"
         validStr = "Valid"
@@ -39,7 +41,7 @@ class KMeans(object):
         iterationStr = "Iteration"
         dimensionOneStr = "D1"
         dimensionTwoStr = "D2"
-        paramStr = "Learn" + str(self.learningRate) + "NumEpoch" + str(self.numEpoch)
+        paramStr = "K" + str(self.K) + "Learn" + str(self.learningRate) + "NumEpoch" + str(self.numEpoch)
 
         # Train Loss
         figureCount = figureCount + 1
@@ -63,7 +65,6 @@ class KMeans(object):
         plt.title(title)
         plt.xlabel(dimensionOneStr)
         plt.ylabel(dimensionTwoStr)
-        percentageAssignEachClass = numAssignEachClass/float(sum(numAssignEachClass))
         plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=minAssign, s=50, alpha=0.5, label=percentageAssignEachClass)
         plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
@@ -136,11 +137,10 @@ class KMeans(object):
                 numUpdate += 1
             currEpoch += 1
             if currEpoch%50 == 0:
-                print("e", str(currEpoch))
+                doNothing = 0
+                # print("e", str(currEpoch))
         # Count how many assigned to each class
         numAssignEachClass = np.bincount(minAssign)
-        print "Assignments To Classes:", numAssignEachClass
-        print "Percentage Assignment To Classes:", numAssignEachClass/float(sum(numAssignEachClass))
         self.printPlotResults(xAxis, yTrainErr, numUpdate, minAssign, currTrainDataShuffle, numAssignEachClass)
 
 def executeKMeans(questionTitle, K, dataType, hasValid):
@@ -157,7 +157,6 @@ def executeKMeans(questionTitle, K, dataType, hasValid):
     else: 
         trainData = dataInitializer.getData(dataType, hasValid)
     # Execute algorithm 
-    print "K:", K
     kObject = KMeans(questionTitle, K, trainData, validData, hasValid)
 
 if __name__ == "__main__":
@@ -170,9 +169,8 @@ if __name__ == "__main__":
     executeKMeans(questionTitle, K, dataType, hasValid)
     # '''
 
-    '''
     questionTitle = "1.1.3"
-    diffK = [1 2 3 4 5]
+    diffK = [1, 2, 3, 4, 5]
     dataType = "2D"
     hasValid = False
     for K in diffK:
