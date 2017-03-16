@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 def reduce_logsumexp(input_tensor, reduction_indices=1, keep_dims=False):
   """Computes the sum of elements across dimensions of a tensor in log domain.
@@ -36,4 +37,23 @@ def logsoftmax(input_tensor):
 
 if __name__ == "__main__":
     print "haha"
+    # Data in this assignment has no label or target since it is an unsupervised learning problem
+    data2D = np.load("data2D.npy")
+    print data2D.size
+    print data2D[0].size
+    data100D = np.load("data100D.npy")
+    print data100D.size
+    print data100D[0].size
+    '''
+    with np.load("tinymnist.npz") as data:
+        trainData, trainTarget = data ["x"], data["y"]
+        validData, validTarget = data ["x_valid"], data ["y_valid"]
+        testData, testTarget = data ["x_test"], data ["y_test"]
+        print trainData.shape
+        print trainTarget.shape
+        print validData.shape
+        print validTarget.shape
+        print testData.shape
+        print testTarget.shape
+    '''
 
