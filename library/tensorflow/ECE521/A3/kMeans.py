@@ -10,7 +10,8 @@ class KMeans(object):
         self.K = K
         self.trainData = trainData
         self.validData = validData 
-        # self.trainData = trainData[0:8] # TODO: TEMP DEBUG
+        #self.trainData = trainData[0:100] # TODO: TEMP DEBUG
+        #numEpoch = 1
         self.D = self.trainData[0].size # Dimension of each data
         self.hasValid = hasValid
         self.learningRate = learningRate
@@ -22,7 +23,7 @@ class KMeans(object):
         # Execute KMeans
         self.KMeansMethod()
 
-    def printPlotResults(self, xAxis, yTrainErr, numUpdate):
+    def printPlotResults(self, xAxis, yTrainErr, numUpdate, minAssign, currTrainData):
         # TODO: To print graphs
         figureCount = 0 # TODO: Make global
         import matplotlib.pyplot as plt
@@ -32,10 +33,14 @@ class KMeans(object):
         trainStr = "Train"
         validStr = "Valid"
         typeLossStr = "Loss"
+        typeScatterStr = "Assignments"
         trainLossStr = trainStr + typeLossStr
         iterationStr = "Iteration"
+        dimensionOneStr = "D1"
+        dimensionTwoStr = "D2"
         paramStr = "LearninRate" + str(self.learningRate) + "NumEpoch" + str(self.numEpoch)
 
+        # Train Loss
         figureCount = figureCount + 1
         plt.figure(figureCount)
         title = trainStr + typeLossStr + paramStr
@@ -47,6 +52,27 @@ class KMeans(object):
         plt.savefig(self.questionTitle + title + ".png")
         plt.close()
         plt.clf()
+
+        # Plot percentage in each different classes as well
+        # TODO: Plot percentage as part of it as well
+        # 2.1.3
+        # all the trainData dimensions after assigning into the different K's
+
+        # Scatter plot based on assignment colors
+        figureCount = figureCount + 1
+        plt.figure(figureCount)
+        title = trainStr + typeScatterStr + paramStr
+        plt.title(title)
+        plt.xlabel(dimensionOneStr)
+        plt.ylabel(dimensionTwoStr)
+        k = 0
+        # TODO: Loop through the different classes and scatter one by one
+        plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=minAssign, s=50, alpha=0.5)
+        plt.savefig(self.questionTitle + title + ".png")
+        plt.close()
+        plt.clf()
+        # '''
+
 
     def KMeansMethod(self):
         ''' 
@@ -68,39 +94,43 @@ class KMeans(object):
         deduct = train_data_broad - U
         square = tf.square(deduct)
         sumOfSquare =  tf.reduce_sum(square, 2)
-        minSquare = tf.reduce_min(sumOfSquare, 1) # TEMP
+        minSquare = tf.reduce_min(sumOfSquare, 1)
         loss = tf.reduce_sum(minSquare)
-
         train = self.optimizer.minimize(loss)
 
+        minAssignments = tf.argmin(sumOfSquare,1)
         
         # Session
         init = tf.global_variables_initializer()
         sess = tf.InteractiveSession()
         sess.run(init)
         currEpoch = 0
+        minAssign = 0
         xAxis = []
         yTrainErr = []
         yValidErr = []
         numUpdate = 0
         step = 0
+        currTrainDataShuffle = self.trainData
         while currEpoch < self.numEpoch:
             np.random.shuffle(self.trainData) # Shuffle Batches
+            currTrainDataShuffle = self.trainData
             step = 0
             feedDicts = {train_data: self.trainData}
             if self.hasValid:
                 feedDicts = {train_data: self.trainData, valid_data: self.validData}
             while step*self.miniBatchSize < self.trainData.shape[0]:
-                _, errTrain = sess.run([train, loss], feed_dict = feedDicts)
-                '''
+                _, minAssign, errTrain = sess.run([train, minAssignments, loss], feed_dict = feedDicts)
                 # TEMP DEBUG, uncomment above once done
-                _, errTrain, u, d, sqr, sumSqr, minSqr, x = sess.run([train, loss, U, deduct, square, sumOfSquare, minSquare, train_data_broad], feed_dict = feedDicts)
+                '''
+                _, errTrain, u, d, sqr, sumSqr, minSqr, minAssign, x = sess.run([train, loss, U, deduct, square, sumOfSquare, minSquare, minAssignments, train_data_broad], feed_dict = feedDicts)
                 print 'x', x
                 print 'u', u
                 print 'd', d
                 print 'sqr', sqr
                 print 'sumSqr', sumSqr
                 print 'minSqr', minSqr
+                print 'minAssign', minAssign
                 print 'l', errTrain
                 # '''
                 xAxis.append(numUpdate)
@@ -111,7 +141,7 @@ class KMeans(object):
             if currEpoch%50 == 0:
                 print("e", str(currEpoch))
         # TODO: Print Plots
-        self.printPlotResults(xAxis, yTrainErr, numUpdate)
+        self.printPlotResults(xAxis, yTrainErr, numUpdate, minAssign, currTrainDataShuffle)
 
 def executeKMeans(questionTitle, K, dataType, hasValid):
     """
