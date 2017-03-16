@@ -22,18 +22,13 @@ class DataInitializer(object):
             data = self.data100D
         if hasValid:
             trainData, validData = self.splitDataRandom(data, hasValid)
-            print 'data' + str(dataType) + ' All: number of data:', data.size
-            print 'data' + str(dataType) + ' All: data dimension:', data[0].size
-            print 'data' + str(dataType) + ' Train: number of data:', trainData.size
-            print 'data' + str(dataType) + ' Train: data dimension:', trainData[0].size
-            print 'data' + str(dataType) + ' Valid: number of data:', validData.size
-            print 'data' + str(dataTyep) + ' Valid: data dimension:', validData[0].size
+            print 'data' + str(dataType) + ' All: (number of data, data dimension):', data.shape
+            print 'data' + str(dataType) + ' Train: (number of data, data dimension):', trainData.shape
+            print 'data' + str(dataType) + ' Valid: (number of data, data dimension):', validData.shape
             return trainData, validData
         trainData = self.splitDataRandom(data, hasValid)
-        print 'data' + str(dataType) + ' All: number of data:', data.size
-        print 'data' + str(dataType) + ' All: data dimension:', data[0].size
-        print 'data' + str(dataType) + ' Train: number of data:', trainData.size
-        print 'data' + str(dataType) + ' Train: data dimension:', trainData[0].size
+        print 'data' + str(dataType) + ' All: (number of data, data dimension):', data.shape
+        print 'data' + str(dataType) + ' Train: (number of data, data dimension):', trainData.shape
         return trainData
 
     def getTinyData(self):
