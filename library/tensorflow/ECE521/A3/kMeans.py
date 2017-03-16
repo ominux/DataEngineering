@@ -3,16 +3,13 @@ import numpy as np
 from dataInitializer import DataInitializer
 
 class KMeans(object):
-    def __init__(self, questionTitle, K, trainData, validData, hasValid, numEpoch = 100, learningRate = 0.1):
+    def __init__(self, questionTitle, K, trainData, validData, hasValid, numEpoch = 200, learningRate = 0.1):
         """
         Constructor
         """
         self.K = K
         self.trainData = trainData
         self.validData = validData 
-        #self.trainData = trainData[0:100] # TODO: TEMP DEBUG
-        #numEpoch = 1
-        #numEpoch = 50
         self.D = self.trainData[0].size # Dimension of each data
         self.hasValid = hasValid
         self.learningRate = learningRate
@@ -23,7 +20,7 @@ class KMeans(object):
         # Execute KMeans
         self.KMeansMethod()
 
-    def printPlotResults(self, xAxis, yTrainErr, yValidErr, numUpdate, minAssign, currTrainData, numAssignEachClass):
+    def printPlotResults(self, xAxis, yTrainErr, yValidErr, numUpdate, minAssign, currTrainData, numAssignEachClass, centers):
         figureCount = 0 # TODO: Make global
         import matplotlib.pyplot as plt
 
@@ -80,8 +77,12 @@ class KMeans(object):
         plt.title(title)
         plt.xlabel(dimensionOneStr)
         plt.ylabel(dimensionTwoStr)
-        # TODO: Fix this to plot label properly with colors or at least know what colors represents which
-        plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=minAssign, s=50, alpha=0.5, label=percentageAssignEachClass)
+        plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=minAssign, s=50, alpha=0.5)
+        #plt.plot(centers[:, 0], centers[:, 1], 'kx', markersize=15)
+        colors = ['blue', 'red', 'green', 'black', 'yellow']
+        colors = colors[:self.K]
+        for i, j, k in zip(centers, percentageAssignEachClass, colors):
+            plt.plot(i[0], i[1], 'kx', markersize=15, label=j, c=k)
         plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
         plt.close()
@@ -124,6 +125,7 @@ class KMeans(object):
         sess.run(init)
         currEpoch = 0
         minAssign = 0
+        centers = 0
         xAxis = []
         yTrainErr = []
         yValidErr = []
@@ -138,8 +140,7 @@ class KMeans(object):
             if self.hasValid:
                 feedDicts = {train_data: self.trainData, valid_data: self.validData}
             while step*self.miniBatchSize < self.trainData.shape[0]:
-                _, minAssign, errTrain, errValid = sess.run([train, minAssignments, loss, validLoss], feed_dict = feedDicts)
-                #_, minAssign, errTrain = sess.run([train, minAssignments, loss], feed_dict = feedDicts)
+                _, minAssign, centers, errTrain, errValid = sess.run([train, minAssignments, U, loss, validLoss], feed_dict = feedDicts)
                 # TODO: TEMP DEBUG, uncomment above once done
                 '''
                 _, errTrain, u, d, sqr, sumSqr, minSqr, minAssign, x = sess.run([train, loss, U, deduct, square, sumOfSquare, minSquare, minAssignments, train_data_broad], feed_dict = feedDicts)
@@ -163,7 +164,9 @@ class KMeans(object):
                 # print("e", str(currEpoch))
         # Count how many assigned to each class
         numAssignEachClass = np.bincount(minAssign)
-        self.printPlotResults(xAxis, yTrainErr, yValidErr, numUpdate, minAssign, currTrainDataShuffle, numAssignEachClass)
+        print centers
+        print centers.shape
+        self.printPlotResults(xAxis, yTrainErr, yValidErr, numUpdate, minAssign, currTrainDataShuffle, numAssignEachClass, centers)
 
 def executeKMeans(questionTitle, K, dataType, hasValid):
     """
