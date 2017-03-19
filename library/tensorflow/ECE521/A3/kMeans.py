@@ -88,6 +88,20 @@ class KMeans(object):
         plt.close()
         plt.clf()
 
+    def PairwiseDistances(self, X, U):
+        """
+        input:
+            X is a matrix of size (B x D)
+            U is a matrix of size (K x D)
+        output:
+            Distances = matrix of size (B x D) containing the pairwise Euclidean distances
+        """
+        batchSize = tf.shape(X)[0] 
+        dimensionSize = tf.shape(X)[1]
+        numClusters = tf.shape(U)[0]
+        X_broadcast = tf.reshape(X, (batchSize, 1, dimensionSize))
+        sumOfSquareDistances = tf.reduce_sum(tf.square(tf.subtract(X_broadcast, U)), 2)
+        return sumOfSquareDistances
 
     def KMeansMethod(self):
         ''' 
@@ -99,21 +113,20 @@ class KMeans(object):
         U = tf.Variable(tf.truncated_normal([self.K, self.D]))
 
         train_data = tf.placeholder(tf.float32, shape=[None, self.D], name="trainingData")
-        batchSizing = tf.shape(train_data)[0]
-
-        train_data_broad = tf.reshape(train_data, (batchSizing, 1, self.D))
-        deduct = train_data_broad - U
-        square = tf.square(deduct)
-        sumOfSquare =  tf.reduce_sum(square, 2)
+        sumOfSquare = self.PairwiseDistances(train_data, U)
+        # End of reimplementation of pairwise distances from A1
         minSquare = tf.reduce_min(sumOfSquare, 1)
         loss = tf.reduce_sum(minSquare)
         validLoss = loss
 
         if self.hasValid: 
             valid_data = tf.placeholder(tf.float32, shape=[None, self.D], name="validationData")
+            '''
             validBatchSizing = tf.shape(valid_data)[0]
             valid_data_broad = tf.reshape(valid_data, (validBatchSizing, 1, self.D))
-            validLoss = tf.reduce_sum(tf.reduce_min(tf.reduce_sum(tf.square(valid_data_broad-U), 2), 1))
+            validLoss = tf.reduce_sum(tf.reduce_min(tf.reduce_sum(tf.square(tf.subtract(valid_data_broad,U)), 2), 1))
+            '''
+            validLoss = tf.reduce_sum(tf.reduce_min(self.PairwiseDistances(valid_data, U)))
 
         train = self.optimizer.minimize(loss)
 
