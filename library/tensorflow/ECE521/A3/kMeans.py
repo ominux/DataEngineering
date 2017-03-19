@@ -118,11 +118,6 @@ class KMeans(object):
 
         if self.hasValid: 
             valid_data = tf.placeholder(tf.float32, shape=[None, self.D], name="validationData")
-            '''
-            validBatchSizing = tf.shape(valid_data)[0]
-            valid_data_broad = tf.reshape(valid_data, (validBatchSizing, 1, self.D))
-            validLoss = tf.reduce_sum(tf.reduce_min(tf.reduce_sum(tf.square(tf.subtract(valid_data_broad,U)), 2), 1))
-            '''
             validLoss = tf.reduce_sum(tf.reduce_min(self.PairwiseDistances(valid_data, U)))
 
         train = self.optimizer.minimize(loss)
@@ -146,25 +141,11 @@ class KMeans(object):
             np.random.shuffle(self.trainData) # Shuffle Batches
             currTrainDataShuffle = self.trainData
             step = 0
-            #feedDicts = {train_data: self.trainData}
-            # feedDicts = {train_data: self.trainData[, valid_data: self.validData}
             while step*self.miniBatchSize < self.trainData.shape[0]:
                 feedDicts = {train_data: self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize]}
                 if self.hasValid:
                     feedDicts = {train_data: self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], valid_data:self.validData}
                 _, minAssign, centers, errTrain, errValid = sess.run([train, minAssignments, U, loss, validLoss], feed_dict = feedDicts)
-                # TODO: TEMP DEBUG, uncomment above once done
-                '''
-                _, errTrain, u, d, sqr, sumSqr, minSqr, minAssign, x = sess.run([train, loss, U, deduct, square, sumOfSquare, minSquare, minAssignments, train_data_broad], feed_dict = feedDicts)
-                print 'x', x
-                print 'u', u
-                print 'd', d
-                print 'sqr', sqr
-                print 'sumSqr', sumSqr
-                print 'minSqr', minSqr
-                print 'minAssign', minAssign
-                print 'l', errTrain
-                # '''
                 xAxis.append(numUpdate)
                 yTrainErr.append(errTrain)
                 yValidErr.append(errValid)
