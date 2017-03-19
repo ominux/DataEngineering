@@ -3,11 +3,12 @@ import numpy as np
 from dataInitializer import DataInitializer
 
 class KMeans(object):
-    def __init__(self, questionTitle, K, trainData, validData, hasValid, numEpoch = 200, learningRate = 0.1):
+    def __init__(self, questionTitle, K, trainData, validData, hasValid, dataType, numEpoch = 200, learningRate = 0.1):
         """
         Constructor
         """
         self.K = K
+        self.dataType = dataType
         self.trainData = trainData
         self.validData = validData 
         self.D = self.trainData[0].size # Dimension of each data
@@ -29,7 +30,8 @@ class KMeans(object):
         print "Assignments To Classes:", numAssignEachClass
         percentageAssignEachClass = numAssignEachClass/float(sum(numAssignEachClass))
         print "Percentage Assignment To Classes:", percentageAssignEachClass
-
+        if self.dataType != "2D":
+            return
         trainStr = "Train"
         validStr = "Valid"
         typeLossStr = "Loss"
@@ -78,7 +80,8 @@ class KMeans(object):
         plt.xlabel(dimensionOneStr)
         plt.ylabel(dimensionTwoStr)
         plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=minAssign, s=50, alpha=0.5)
-        colors = ['blue', 'red', 'green', 'black', 'yellow']
+        colors = ['blue', 'red', 'green', 'black', 'yellow', 'magenta', 'cyan', 'brown', 'orange', 
+                'aqua']
         colors = colors[:self.K]
         for i, j, k in zip(centers, percentageAssignEachClass, colors):
             plt.plot(i[0], i[1], 'kx', markersize=15, label=j, c=k)
@@ -174,11 +177,12 @@ def executeKMeans(questionTitle, K, dataType, hasValid):
     else: 
         trainData = dataInitializer.getData(dataType, hasValid)
     # Execute algorithm 
-    kObject = KMeans(questionTitle, K, trainData, validData, hasValid)
+    kObject = KMeans(questionTitle, K, trainData, validData, hasValid, dataType)
 
 if __name__ == "__main__":
     print "ECE521 Assignment 3: Unsupervised Learning: K Means"
 
+    '''
     # Unsupervised => Data has no label or target
     questionTitle = "1.1.2"
     dataType = "2D"
@@ -187,6 +191,7 @@ if __name__ == "__main__":
     executeKMeans(questionTitle, K, dataType, hasValid)
     # '''
 
+    '''
     questionTitle = "1.1.3"
     diffK = [1, 2, 3, 4, 5]
     dataType = "2D"
@@ -195,6 +200,7 @@ if __name__ == "__main__":
         executeKMeans(questionTitle, K, dataType, hasValid)
     # '''
 
+    '''
     questionTitle = "1.1.4"
     diffK = [1, 2, 3, 4, 5]
     dataType = "2D"
@@ -203,3 +209,11 @@ if __name__ == "__main__":
         executeKMeans(questionTitle, K, dataType, hasValid)
     # '''
 
+    # Run using 100D data
+    questionTitle = "2.2.4"
+    diffK = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    dataType = "100D"
+    hasValid = True
+    for K in diffK:
+        executeKMeans(questionTitle, K, dataType, hasValid)
+    # '''
