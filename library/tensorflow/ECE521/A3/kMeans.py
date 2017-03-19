@@ -78,7 +78,6 @@ class KMeans(object):
         plt.xlabel(dimensionOneStr)
         plt.ylabel(dimensionTwoStr)
         plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=minAssign, s=50, alpha=0.5)
-        #plt.plot(centers[:, 0], centers[:, 1], 'kx', markersize=15)
         colors = ['blue', 'red', 'green', 'black', 'yellow']
         colors = colors[:self.K]
         for i, j, k in zip(centers, percentageAssignEachClass, colors):
@@ -111,10 +110,8 @@ class KMeans(object):
         '''
         # Build Graph 
         U = tf.Variable(tf.truncated_normal([self.K, self.D]))
-
         train_data = tf.placeholder(tf.float32, shape=[None, self.D], name="trainingData")
         sumOfSquare = self.PairwiseDistances(train_data, U)
-        # End of reimplementation of pairwise distances from A1
         minSquare = tf.reduce_min(sumOfSquare, 1)
         loss = tf.reduce_sum(minSquare)
         validLoss = loss
@@ -149,10 +146,12 @@ class KMeans(object):
             np.random.shuffle(self.trainData) # Shuffle Batches
             currTrainDataShuffle = self.trainData
             step = 0
-            feedDicts = {train_data: self.trainData}
-            if self.hasValid:
-                feedDicts = {train_data: self.trainData, valid_data: self.validData}
+            #feedDicts = {train_data: self.trainData}
+            # feedDicts = {train_data: self.trainData[, valid_data: self.validData}
             while step*self.miniBatchSize < self.trainData.shape[0]:
+                feedDicts = {train_data: self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize]}
+                if self.hasValid:
+                    feedDicts = {train_data: self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], valid_data:self.validData}
                 _, minAssign, centers, errTrain, errValid = sess.run([train, minAssignments, U, loss, validLoss], feed_dict = feedDicts)
                 # TODO: TEMP DEBUG, uncomment above once done
                 '''
@@ -177,8 +176,7 @@ class KMeans(object):
                 # print("e", str(currEpoch))
         # Count how many assigned to each class
         numAssignEachClass = np.bincount(minAssign)
-        print centers
-        print centers.shape
+        print "Center Values", centers
         self.printPlotResults(xAxis, yTrainErr, yValidErr, numUpdate, minAssign, currTrainDataShuffle, numAssignEachClass, centers)
 
 def executeKMeans(questionTitle, K, dataType, hasValid):
