@@ -5,7 +5,7 @@ from dataInitializer import DataInitializer
 from utils import * 
 
 class MixtureOfGaussians(object):
-    def __init__(self, questionTitle, K, trainData, validData, hasValid, dataType, numEpoch = 400, learningRate = 0.01):
+    def __init__(self, questionTitle, K, trainData, validData, hasValid, dataType, numEpoch = 500, learningRate = 0.001):
         """
         Constructor
         """
@@ -24,6 +24,7 @@ class MixtureOfGaussians(object):
         self.MixtureOfGaussiansMethod()
 
     def printPlotResults(self, xAxis, yTrainErr, yValidErr, numUpdate, minAssign, currTrainData, numAssignEachClass, clusterMean, clusterStdDeviation, clusterPrior):
+        # TODO: Print by decreasing so that the outliers get printed over the non-outliers
         figureCount = 0 # TODO: Make global
         import matplotlib.pyplot as plt
 
@@ -142,10 +143,14 @@ class MixtureOfGaussians(object):
         '''
         # Build Graph 
         clusterMean = tf.Variable(tf.truncated_normal([self.K, self.D])) # cluster centers
-        clusterStdDeviationConstraint = tf.Variable(tf.zeros([self.K])) # cluster constraint to prevent negative
+        # Initialize to [-1, 1]
+        clusterStdDeviationConstraint = tf.Variable(tf.truncated_normal([1, self.K], mean=0, stddev = 0.5)) # cluster constraint to prevent negative
         clusterStdDeviation = tf.sqrt(tf.exp(clusterStdDeviationConstraint))
-        clusterPriorConstraint = tf.Variable(tf.zeros([self.K]))
-        clusterPrior = tf.divide(tf.exp(clusterPriorConstraint), tf.reduce_sum(tf.exp(clusterPriorConstraint)))
+        # Uniform intialization
+        clusterPriorConstraint = tf.Variable(tf.ones([1, self.K]))
+        logClusterConstraint = logsoftmax(clusterPriorConstraint)
+        # clusterPrior = tf.divide(tf.exp(clusterPriorConstraint), tf.reduce_sum(tf.exp(clusterPriorConstraint)))
+        clusterPrior = tf.exp(logClusterConstraint)
 
         trainData = tf.placeholder(tf.float32, shape=[None, self.D], name="trainingData")
 
@@ -242,6 +247,7 @@ def executeMixtureOfGaussians(questionTitle, K, dataType, hasValid):
 
 if __name__ == "__main__":
     print "ECE521 Assignment 3: Unsupervised Learning: GaussianCluster"
+    '''
     # Gaussian Cluster Model
     questionTitle = "2.1.2" # Implemented function
     questionTitle = "2.1.3" # Implemented FUnction
@@ -254,16 +260,21 @@ if __name__ == "__main__":
     # '''
 
     questionTitle = "2.2.3"
-    diffK = [1, 2, 3, 4, 5]
     dataType = "2D"
     hasValid = True
+    diffK = [1, 2, 3, 4, 5]
+    # TODO: Figure out why assign 0 to certain clusters
+    numEpoch = 500
+    learnRate = 0.001
     for K in diffK:
-        executeMixtureOfGaussians(questionTitle, K, dataType, hasValid)
+        executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learnRate)
+    # '''
 
     '''
     questionTitle = "2.2.4"
-    diffK = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     dataType = "100D"
+    hasValid = True
+    diffK = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     for K in diffK:
         executeMixtureOfGaussians(questionTitle, K, dataType, hasValid)
     # '''
