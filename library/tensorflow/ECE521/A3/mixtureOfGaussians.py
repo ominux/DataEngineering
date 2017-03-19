@@ -17,8 +17,6 @@ class MixtureOfGaussians(object):
         self.learningRate = learningRate
         self.numEpoch = numEpoch
         self.miniBatchSize = self.trainData.shape[0] # miniBatchSize is entire data size
-        # TODO: REMOVE BELOW TEMP
-        self.miniBatchSize = 2 
         self.questionTitle = questionTitle
         self.optimizer = tf.train.AdamOptimizer(learning_rate = self.learningRate, beta1=0.9, beta2=0.99, epsilon=1e-5)
         # Execute Mixture of Gaussians
@@ -106,18 +104,26 @@ class MixtureOfGaussians(object):
         sumOfSquareDistances = tf.reduce_sum(tf.square(tf.subtract(X_broadcast, U)), 2)
         return sumOfSquareDistances
 
-    def LnProbabilityXGivenZ(self, data, mean, stddev, prior):
+    def LnProbabilityXGivenZ(self, data, mean, stddev):
         sumOfSquare = self.PairwiseDistances(data, mean)
         logLikelihoodDataGivenCluster = -tf.log(tf.sqrt(tf.constant(2*np.pi)) * stddev) - tf.divide(sumOfSquare, 2*tf.square(stddev))
         return logLikelihoodDataGivenCluster
 
     def LnProbabilityZGivenX(self, data, mean, stddev, prior):
-        lnProbabilityXGivenZ = self.LnProbabilityXGivenZ(data, mean, stddev, prior)
-        log_prior_broad = tf.log(tf.reshape(prior, (1, self.K)))
-        numerator = log_prior_broad + lnProbabilityXGivenZ
-        denominator = tf.reshape(reduce_logsumexp(numerator, 1), (tf.shape(data)[0], 1))
-        lnProbabilityZGivenX = numerator - denominator
+        lnProbabilityXGivenZ = self.LnProbabilityXGivenZ(data, mean, stddev)
+        lnPriorBroad = tf.log(tf.reshape(prior, (1, self.K)))
+        numerator = lnPriorBroad + lnProbabilityXGivenZ
+        lnProbabilityX = tf.reshape(reduce_logsumexp(numerator, 1), (tf.shape(data)[0], 1))
+        lnProbabilityZGivenX = numerator - lnProbabilityX
         return lnProbabilityZGivenX
+
+    def LnProbabilityX(self, data, mean, stddev, prior):
+        lnProbabilityXGivenZ = self.LnProbabilityXGivenZ(data, mean, stddev)
+        lnPriorBroad = tf.log(tf.reshape(prior, (1, self.K)))
+        numerator = lnPriorBroad + lnProbabilityXGivenZ
+        lnProbabilityX = tf.reshape(reduce_logsumexp(numerator, 1), (tf.shape(data)[0], 1))
+        return lnProbabilityX
+
 
     def MixtureOfGaussiansMethod(self):
         ''' 
@@ -135,30 +141,17 @@ class MixtureOfGaussians(object):
         trainData = tf.placeholder(tf.float32, shape=[None, self.D], name="trainingData")
 
         sumOfSquare = self.PairwiseDistances(trainData, clusterMean)
-        lnProbabilityXGivenZ = self.LnProbabilityXGivenZ(trainData, clusterMean, clusterStdDeviation, clusterPrior)
+        lnProbabilityXGivenZ = self.LnProbabilityXGivenZ(trainData, clusterMean, clusterStdDeviation)
         # TODO: Copy paste into functions
         # ----------------------------------------------------------------------------------
-        '''
-        data = trainData
-        mean = clusterMean
-        stddev = clusterStdDeviation
-        prior = clusterPrior
-        lnProbabilityXGivenZ = self.LnProbabilityXGivenZ(data, mean, stddev, prior)
-        log_prior_broad = tf.log(tf.reshape(prior, (1, self.K)))
-        numerator = log_prior_broad + lnProbabilityXGivenZ
-        denominator = tf.reshape(reduce_logsumexp(numerator, 1), (tf.shape(data)[0], 1))
-        lnProbabilityZGivenX = numerator - denominator
-        '''
         lnProbabilityZGivenX = self.LnProbabilityZGivenX(trainData, clusterMean, clusterStdDeviation, clusterPrior)
-        # check that exp(logProbabilities) sum to 1
-        check = tf.reduce_sum(tf.exp(lnProbabilityZGivenX), 1)
+        check = tf.reduce_sum(tf.exp(lnProbabilityZGivenX), 1) # Check probabilities sum to 1
+        lnProbabilityX = self.LnProbabilityX(trainData, clusterMean, clusterStdDeviation, clusterPrior)
+
         # ----------------------------------------------------------------------------------
         #logLikelihoodDataGivenCluster = self.LnProbabilityZGivenX(trainData, clusterMean, clusterStdDeviation, clusterPrior)
-        # TODO: Replaced minSquare with log probability
-        minSquare = tf.reduce_min(sumOfSquare, 1)
-        loss = tf.reduce_sum(minSquare)
-        validLoss = loss
-
+        loss = tf.reduce_sum(-1 * lnProbabilityX)
+        validLoss = loss # initialization
         if self.hasValid: 
             valid_data = tf.placeholder(tf.float32, shape=[None, self.D], name="validationData")
             '''
@@ -166,11 +159,11 @@ class MixtureOfGaussians(object):
             valid_data_broad = tf.reshape(valid_data, (validBatchSizing, 1, self.D))
             validLoss = tf.reduce_sum(tf.reduce_min(tf.reduce_sum(tf.square(tf.subtract(valid_data_broad,clusterMean)), 2), 1))
             '''
-            validLoss = tf.reduce_sum(tf.reduce_min(self.PairwiseDistances(valid_data, clusterMean)))
+            validLoss = tf.reduce_sum(-1 * self.LnProbabilityX(valid_data, clusterMean, clusterStdDeviation, clusterPrior))
 
         train = self.optimizer.minimize(loss)
 
-        # TODO: Update assignment function below
+        # TODO: Update assignment function below for MOG
         minAssignments = tf.argmin(sumOfSquare,1)
         
         # Session
@@ -195,10 +188,7 @@ class MixtureOfGaussians(object):
                 if self.hasValid:
                     feedDicts = {trainData: self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], valid_data: self.validData}
                 _, minAssign, centers, zGivenX, checkZGivenX, errTrain, errValid = sess.run([train, minAssignments, clusterMean, lnProbabilityZGivenX, check, loss, validLoss], feed_dict = feedDicts)
-                print "lnZGivenX", zGivenX
-                print zGivenX.shape
-                print checkZGivenX
-                sys.exit(0)
+                # print checkZGivenX
                 '''
                 _, minAssign, centers, xGivenZ, clusterPri, num,den, zGivenX, errTrain, errValid = sess.run([train, minAssignments, clusterMean, lnProbabilityXGivenZ , clusterPrior, numerator, denominator, lnProbabilityZGivenX, loss, validLoss], feed_dict = feedDicts)
                 print "lnXGivenZ", xGivenZ
@@ -218,8 +208,7 @@ class MixtureOfGaussians(object):
             currEpoch += 1
         # Count how many assigned to each class
         numAssignEachClass = np.bincount(minAssign)
-        # TODO: PLOT LATER
-        # self.printPlotResults(xAxis, yTrainErr, yValidErr, numUpdate, minAssign, currTrainDataShuffle, numAssignEachClass, centers)
+        self.printPlotResults(xAxis, yTrainErr, yValidErr, numUpdate, minAssign, currTrainDataShuffle, numAssignEachClass, centers)
 
 def executeMixtureOfGaussians(questionTitle, K, dataType, hasValid):
     """
@@ -241,27 +230,21 @@ def executeMixtureOfGaussians(questionTitle, K, dataType, hasValid):
 if __name__ == "__main__":
     print "ECE521 Assignment 3: Unsupervised Learning: GaussianCluster"
     # Gaussian Cluster Model
-    questionTitle = "2.1.2"
+    questionTitle = "2.1.2" # Implemented function
+    questionTitle = "2.1.3" # Implemented FUnction
+    print "ECE521 Assignment 3: Unsupervised Learning: Mixture of Gaussian"
+    questionTitle = "2.2.2"
     dataType = "2D"
     hasValid = False # No validation data
     K = 3
     executeMixtureOfGaussians(questionTitle, K, dataType, hasValid)
     # '''
-    
+
     '''
-    questionTitle = "2.1.3"
-    diffK = [1 2 3 4 5]
-    dataType = "2D"
-    hasValid = True
-    for K in diffK:
-        executeMixtureOfGaussians(questionTitle, K, dataType, hasValid)
-    # '''
-    print "ECE521 Assignment 3: Unsupervised Learning: Mixture of Gaussian"
-    '''
-    # TODO:
-    questionTitle = "2.2.2"
     # TODO:
     questionTitle = "2.2.3"
+    for K in diffK:
+        executeMixtureOfGaussians(questionTitle, K, dataType, hasValid)
     # TODO:
     questionTitle = "2.2.4"
     # TODO:
