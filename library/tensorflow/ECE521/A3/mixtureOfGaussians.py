@@ -160,9 +160,9 @@ class MixtureOfGaussians(object):
         clusterVariance = tf.exp(clusterStdDeviationConstraint)
         clusterStdDeviation = tf.sqrt(clusterVariance)
         # Uniform intialization
-        #clusterPriorConstraint = tf.Variable(tf.ones([1, self.K]))
-        clusterPriorConstraint = tf.ones([1, self.K])
-        logClusterConstraint = logsoftmax(tf.log(clusterPriorConstraint))
+        clusterPriorConstraint = tf.Variable(tf.ones([1, self.K]))
+        #clusterPriorConstraint = tf.ones([1, self.K])
+        logClusterConstraint = logsoftmax(clusterPriorConstraint)
         # clusterPrior = tf.divide(tf.exp(clusterPriorConstraint), tf.reduce_sum(tf.exp(clusterPriorConstraint)))
         clusterPrior = tf.exp(logClusterConstraint)
 
@@ -291,9 +291,9 @@ if __name__ == "__main__":
     dataType = "2D"
     hasValid = True
     diffK = [1, 2, 3, 4, 5]
-    diffK = [5]
+    diffK = [4]
     numEpoch = 1000
-    learningRate = 0.01
+    learningRate = 0.1
     for K in diffK:
         executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
     # '''
