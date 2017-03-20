@@ -122,7 +122,7 @@ class MixtureOfGaussians(object):
 
     def LnProbabilityXGivenZ(self, data, mean, variance):
         sumOfSquare = self.PairwiseDistances(data, mean)
-        logLikelihoodDataGivenCluster = tf.add(-tf.multiply(self.D/2.0,tf.log(tf.constant(2.0*np.pi)*variance)), -tf.divide(sumOfSquare, 2.0*variance))
+        logLikelihoodDataGivenCluster = tf.add(-tf.multiply(tf.cast(self.D, tf.float32)/2.0,tf.log(tf.constant(2.0*np.pi)*variance)), -tf.divide(sumOfSquare, 2.0*variance))
         return logLikelihoodDataGivenCluster
 
     def LnProbabilityZGivenX(self, data, mean, variance, lnPriorBroad):
@@ -150,16 +150,18 @@ class MixtureOfGaussians(object):
         '''
         # Build Graph 
         # Mean location matters a lot in convergence
-        # clusterMean = tf.Variable(tf.truncated_normal([self.K, self.D], mean=-1, stddev=0.5)) # cluster centers
-        clusterMean = tf.Variable(tf.zeros([self.K, self.D])) # cluster centers
+        clusterMean = tf.Variable(tf.truncated_normal([self.K, self.D], mean=-1, stddev=2.0)) # cluster centers
+        #clusterMean = tf.Variable(tf.zeros([self.K, self.D])) # cluster centers
         # Initialize to [-1, 1]
-        clusterStdDeviationConstraint = tf.Variable(tf.truncated_normal([1, self.K], mean=0, stddev = 0.5)) # cluster constraint to prevent negative
-        #clusterStdDeviationConstraint = tf.Variable(tf.truncated_normal([1, self.K], mean=0, stddev=1.0))
+        # clusterStdDeviationConstraint = tf.Variable(tf.truncated_normal([1, self.K], mean=-0.69, stddev = 0.3)) # cluster constraint to prevent negative
+        #clusterStdDeviationConstraint = tf.Variable(tf.truncated_normal([1, self.K], mean=0, stddev = 0.5)) # cluster constraint to prevent negative
+        clusterStdDeviationConstraint = tf.Variable(tf.truncated_normal([1, self.K], mean=0, stddev=0.1))
         #clusterStdDeviationConstraint = tf.Variable(tf.zeros([1, self.K]))
         clusterVariance = tf.exp(clusterStdDeviationConstraint)
         clusterStdDeviation = tf.sqrt(clusterVariance)
         # Uniform intialization
-        clusterPriorConstraint = tf.Variable(tf.ones([1, self.K]))
+        #clusterPriorConstraint = tf.Variable(tf.ones([1, self.K]))
+        clusterPriorConstraint = tf.ones([1, self.K])
         logClusterConstraint = logsoftmax(tf.log(clusterPriorConstraint))
         # clusterPrior = tf.divide(tf.exp(clusterPriorConstraint), tf.reduce_sum(tf.exp(clusterPriorConstraint)))
         clusterPrior = tf.exp(logClusterConstraint)
@@ -269,6 +271,7 @@ def executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, le
     kObject = MixtureOfGaussians(questionTitle, K, trainData, validData, hasValid, dataType, numEpoch, learningRate)
 
 if __name__ == "__main__":
+    '''
     print "ECE521 Assignment 3: Unsupervised Learning: GaussianCluster"
     # Gaussian Cluster Model
     questionTitle = "2.1.2" # Implemented function
@@ -288,8 +291,8 @@ if __name__ == "__main__":
     dataType = "2D"
     hasValid = True
     diffK = [1, 2, 3, 4, 5]
-    # diffK = [4]
-    numEpoch = 95
+    diffK = [5]
+    numEpoch = 1000
     learningRate = 0.01
     for K in diffK:
         executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
