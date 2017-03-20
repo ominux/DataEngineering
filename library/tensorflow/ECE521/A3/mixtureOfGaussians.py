@@ -89,8 +89,8 @@ class MixtureOfGaussians(object):
         plt.title(title)
         plt.xlabel(dimensionOneStr)
         plt.ylabel(dimensionTwoStr)
-        plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=minAssign, s=50, alpha=0.5)
         colors = ['blue', 'red', 'green', 'black', 'yellow']
+        plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=minAssign, s=10, alpha=0.5)
         colors = colors[:self.K]
         for i, j, k in zip(clusterMean, percentageAssignEachClass, colors):
             plt.plot(i[0], i[1], 'kx', markersize=15, label=j, c=k)
@@ -116,7 +116,7 @@ class MixtureOfGaussians(object):
 
     def LnProbabilityXGivenZ(self, data, mean, stddev):
         sumOfSquare = self.PairwiseDistances(data, mean)
-        logLikelihoodDataGivenCluster = -tf.log(tf.sqrt(tf.constant(2*np.pi)) * stddev) - tf.divide(sumOfSquare, 2*tf.square(stddev))
+        logLikelihoodDataGivenCluster = -(tf.log(tf.sqrt(tf.constant(2*np.pi)) * stddev))  -  tf.divide(sumOfSquare, 2*tf.square(stddev))
         return logLikelihoodDataGivenCluster
 
     def LnProbabilityZGivenX(self, data, mean, stddev, prior):
@@ -134,7 +134,6 @@ class MixtureOfGaussians(object):
         lnProbabilityX = tf.reshape(reduce_logsumexp(numerator, 1), (tf.shape(data)[0], 1))
         return lnProbabilityX
 
-
     def MixtureOfGaussiansMethod(self):
         ''' 
         Build Graph and execute in here
@@ -148,7 +147,7 @@ class MixtureOfGaussians(object):
         clusterStdDeviation = tf.sqrt(tf.exp(clusterStdDeviationConstraint))
         # Uniform intialization
         clusterPriorConstraint = tf.Variable(tf.ones([1, self.K]))
-        logClusterConstraint = logsoftmax(clusterPriorConstraint)
+        logClusterConstraint = logsoftmax(tf.log(clusterPriorConstraint))
         # clusterPrior = tf.divide(tf.exp(clusterPriorConstraint), tf.reduce_sum(tf.exp(clusterPriorConstraint)))
         clusterPrior = tf.exp(logClusterConstraint)
 
@@ -229,7 +228,7 @@ class MixtureOfGaussians(object):
         numAssignEachClass = np.bincount(minAssign)
         self.printPlotResults(xAxis, yTrainErr, yValidErr, numUpdate, minAssign, currTrainDataShuffle, numAssignEachClass, paramClusterMean, paramClusterStdDeviation, paramClusterPrior)
 
-def executeMixtureOfGaussians(questionTitle, K, dataType, hasValid):
+def executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate):
     """
     Re-loads the data and re-randomize it with same seed anytime to ensure replicable results
     """
@@ -242,12 +241,12 @@ def executeMixtureOfGaussians(questionTitle, K, dataType, hasValid):
         trainData, validData = dataInitializer.getData(dataType, hasValid)
     else: 
         trainData = dataInitializer.getData(dataType, hasValid)
+
     # Execute algorithm 
-    kObject = MixtureOfGaussians(questionTitle, K, trainData, validData, hasValid, dataType)
+    kObject = MixtureOfGaussians(questionTitle, K, trainData, validData, hasValid, dataType, numEpoch, learningRate)
 
 if __name__ == "__main__":
     print "ECE521 Assignment 3: Unsupervised Learning: GaussianCluster"
-    '''
     # Gaussian Cluster Model
     questionTitle = "2.1.2" # Implemented function
     questionTitle = "2.1.3" # Implemented FUnction
@@ -256,7 +255,9 @@ if __name__ == "__main__":
     dataType = "2D"
     hasValid = False # No validation data
     K = 3
-    executeMixtureOfGaussians(questionTitle, K, dataType, hasValid)
+    numEpoch = 500
+    learningRate = 0.001
+    executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
     # '''
 
     questionTitle = "2.2.3"
@@ -265,9 +266,9 @@ if __name__ == "__main__":
     diffK = [1, 2, 3, 4, 5]
     # TODO: Figure out why assign 0 to certain clusters
     numEpoch = 500
-    learnRate = 0.001
+    learningRate = 0.001
     for K in diffK:
-        executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learnRate)
+        executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
     # '''
 
     '''
@@ -275,6 +276,8 @@ if __name__ == "__main__":
     dataType = "100D"
     hasValid = True
     diffK = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    numEpoch = 200
+    learningRate = 0.1
     for K in diffK:
-        executeMixtureOfGaussians(questionTitle, K, dataType, hasValid)
+        executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
     # '''
