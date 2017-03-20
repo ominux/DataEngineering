@@ -271,7 +271,6 @@ def executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, le
     kObject = MixtureOfGaussians(questionTitle, K, trainData, validData, hasValid, dataType, numEpoch, learningRate)
 
 if __name__ == "__main__":
-    '''
     print "ECE521 Assignment 3: Unsupervised Learning: GaussianCluster"
     # Gaussian Cluster Model
     questionTitle = "2.1.2" # Implemented function
@@ -291,7 +290,6 @@ if __name__ == "__main__":
     dataType = "2D"
     hasValid = True
     diffK = [1, 2, 3, 4, 5]
-    diffK = [4]
     numEpoch = 1000
     learningRate = 0.1
     for K in diffK:
