@@ -87,6 +87,8 @@ class MixtureOfGaussians(object):
         # Including percentage as the label
         figureCount = figureCount + 1
         plt.figure(figureCount)
+        plt.axes()
+
         title = trainStr + typeScatterStr + paramStr
         plt.title(title)
         plt.xlabel(dimensionOneStr)
@@ -94,8 +96,10 @@ class MixtureOfGaussians(object):
         colors = ['blue', 'red', 'green', 'black', 'yellow']
         plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=minAssign, s=10, alpha=0.5)
         colors = colors[:self.K]
-        for i, j, k in zip(clusterMean, percentageAssignEachClass, colors):
+        for i, j, k, l in zip(clusterMean, percentageAssignEachClass, colors, clusterStdDeviation[0]):
             plt.plot(i[0], i[1], 'kx', markersize=15, label=j, c=k)
+            circle = plt.Circle((i[0], i[1]), radius=2*l, color=k, fill=False)
+            plt.gca().add_patch(circle)
         plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
         plt.close()
@@ -149,8 +153,8 @@ class MixtureOfGaussians(object):
         # clusterMean = tf.Variable(tf.truncated_normal([self.K, self.D], mean=-1, stddev=0.5)) # cluster centers
         clusterMean = tf.Variable(tf.zeros([self.K, self.D])) # cluster centers
         # Initialize to [-1, 1]
-        #clusterStdDeviationConstraint = tf.Variable(tf.truncated_normal([1, self.K], mean=0, stddev = 0.5)) # cluster constraint to prevent negative
-        clusterStdDeviationConstraint = tf.Variable(tf.truncated_normal([1, self.K]))
+        clusterStdDeviationConstraint = tf.Variable(tf.truncated_normal([1, self.K], mean=0, stddev = 0.5)) # cluster constraint to prevent negative
+        #clusterStdDeviationConstraint = tf.Variable(tf.truncated_normal([1, self.K], mean=0, stddev=1.0))
         #clusterStdDeviationConstraint = tf.Variable(tf.zeros([1, self.K]))
         clusterVariance = tf.exp(clusterStdDeviationConstraint)
         clusterStdDeviation = tf.sqrt(clusterVariance)
@@ -267,7 +271,6 @@ def executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, le
 if __name__ == "__main__":
     print "ECE521 Assignment 3: Unsupervised Learning: GaussianCluster"
     # Gaussian Cluster Model
-    '''
     questionTitle = "2.1.2" # Implemented function
     questionTitle = "2.1.3" # Implemented FUnction
     print "ECE521 Assignment 3: Unsupervised Learning: Mixture of Gaussian"
@@ -275,8 +278,9 @@ if __name__ == "__main__":
     dataType = "2D"
     hasValid = False # No validation data
     K = 3
-    numEpoch = 500
+    numEpoch = 1000
     learningRate = 0.001
+    # Note: Loss will be higher since no validation data
     executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
     # '''
 
@@ -285,8 +289,8 @@ if __name__ == "__main__":
     hasValid = True
     diffK = [1, 2, 3, 4, 5]
     # diffK = [4]
-    numEpoch = 700
-    learningRate = 0.001
+    numEpoch = 95
+    learningRate = 0.01
     for K in diffK:
         executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
     # '''
