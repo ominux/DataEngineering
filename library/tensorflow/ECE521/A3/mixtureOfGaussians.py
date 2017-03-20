@@ -180,8 +180,8 @@ class MixtureOfGaussians(object):
         probabilityZGivenX = tf.exp(lnProbabilityZGivenX)
         check = tf.reduce_sum(probabilityZGivenX, 1) # Check probabilities sum to 1
         # Assign classes based on maximum posterior probability for each data point
-        #minAssignments = tf.argmax(lnProbabilityZGivenX, 1)
-        minAssignments = tf.argmax(lnProbabilityXGivenZ, 1)
+        minAssignments = tf.argmax(lnProbabilityXGivenZ, 1) # No prior contribution during assignment
+        minAssignments = tf.argmax(lnProbabilityZGivenX, 1) # Prior contributes during assignment
 
         # ----------------------------------------------------------------------------------
         #logLikelihoodDataGivenCluster = self.LnProbabilityZGivenX(trainData, clusterMean, clusterStdDeviation, clusterPrior)
