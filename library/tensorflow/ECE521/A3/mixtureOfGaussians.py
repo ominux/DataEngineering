@@ -40,8 +40,6 @@ class MixtureOfGaussians(object):
         print "stdDeviation", clusterStdDeviation
         print "stdDeviationShape", clusterStdDeviation.shape
 
-        if self.dataType != "2D":
-            return
         trainStr = "Train"
         validStr = "Valid"
         typeLossStr = "Loss"
@@ -80,6 +78,8 @@ class MixtureOfGaussians(object):
             plt.close()
             plt.clf()
 
+        if self.dataType != "2D":
+            return
         # Plot percentage in each different classes as well
         # Scatter plot based on assignment colors
         # Including percentage as the label
@@ -248,6 +248,7 @@ def executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, le
 if __name__ == "__main__":
     print "ECE521 Assignment 3: Unsupervised Learning: GaussianCluster"
     # Gaussian Cluster Model
+    '''
     questionTitle = "2.1.2" # Implemented function
     questionTitle = "2.1.3" # Implemented FUnction
     print "ECE521 Assignment 3: Unsupervised Learning: Mixture of Gaussian"
@@ -260,23 +261,22 @@ if __name__ == "__main__":
     executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
     # '''
 
+    '''
     questionTitle = "2.2.3"
     dataType = "2D"
     hasValid = True
     diffK = [1, 2, 3, 4, 5]
-    # TODO: Figure out why assign 0 to certain clusters
     numEpoch = 500
     learningRate = 0.001
     for K in diffK:
         executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
     # '''
 
-    '''
     questionTitle = "2.2.4"
     dataType = "100D"
     hasValid = True
     diffK = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    numEpoch = 200
+    numEpoch = 10 
     learningRate = 0.1
     for K in diffK:
         executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)

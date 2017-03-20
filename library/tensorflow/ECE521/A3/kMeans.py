@@ -30,8 +30,6 @@ class KMeans(object):
         print "Assignments To Classes:", numAssignEachClass
         percentageAssignEachClass = numAssignEachClass/float(sum(numAssignEachClass))
         print "Percentage Assignment To Classes:", percentageAssignEachClass
-        if self.dataType != "2D":
-            return
         trainStr = "Train"
         validStr = "Valid"
         typeLossStr = "Loss"
@@ -69,6 +67,9 @@ class KMeans(object):
             plt.savefig(self.questionTitle + title + ".png")
             plt.close()
             plt.clf()
+
+        if self.dataType != "2D":
+            return
 
         # Plot percentage in each different classes as well
         # Scatter plot based on assignment colors
