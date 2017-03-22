@@ -25,15 +25,22 @@ class MixtureOfGaussians(object):
         # Execute Mixture of Gaussians
         self.MixtureOfGaussiansMethod()
 
-    def printPlotResults(self, xAxis, yTrainErr, yValidErr, numUpdate, minAssign, currTrainData, numAssignEachClass, clusterMean, clusterStdDeviation, clusterPrior):
+    def printPlotResults(self, xAxis, yTrainErr, yValidErr, numUpdate, minAssignTrain, currTrainData, clusterMean, clusterStdDeviation, clusterPrior,  minAssignValid):
         figureCount = 0 # TODO: Make global
         import matplotlib.pyplot as plt
         print "mean", clusterMean
         print "K: ", self.K
         print "Iter: ", numUpdate
-        print "Assignments To Classes:", numAssignEachClass
-        percentageAssignEachClass = numAssignEachClass/float(sum(numAssignEachClass))
-        print "Percentage Assignment To Classes:", percentageAssignEachClass
+        numTrainAssignEachClass = np.bincount(minAssignTrain)
+        numValidAssignEachClass = np.bincount(minAssignValid)
+        print "Train Assignments To Classes:", numTrainAssignEachClass
+        percentageTrainAssignEachClass = numTrainAssignEachClass/float(sum(numTrainAssignEachClass))
+        print "Train Percentage Assignment To Classes:", percentageTrainAssignEachClass
+        percentageValidAssignEachClass = percentageTrainAssignEachClass # Initialize
+        if self.hasValid:
+            print "Valid Assignments To Classes:", numValidAssignEachClass
+            percentageValidAssignEachClass = numValidAssignEachClass/float(sum(numValidAssignEachClass))
+            print "Valid Percentage Assignment To Classes:", percentageValidAssignEachClass
         print "prior", clusterPrior
         print "prior.shape", clusterPrior.shape
         print "prior Sum", np.sum(clusterPrior)
@@ -85,18 +92,18 @@ class MixtureOfGaussians(object):
         # Plot percentage in each different classes as well
         # Scatter plot based on assignment colors
         # Including percentage as the label
+        # Train Scatter Plot
         figureCount = figureCount + 1
         plt.figure(figureCount)
         plt.axes()
-
         title = trainStr + typeScatterStr + paramStr
         plt.title(title)
         plt.xlabel(dimensionOneStr)
         plt.ylabel(dimensionTwoStr)
         colors = ['blue', 'red', 'green', 'black', 'yellow']
-        plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=minAssign, s=10, alpha=0.5)
+        plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=minAssignTrain, s=10, alpha=0.5)
         colors = colors[:self.K]
-        for i, j, k, l in zip(clusterMean, percentageAssignEachClass, colors, clusterStdDeviation[0]):
+        for i, j, k, l in zip(clusterMean, percentageTrainAssignEachClass, colors, clusterStdDeviation[0]):
             plt.plot(i[0], i[1], 'kx', markersize=15, label=j, c=k)
             circle = plt.Circle((i[0], i[1]), radius=2*l, color=k, fill=False)
             plt.gca().add_patch(circle)
@@ -104,6 +111,27 @@ class MixtureOfGaussians(object):
         plt.savefig(self.questionTitle + title + ".png")
         plt.close()
         plt.clf()
+
+        if self.hasValid:
+            # Valid Scatter Plot
+            figureCount = figureCount + 1
+            plt.figure(figureCount)
+            plt.axes()
+            title = validStr + typeScatterStr + paramStr
+            plt.title(title)
+            plt.xlabel(dimensionOneStr)
+            plt.ylabel(dimensionTwoStr)
+            colors = ['blue', 'red', 'green', 'black', 'yellow']
+            plt.scatter(self.validData[:, 0], self.validData[:, 1], c=minAssignValid, s=10, alpha=0.5)
+            colors = colors[:self.K]
+            for i, j, k, l in zip(clusterMean, percentageValidAssignEachClass, colors, clusterStdDeviation[0]):
+                plt.plot(i[0], i[1], 'kx', markersize=15, label=j, c=k)
+                circle = plt.Circle((i[0], i[1]), radius=2*l, color=k, fill=False)
+                plt.gca().add_patch(circle)
+            plt.legend()
+            plt.savefig(self.questionTitle + title + ".png")
+            plt.close()
+            plt.clf()
 
     def PairwiseDistances(self, X, U):
         """
@@ -186,9 +214,12 @@ class MixtureOfGaussians(object):
         # ----------------------------------------------------------------------------------
         #logLikelihoodDataGivenCluster = self.LnProbabilityZGivenX(trainData, clusterMean, clusterStdDeviation, clusterPrior)
         validLoss = loss # initialization
+        minValidAssignments = minAssignments #Initialization
         if self.hasValid: 
             valid_data = tf.placeholder(tf.float32, shape=[None, self.D], name="validationData")
             validLoss = tf.reduce_sum(-1.0 * self.LnProbabilityX(valid_data, clusterMean,clusterVariance,logClusterConstraint))
+            validLnProbabilityZGivenX = self.LnProbabilityZGivenX(valid_data, clusterMean, clusterVariance, logClusterConstraint)
+            minValidAssignments = tf.argmax(validLnProbabilityZGivenX, 1) # Prior contributes during assignment
 
         train = self.optimizer.minimize(loss)
         
@@ -197,7 +228,8 @@ class MixtureOfGaussians(object):
         sess = tf.InteractiveSession()
         sess.run(init)
         currEpoch = 0
-        minAssign = 0
+        minAssignTrain = 0
+        minAssignValid = 0
         centers = 0
         xAxis = []
         yTrainErr = []
@@ -212,46 +244,25 @@ class MixtureOfGaussians(object):
                 feedDicts = {trainData: self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize]}
                 if self.hasValid:
                     feedDicts = {trainData: self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], valid_data: self.validData}
-                _, minAssign, paramClusterMean, paramClusterPrior, paramClusterStdDeviation, zGivenX, checkZGivenX, errTrain, errValid = sess.run([train, minAssignments, clusterMean, clusterPrior, clusterStdDeviation, lnProbabilityZGivenX, check, loss, validLoss], feed_dict = feedDicts)
-                # print checkZGivenX
-                '''
-                print "prior", paramClusterPrior
-                print "prior.shape", paramClusterPrior.shape
-                print "prior Sum", np.sum(paramClusterPrior)
-                print "stdDeviation", paramClusterStdDeviation
-                print "stdDeviationShape", paramClusterStdDeviation.shape
-                print "zgivenX", zGivenX
-                print "zgivenXshape", zGivenX.shape
-                print "minAssign", minAssign
-                sys.exit(0)
-                '''
-                '''
-                _, minAssign, centers, xGivenZ, clusterPri, num,den, zGivenX, errTrain, errValid = sess.run([train, minAssignments, clusterMean, lnProbabilityXGivenZ , clusterPrior, numerator, denominator, lnProbabilityZGivenX, loss, validLoss], feed_dict = feedDicts)
-                print "lnXGivenZ", xGivenZ
-                print xGivenZ.shape
-                print "ClusterPrior", clusterPri
-                print "numerator", num
-                print "denominator", den
-                print "lnZGivenX", zGivenX
-                print zGivenX.shape
-                sys.exit(0)
-                '''
+                _, minAssignTrain, paramClusterMean, paramClusterPrior, paramClusterStdDeviation, zGivenX, checkZGivenX, errTrain, errValid, minAssignValid = sess.run([train, minAssignments, clusterMean, clusterPrior, clusterStdDeviation, lnProbabilityZGivenX, check, loss, validLoss, minValidAssignments], feed_dict = feedDicts)
                 xAxis.append(numUpdate)
                 yTrainErr.append(errTrain)
                 yValidErr.append(errValid)
                 step += 1
                 numUpdate += 1
             currEpoch += 1
-            # print currEpoch
+
+            if currEpoch%100 == 0:
+                logStdOut("e: " + str(currEpoch))
         # Calculate everything again without training
         feedDicts = {trainData: self.trainData}
+        # No training, just gather data for valid assignments 
         if self.hasValid:
             feedDicts = {trainData: self.trainData, valid_data: self.validData}
-        minAssign, paramClusterMean, paramClusterPrior, paramClusterStdDeviation, zGivenX, checkZGivenX, errTrain, errValid = sess.run([minAssignments, clusterMean, clusterPrior, clusterStdDeviation, lnProbabilityZGivenX, check, loss, validLoss], feed_dict = feedDicts)
+        minAssignTrain, paramClusterMean, paramClusterPrior, paramClusterStdDeviation, zGivenX, checkZGivenX, errTrain, errValid, minAssignValid = sess.run([minAssignments, clusterMean, clusterPrior, clusterStdDeviation, lnProbabilityZGivenX, check, loss, validLoss, minValidAssignments], feed_dict = feedDicts)
         # Count how many assigned to each class
-        numAssignEachClass = np.bincount(minAssign)
         currTrainDataShuffle = self.trainData
-        self.printPlotResults(xAxis, yTrainErr, yValidErr, numUpdate, minAssign, currTrainDataShuffle, numAssignEachClass, paramClusterMean, paramClusterStdDeviation, paramClusterPrior)
+        self.printPlotResults(xAxis, yTrainErr, yValidErr, numUpdate, minAssignTrain, currTrainDataShuffle, paramClusterMean, paramClusterStdDeviation, paramClusterPrior, minAssignValid)
 
 def executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate):
     """
@@ -297,8 +308,6 @@ def logElapsedTime(message):
     startTime = datetime.datetime.now()
 
 if __name__ == "__main__":
-    logStdOut("Mixture of Gaussians")
-
     print "ECE521 Assignment 3: Unsupervised Learning: GaussianCluster"
     # Gaussian Cluster Model
     questionTitle = "2.1.2" # Implemented function
@@ -314,7 +323,6 @@ if __name__ == "__main__":
     executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
     # '''
 
-    '''
     questionTitle = "2.2.3"
     dataType = "2D"
     hasValid = True
