@@ -3,6 +3,8 @@ import numpy as np
 import sys
 from dataInitializer import DataInitializer
 from utils import * 
+import datetime
+import sys
 
 class MixtureOfGaussians(object):
     def __init__(self, questionTitle, K, trainData, validData, hasValid, dataType, numEpoch = 500, learningRate = 0.001): 
@@ -24,10 +26,8 @@ class MixtureOfGaussians(object):
         self.MixtureOfGaussiansMethod()
 
     def printPlotResults(self, xAxis, yTrainErr, yValidErr, numUpdate, minAssign, currTrainData, numAssignEachClass, clusterMean, clusterStdDeviation, clusterPrior):
-        # TODO: Print by decreasing so that the outliers get printed over the non-outliers
         figureCount = 0 # TODO: Make global
         import matplotlib.pyplot as plt
-
         print "mean", clusterMean
         print "K: ", self.K
         print "Iter: ", numUpdate
@@ -257,6 +257,7 @@ def executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, le
     """
     Re-loads the data and re-randomize it with same seed anytime to ensure replicable results
     """
+    logStdOut(questionTitle)
     print questionTitle
     trainData = 0
     validData = 0
@@ -269,8 +270,35 @@ def executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, le
 
     # Execute algorithm 
     kObject = MixtureOfGaussians(questionTitle, K, trainData, validData, hasValid, dataType, numEpoch, learningRate)
+    logElapsedTime(questionTitle + "K" + str(K) + "NumEpoch" + str(numEpoch))
+
+# Global for logging
+questionTitle = "" # Need to be global for logging to work
+startTime = datetime.datetime.now()
+figureCount = 1 # To not overwrite existing pictures
+
+def logStdOut(message):
+    # Temporary print to std out
+    sys.stdout = sys.__stdout__
+    print message
+    # Continue editing same file
+    sys.stdout = open("result" + questionTitle + ".txt", "a")
+
+def logElapsedTime(message):
+    ''' Logs the elapsedTime with a given message '''
+    global startTime 
+    endTime = datetime.datetime.now()
+    elapsedTime = endTime - startTime
+    hours, remainder = divmod(elapsedTime.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    totalDays = elapsedTime.days
+    timeStr = str(message) + ': Days: ' + str(totalDays) +  " hours: " + str(hours) + ' minutes: ' + str(minutes) +  ' seconds: ' + str(seconds)
+    logStdOut(timeStr)
+    startTime = datetime.datetime.now()
 
 if __name__ == "__main__":
+    logStdOut("Mixture of Gaussians")
+
     print "ECE521 Assignment 3: Unsupervised Learning: GaussianCluster"
     # Gaussian Cluster Model
     questionTitle = "2.1.2" # Implemented function
@@ -286,6 +314,7 @@ if __name__ == "__main__":
     executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
     # '''
 
+    '''
     questionTitle = "2.2.3"
     dataType = "2D"
     hasValid = True
@@ -302,8 +331,8 @@ if __name__ == "__main__":
     hasValid = True
     diffK = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     diffK = [10]
-    numEpoch = 30 
-    learningRate = 0.01
+    numEpoch = 1000
+    learningRate = 0.1
     for K in diffK:
         executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
     # '''
