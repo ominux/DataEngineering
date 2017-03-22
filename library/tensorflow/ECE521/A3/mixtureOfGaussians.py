@@ -327,7 +327,6 @@ if __name__ == "__main__":
     dataType = "2D"
     hasValid = True
     diffK = [1, 2, 3, 4, 5]
-    diffK = [3, 4, 5]
     numEpoch = 200
     learningRate = 0.1
     for K in diffK:
