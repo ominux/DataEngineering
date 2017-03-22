@@ -1,0 +1,8 @@
+1.1.2
+Center Values [[ 0.12183072 -1.52300096]
+ [-1.05592346 -3.24325442]
+ [ 1.25174451  0.24658071]]
+K:  3
+Iter:  200
+Train Assignments To Classes: [2381 3813 3806]
+Train Percentage Assignment To Classes: [ 0.2381  0.3813  0.3806]

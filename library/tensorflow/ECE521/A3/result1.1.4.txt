@@ -1,0 +1,50 @@
+1.1.4
+Center Values [[ 0.10337118 -1.51280987]]
+K:  1
+Iter:  200
+Train Assignments To Classes: [6667]
+Train Percentage Assignment To Classes: [ 1.]
+Valid Assignments To Classes: [3333]
+Valid Percentage Assignment To Classes: [ 1.]
+1.1.4
+Center Values [[-0.83688897 -2.9244616 ]
+ [ 1.05972672 -0.07672206]]
+K:  2
+Iter:  200
+Train Assignments To Classes: [3362 3305]
+Train Percentage Assignment To Classes: [ 0.50427479  0.49572521]
+Valid Assignments To Classes: [1676 1657]
+Valid Percentage Assignment To Classes: [ 0.50285029  0.49714971]
+1.1.4
+Center Values [[-1.05979621 -3.23099017]
+ [ 0.16725457 -1.53975761]
+ [ 1.24273229  0.24498899]]
+K:  3
+Iter:  200
+Train Assignments To Classes: [2571 1559 2537]
+Train Percentage Assignment To Classes: [ 0.38563072  0.23383831  0.38053097]
+Valid Assignments To Classes: [1257  812 1264]
+Valid Percentage Assignment To Classes: [ 0.37713771  0.24362436  0.37923792]
+1.1.4
+Center Values [[-0.62024784 -1.06710112]
+ [ 1.25667894  0.25329399]
+ [ 0.83743441 -1.98268485]
+ [-1.0660919  -3.25883508]]
+K:  4
+Iter:  200
+Train Assignments To Classes: [ 818 2489  867 2493]
+Train Percentage Assignment To Classes: [ 0.12269387  0.37333133  0.1300435   0.3739313 ]
+Valid Assignments To Classes: [ 421 1240  453 1219]
+Valid Percentage Assignment To Classes: [ 0.12631263  0.3720372   0.13591359  0.36573657]
+1.1.4
+Center Values [[ 1.25823402  0.28551209]
+ [-0.67338175 -0.97429943]
+ [-1.10044694 -3.27011418]
+ [ 1.15186346 -1.43302   ]
+ [ 0.28800854 -2.41866636]]
+K:  5
+Iter:  200
+Train Assignments To Classes: [2410  720 2408  540  589]
+Train Percentage Assignment To Classes: [ 0.36148193  0.1079946   0.36118194  0.08099595  0.08834558]
+Valid Assignments To Classes: [1211  380 1179  277  286]
+Valid Percentage Assignment To Classes: [ 0.36333633  0.1140114   0.35373537  0.08310831  0.08580858]
