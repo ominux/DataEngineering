@@ -339,7 +339,7 @@ if __name__ == "__main__":
     dataType = "100D"
     hasValid = True
     diffK = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    numEpoch = 1000
+    numEpoch = 150
     learningRate = 0.1
     for K in diffK:
         executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
