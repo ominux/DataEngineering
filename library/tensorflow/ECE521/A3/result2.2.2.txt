@@ -13,3 +13,18 @@ stdDeviation [[ 1.31666088  1.34811795  1.36067557]]
 stdDeviationShape (1, 3)
 Lowest TrainLoss 35643.7
 Lowest ValidLoss 35643.7
+2.2.2
+mean [[-2.36185718 -1.27347577]
+ [ 0.71004486  0.74172038]
+ [-1.51175439 -0.60101229]]
+K:  3
+Iter:  200
+Train Assignments To Classes: [3659 4628 1713]
+Train Percentage Assignment To Classes: [ 0.3659  0.4628  0.1713]
+prior [[ 0.2979399   0.41057754  0.29148245]]
+prior.shape (1, 3)
+prior Sum 1.0
+stdDeviation [[ 1.0436579   1.02888894  1.07864738]]
+stdDeviationShape (1, 3)
+Lowest TrainLoss 42956.2
+Lowest ValidLoss 42956.2

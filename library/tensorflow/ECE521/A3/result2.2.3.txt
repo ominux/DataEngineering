@@ -83,3 +83,88 @@ stdDeviation [[ 0.9892478   0.19820884  0.24648139  0.25311762  0.19815707]]
 stdDeviationShape (1, 5)
 Lowest TrainLoss 11388.1
 Lowest ValidLoss 5740.18
+2.2.3
+mean [[ 0.1032524  -1.51273727]]
+K:  1
+Iter:  200
+Train Assignments To Classes: [6667]
+Train Percentage Assignment To Classes: [ 1.]
+Valid Assignments To Classes: [3333]
+Valid Percentage Assignment To Classes: [ 1.]
+prior [[ 1.]]
+prior.shape (1, 1)
+prior Sum 1.0
+stdDeviation [[ 1.38505661]]
+stdDeviationShape (1, 1)
+Lowest TrainLoss 23262.9
+Lowest ValidLoss 11652.9
+2.2.3
+mean [[-1.10098183 -3.28418231]
+ [ 0.62108213 -0.51382548]]
+K:  2
+Iter:  200
+Train Assignments To Classes: [2286 4381]
+Train Percentage Assignment To Classes: [ 0.34288286  0.65711714]
+Valid Assignments To Classes: [1108 2225]
+Valid Percentage Assignment To Classes: [ 0.33243324  0.66756676]
+prior [[ 0.32785267  0.67214727]]
+prior.shape (1, 2)
+prior Sum 1.0
+stdDeviation [[ 0.17286456  1.03303933]]
+stdDeviationShape (1, 2)
+Lowest TrainLoss 16227.0
+Lowest ValidLoss 8279.24
+2.2.3
+mean [[ 1.29739273  0.30672383]
+ [-1.10057282 -3.30262661]
+ [ 0.12818885 -1.51908934]]
+K:  3
+Iter:  200
+Train Assignments To Classes: [2250 2278 2139]
+Train Percentage Assignment To Classes: [ 0.33748313  0.34168292  0.32083396]
+Valid Assignments To Classes: [1139 1106 1088]
+Valid Percentage Assignment To Classes: [ 0.34173417  0.33183318  0.32643264]
+prior [[ 0.33136669  0.33542895  0.3332043 ]]
+prior.shape (1, 3)
+prior Sum 1.0
+stdDeviation [[ 0.19741498  0.19683078  0.99013531]]
+stdDeviationShape (1, 3)
+Lowest TrainLoss 11393.9
+Lowest ValidLoss 5740.24
+2.2.3
+mean [[-0.65175974 -1.58973694]
+ [ 0.14124623 -1.51762068]
+ [ 1.29679811  0.3067196 ]
+ [-1.1003468  -3.30262685]]
+K:  4
+Iter:  200
+Train Assignments To Classes: [   0 2134 2251 2282]
+Train Percentage Assignment To Classes: [ 0.          0.320084    0.33763312  0.34228289]
+Valid Assignments To Classes: [   0 1088 1139 1106]
+Valid Percentage Assignment To Classes: [ 0.          0.32643264  0.34173417  0.33183318]
+prior [[ 0.00524763  0.32758194  0.33139879  0.33577177]]
+prior.shape (1, 4)
+prior Sum 1.0
+stdDeviation [[ 1.07583952  0.98668128  0.19760302  0.19829237]]
+stdDeviationShape (1, 4)
+Lowest TrainLoss 11394.1
+Lowest ValidLoss 5740.79
+2.2.3
+mean [[-1.10051239 -3.3026371 ]
+ [ 0.13791519 -1.57519317]
+ [ 1.25672805  0.30055541]
+ [ 1.35891867  0.31651247]
+ [ 0.06473114 -1.09280634]]
+K:  5
+Iter:  200
+Train Assignments To Classes: [2281 2136 1794  456]
+Train Percentage Assignment To Classes: [ 0.34213289  0.32038398  0.26908655  0.06839658]
+Valid Assignments To Classes: [1106 1086  912  229]
+Valid Percentage Assignment To Classes: [ 0.33183318  0.32583258  0.27362736  0.06870687]
+prior [[ 0.33569098  0.29429099  0.2021243   0.129235    0.03865888]]
+prior.shape (1, 5)
+prior Sum 1.0
+stdDeviation [[ 0.19819483  0.98697335  0.19724874  0.18983477  0.96296388]]
+stdDeviationShape (1, 5)
+Lowest TrainLoss 11392.8
+Lowest ValidLoss 5740.51
