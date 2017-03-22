@@ -37,6 +37,8 @@ class KMeans(object):
         percentageTrainAssignEachClass = numTrainAssignEachClass/float(sum(numTrainAssignEachClass))
         print "Train Percentage Assignment To Classes:", percentageTrainAssignEachClass
 
+        percentageValidAssignEachClass = percentageTrainAssignEachClass # Initialize
+
         if self.hasValid:
             print "Valid Assignments To Classes:", numValidAssignEachClass
             percentageValidAssignEachClass = numValidAssignEachClass/float(sum(numValidAssignEachClass))
@@ -95,7 +97,7 @@ class KMeans(object):
         colors = ['blue', 'red', 'green', 'black', 'yellow', 'magenta', 'cyan', 'brown', 'orange', 
                 'aqua']
         colors = colors[:self.K]
-        plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=colors, s=50, alpha=0.5)
+        plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=minAssignTrain, s=10, alpha=0.5)
         for i, j, k in zip(centers, percentageTrainAssignEachClass, colors):
             plt.plot(i[0], i[1], 'kx', markersize=15, label=j, c=k)
         plt.legend()
@@ -114,7 +116,7 @@ class KMeans(object):
             colors = ['blue', 'red', 'green', 'black', 'yellow', 'magenta', 'cyan', 'brown', 'orange', 
                     'aqua']
             colors = colors[:self.K]
-            plt.scatter(self.validData[:, 0], self.validData[:, 1], c=colors, s=50, alpha=0.5)
+            plt.scatter(self.validData[:, 0], self.validData[:, 1], c=minAssignValid, s=10, alpha=0.5)
             for i, j, k in zip(centers, percentageValidAssignEachClass, colors):
                 plt.plot(i[0], i[1], 'kx', markersize=15, label=j, c=k)
             plt.legend()
