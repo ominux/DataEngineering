@@ -308,6 +308,7 @@ def logElapsedTime(message):
     startTime = datetime.datetime.now()
 
 if __name__ == "__main__":
+    '''
     print "ECE521 Assignment 3: Unsupervised Learning: GaussianCluster"
     # Gaussian Cluster Model
     questionTitle = "2.1.2" # Implemented function
@@ -318,11 +319,12 @@ if __name__ == "__main__":
     hasValid = False # No validation data
     K = 3
     numEpoch = 200
-    learningRate = 0.001
+    learningRate = 0.1
     # Note: Loss will be higher since no validation data
     executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
     # '''
 
+    '''
     questionTitle = "2.2.3"
     dataType = "2D"
     hasValid = True
@@ -333,12 +335,10 @@ if __name__ == "__main__":
         executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
     # '''
 
-    '''
-    questionTitle = "2.2.4"
+    questionTitle = "2.2.4.2"
     dataType = "100D"
     hasValid = True
     diffK = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    diffK = [10]
     numEpoch = 1000
     learningRate = 0.1
     for K in diffK:

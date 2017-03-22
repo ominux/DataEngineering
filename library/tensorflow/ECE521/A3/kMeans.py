@@ -192,7 +192,6 @@ class KMeans(object):
                 numUpdate += 1
             currEpoch += 1
             if currEpoch%50 == 0:
-                doNothing = 0
                 logStdOut("e: " + str(currEpoch))
         print "Center Values", centers
         self.printPlotResults(xAxis, yTrainErr, yValidErr, numUpdate, minAssignTrain, currTrainDataShuffle, centers, minAssignValid)
@@ -244,6 +243,7 @@ if __name__ == "__main__":
     print "ECE521 Assignment 3: Unsupervised Learning: K Means"
 
     # Unsupervised => Data has no label or target
+    '''
     questionTitle = "1.1.2"
     dataType = "2D"
     hasValid = False # No validation data
@@ -251,6 +251,7 @@ if __name__ == "__main__":
     executeKMeans(questionTitle, K, dataType, hasValid)
     # '''
 
+    '''
     questionTitle = "1.1.3"
     diffK = [1, 2, 3, 4, 5]
     dataType = "2D"
@@ -259,6 +260,7 @@ if __name__ == "__main__":
         executeKMeans(questionTitle, K, dataType, hasValid)
     # '''
 
+    '''
     questionTitle = "1.1.4"
     diffK = [1, 2, 3, 4, 5]
     dataType = "2D"
@@ -267,9 +269,8 @@ if __name__ == "__main__":
         executeKMeans(questionTitle, K, dataType, hasValid)
     # '''
 
-    '''
     # Run using 100D data
-    questionTitle = "2.2.4"
+    questionTitle = "2.2.4.1"
     diffK = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     dataType = "100D"
     hasValid = True
