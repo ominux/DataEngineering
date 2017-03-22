@@ -1,0 +1,15 @@
+2.2.2
+mean [[-1.81479311 -1.82561719]
+ [-0.33533633  0.93527281]
+ [ 0.174208   -1.4837842 ]]
+K:  3
+Iter:  1000
+Train Assignments To Classes: [  21   12 9967]
+Train Percentage Assignment To Classes: [ 0.0021  0.0012  0.9967]
+prior [[ 0.14362673  0.12673332  0.72964001]]
+prior.shape (1, 3)
+prior Sum 1.0
+stdDeviation [[ 1.31666088  1.34811795  1.36067557]]
+stdDeviationShape (1, 3)
+Lowest TrainLoss 35643.7
+Lowest ValidLoss 35643.7
