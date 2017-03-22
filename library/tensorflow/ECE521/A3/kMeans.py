@@ -5,7 +5,7 @@ import datetime
 import sys
 
 class KMeans(object):
-    def __init__(self, questionTitle, K, trainData, validData, hasValid, dataType, numEpoch = 200, learningRate = 0.1):
+    def __init__(self, questionTitle, K, trainData, validData, hasValid, dataType, numEpoch = 50, learningRate = 0.1):
         """
         Constructor
         """
