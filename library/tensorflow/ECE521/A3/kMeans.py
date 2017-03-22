@@ -1,6 +1,8 @@
 import tensorflow as tf
 import numpy as np
 from dataInitializer import DataInitializer
+import datetime
+import sys
 
 class KMeans(object):
     def __init__(self, questionTitle, K, trainData, validData, hasValid, dataType, numEpoch = 200, learningRate = 0.1):
@@ -21,15 +23,25 @@ class KMeans(object):
         # Execute KMeans
         self.KMeansMethod()
 
-    def printPlotResults(self, xAxis, yTrainErr, yValidErr, numUpdate, minAssign, currTrainData, numAssignEachClass, centers):
+    def printPlotResults(self, xAxis, yTrainErr, yValidErr, numUpdate, minAssignTrain, currTrainData, centers, minAssignValid):
         figureCount = 0 # TODO: Make global
         import matplotlib.pyplot as plt
 
+        # Count how many assigned to each class
+        numTrainAssignEachClass = np.bincount(minAssignTrain)
+        numValidAssignEachClass = np.bincount(minAssignValid)
+
         print "K: ", self.K
         print "Iter: ", numUpdate
-        print "Assignments To Classes:", numAssignEachClass
-        percentageAssignEachClass = numAssignEachClass/float(sum(numAssignEachClass))
-        print "Percentage Assignment To Classes:", percentageAssignEachClass
+        print "Train Assignments To Classes:", numTrainAssignEachClass
+        percentageTrainAssignEachClass = numTrainAssignEachClass/float(sum(numTrainAssignEachClass))
+        print "Train Percentage Assignment To Classes:", percentageTrainAssignEachClass
+
+        if self.hasValid:
+            print "Valid Assignments To Classes:", numValidAssignEachClass
+            percentageValidAssignEachClass = numValidAssignEachClass/float(sum(numValidAssignEachClass))
+            print "Valid Percentage Assignment To Classes:", percentageValidAssignEachClass
+
         trainStr = "Train"
         validStr = "Valid"
         typeLossStr = "Loss"
@@ -80,16 +92,35 @@ class KMeans(object):
         plt.title(title)
         plt.xlabel(dimensionOneStr)
         plt.ylabel(dimensionTwoStr)
-        plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=minAssign, s=50, alpha=0.5)
         colors = ['blue', 'red', 'green', 'black', 'yellow', 'magenta', 'cyan', 'brown', 'orange', 
                 'aqua']
         colors = colors[:self.K]
-        for i, j, k in zip(centers, percentageAssignEachClass, colors):
+        plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=colors, s=50, alpha=0.5)
+        for i, j, k in zip(centers, percentageTrainAssignEachClass, colors):
             plt.plot(i[0], i[1], 'kx', markersize=15, label=j, c=k)
         plt.legend()
         plt.savefig(self.questionTitle + title + ".png")
         plt.close()
         plt.clf()
+
+        if self.hasValid:
+            # Valid Assignments
+            figureCount = figureCount + 1
+            plt.figure(figureCount)
+            title = validStr + typeScatterStr + paramStr
+            plt.title(title)
+            plt.xlabel(dimensionOneStr)
+            plt.ylabel(dimensionTwoStr)
+            colors = ['blue', 'red', 'green', 'black', 'yellow', 'magenta', 'cyan', 'brown', 'orange', 
+                    'aqua']
+            colors = colors[:self.K]
+            plt.scatter(self.validData[:, 0], self.validData[:, 1], c=colors, s=50, alpha=0.5)
+            for i, j, k in zip(centers, percentageValidAssignEachClass, colors):
+                plt.plot(i[0], i[1], 'kx', markersize=15, label=j, c=k)
+            plt.legend()
+            plt.savefig(self.questionTitle + title + ".png")
+            plt.close()
+            plt.clf()
 
     def PairwiseDistances(self, X, U):
         """
@@ -117,16 +148,18 @@ class KMeans(object):
         train_data = tf.placeholder(tf.float32, shape=[None, self.D], name="trainingData")
         sumOfSquare = self.PairwiseDistances(train_data, U)
         minSquare = tf.reduce_min(sumOfSquare, 1)
+        minAssignments = tf.argmin(sumOfSquare,1)
         loss = tf.reduce_sum(minSquare)
         validLoss = loss
+        minValidAssignments = minAssignments
 
         if self.hasValid: 
             valid_data = tf.placeholder(tf.float32, shape=[None, self.D], name="validationData")
-            validLoss = tf.reduce_sum(tf.reduce_min(self.PairwiseDistances(valid_data, U)))
+            validSumOfSquare = self.PairwiseDistances(valid_data, U)
+            validLoss = tf.reduce_sum(tf.reduce_min(validSumOfSquare))
+            minValidAssignments = tf.argmin(validSumOfSquare, 1)
 
         train = self.optimizer.minimize(loss)
-
-        minAssignments = tf.argmin(sumOfSquare,1)
         
         # Session
         init = tf.global_variables_initializer()
@@ -149,7 +182,7 @@ class KMeans(object):
                 feedDicts = {train_data: self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize]}
                 if self.hasValid:
                     feedDicts = {train_data: self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], valid_data:self.validData}
-                _, minAssign, centers, errTrain, errValid = sess.run([train, minAssignments, U, loss, validLoss], feed_dict = feedDicts)
+                _, minAssignTrain, minAssignValid, centers, errTrain, errValid = sess.run([train, minAssignments, minValidAssignments, U, loss, validLoss], feed_dict = feedDicts)
                 xAxis.append(numUpdate)
                 yTrainErr.append(errTrain)
                 yValidErr.append(errValid)
@@ -158,16 +191,15 @@ class KMeans(object):
             currEpoch += 1
             if currEpoch%50 == 0:
                 doNothing = 0
-                # print("e", str(currEpoch))
-        # Count how many assigned to each class
-        numAssignEachClass = np.bincount(minAssign)
+                logStdOut("e: " + str(currEpoch))
         print "Center Values", centers
-        self.printPlotResults(xAxis, yTrainErr, yValidErr, numUpdate, minAssign, currTrainDataShuffle, numAssignEachClass, centers)
+        self.printPlotResults(xAxis, yTrainErr, yValidErr, numUpdate, minAssignTrain, currTrainDataShuffle, centers, minAssignValid)
 
 def executeKMeans(questionTitle, K, dataType, hasValid):
     """
     Re-loads the data and re-randomize it with same seed anytime to ensure replicable results
     """
+    logStdOut(questionTitle)
     print questionTitle
     trainData = 0
     validData = 0
@@ -179,11 +211,36 @@ def executeKMeans(questionTitle, K, dataType, hasValid):
         trainData = dataInitializer.getData(dataType, hasValid)
     # Execute algorithm 
     kObject = KMeans(questionTitle, K, trainData, validData, hasValid, dataType)
+    logElapsedTime(questionTitle + "K" + str(K))
+    
+
+# Global for logging
+questionTitle = "" # Need to be global for logging to work
+startTime = datetime.datetime.now()
+figureCount = 1 # To not overwrite existing pictures
+
+def logStdOut(message):
+    # Temporary print to std out
+    sys.stdout = sys.__stdout__
+    print message
+    # Continue editing same file
+    sys.stdout = open("result" + questionTitle + ".txt", "a")
+
+def logElapsedTime(message):
+    ''' Logs the elapsedTime with a given message '''
+    global startTime 
+    endTime = datetime.datetime.now()
+    elapsedTime = endTime - startTime
+    hours, remainder = divmod(elapsedTime.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    totalDays = elapsedTime.days
+    timeStr = str(message) + ': Days: ' + str(totalDays) +  " hours: " + str(hours) + ' minutes: ' + str(minutes) +  ' seconds: ' + str(seconds)
+    logStdOut(timeStr)
+    startTime = datetime.datetime.now()
 
 if __name__ == "__main__":
     print "ECE521 Assignment 3: Unsupervised Learning: K Means"
 
-    '''
     # Unsupervised => Data has no label or target
     questionTitle = "1.1.2"
     dataType = "2D"
@@ -192,7 +249,6 @@ if __name__ == "__main__":
     executeKMeans(questionTitle, K, dataType, hasValid)
     # '''
 
-    '''
     questionTitle = "1.1.3"
     diffK = [1, 2, 3, 4, 5]
     dataType = "2D"
@@ -201,7 +257,6 @@ if __name__ == "__main__":
         executeKMeans(questionTitle, K, dataType, hasValid)
     # '''
 
-    '''
     questionTitle = "1.1.4"
     diffK = [1, 2, 3, 4, 5]
     dataType = "2D"
@@ -210,6 +265,7 @@ if __name__ == "__main__":
         executeKMeans(questionTitle, K, dataType, hasValid)
     # '''
 
+    '''
     # Run using 100D data
     questionTitle = "2.2.4"
     diffK = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
