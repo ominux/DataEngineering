@@ -317,7 +317,7 @@ if __name__ == "__main__":
     dataType = "2D"
     hasValid = False # No validation data
     K = 3
-    numEpoch = 1000
+    numEpoch = 200
     learningRate = 0.001
     # Note: Loss will be higher since no validation data
     executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
@@ -327,7 +327,8 @@ if __name__ == "__main__":
     dataType = "2D"
     hasValid = True
     diffK = [1, 2, 3, 4, 5]
-    numEpoch = 1000
+    diffK = [3, 4, 5]
+    numEpoch = 200
     learningRate = 0.1
     for K in diffK:
         executeMixtureOfGaussians(questionTitle, K, dataType, hasValid, numEpoch, learningRate)
