@@ -132,7 +132,7 @@ class FactorAnalysis(object):
         logProbability = -0.5 * (total + self.D * tf.log(2.0 * np.pi) + logDeterminantCovariance)
         loss = tf.negative(logProbability)
 
-        validDeductU = tf.subtract(trainData, factorMean)
+        validDeductU = tf.subtract(validData, factorMean)
         validDeductUTranspose = tf.transpose(validDeductU)
         validTotal = tf.trace(tf.matmul(tf.matmul(validDeductU, factorCovarianceInv), validDeductUTranspose))
         validLogProbability = -0.5 * (validTotal + self.D * tf.log(2.0 * np.pi) + logDeterminantCovariance)
@@ -218,7 +218,7 @@ def logElapsedTime(message):
 if __name__ == "__main__":
     print "ECE521 Assignment 3: Unsupervised Learning: Factor Analysis"
     questionTitle = "3.1.2"
-    numEpoch = 200
+    numEpoch = 250
     learningRate = 0.1
     K = 4
     executeFactorAnalysis(questionTitle, K, numEpoch, learningRate)
