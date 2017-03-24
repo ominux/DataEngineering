@@ -12,7 +12,7 @@ class FactorAnalysis(object):
         """
         Constructor
         """
-        self.K = K # number of clusters
+        self.K = K # number of factors
         self.trainData = trainData
         self.trainTarget = trainTarget
         self.validData = validData 
@@ -20,6 +20,7 @@ class FactorAnalysis(object):
         self.testData = testData
         self.testTarget = testTarget
         self.D = self.trainData[0].size # Dimension of each data
+        print 'datadimension', self.D # TODO TEMP
         self.learningRate = learningRate
         self.numEpoch = numEpoch
         self.miniBatchSize = self.trainData.shape[0] # miniBatchSize is entire data size
@@ -39,10 +40,19 @@ class FactorAnalysis(object):
         plt.imshow(currImage, interpolation="nearest", cmap="gray")
         plt.savefig(str(imageName) + ".png")
 
-    def printPlotResults(self, xAxis, yTrainErr, yValidErr, numUpdate, minAssignTrain, currTrainData, clusterMean, clusterStdDeviation, clusterPrior,  minAssignValid):
+    def printTensor(self, tensorToPrint, trainData, message=""):
+        init = tf.global_variables_initializer()
+        sess = tf.InteractiveSession()
+        sess.run(init)
+        printDict = {trainData: self.trainData}
+        valueToPrint = sess.run([tensorToPrint], feed_dict = printDict)
+        print message, valueToPrint
+        print "shape", np.array(valueToPrint).shape
+
+    def printPlotResults(self, xAxis, yTrainErr, yValidErr, numUpdate, minAssignTrain, currTrainData, factorMean, factorStdDeviation, factorPrior,  minAssignValid):
         figureCount = 0 # TODO: Make global
         import matplotlib.pyplot as plt
-        print "mean", clusterMean
+        print "mean", factorMean
         print "K: ", self.K
         print "Iter: ", numUpdate
         numTrainAssignEachClass = np.bincount(minAssignTrain)
@@ -54,11 +64,11 @@ class FactorAnalysis(object):
         print "Valid Assignments To Classes:", numValidAssignEachClass
         percentageValidAssignEachClass = numValidAssignEachClass/float(sum(numValidAssignEachClass))
         print "Valid Percentage Assignment To Classes:", percentageValidAssignEachClass
-        print "prior", clusterPrior
-        print "prior.shape", clusterPrior.shape
-        print "prior Sum", np.sum(clusterPrior)
-        print "stdDeviation", clusterStdDeviation
-        print "stdDeviationShape", clusterStdDeviation.shape
+        print "prior", factorPrior
+        print "prior.shape", factorPrior.shape
+        print "prior Sum", np.sum(factorPrior)
+        print "stdDeviation", factorStdDeviation
+        print "stdDeviationShape", factorStdDeviation.shape
         print "Lowest TrainLoss", np.min(yTrainErr)
         print "Lowest ValidLoss", np.min(yValidErr)
 
@@ -115,7 +125,7 @@ class FactorAnalysis(object):
         colors = ['blue', 'red', 'green', 'black', 'yellow']
         plt.scatter(currTrainData[:, 0], currTrainData[:, 1], c=minAssignTrain, s=10, alpha=0.5)
         colors = colors[:self.K]
-        for i, j, k, l in zip(clusterMean, percentageTrainAssignEachClass, colors, clusterStdDeviation[0]):
+        for i, j, k, l in zip(factorMean, percentageTrainAssignEachClass, colors, factorStdDeviation[0]):
             plt.plot(i[0], i[1], 'kx', markersize=15, label=j, c=k)
             circle = plt.Circle((i[0], i[1]), radius=2*l, color=k, fill=False)
             plt.gca().add_patch(circle)
@@ -135,7 +145,7 @@ class FactorAnalysis(object):
         colors = ['blue', 'red', 'green', 'black', 'yellow']
         plt.scatter(self.validData[:, 0], self.validData[:, 1], c=minAssignValid, s=10, alpha=0.5)
         colors = colors[:self.K]
-        for i, j, k, l in zip(clusterMean, percentageValidAssignEachClass, colors, clusterStdDeviation[0]):
+        for i, j, k, l in zip(factorMean, percentageValidAssignEachClass, colors, factorStdDeviation[0]):
             plt.plot(i[0], i[1], 'kx', markersize=15, label=j, c=k)
             circle = plt.Circle((i[0], i[1]), radius=2*l, color=k, fill=False)
             plt.gca().add_patch(circle)
@@ -181,6 +191,7 @@ class FactorAnalysis(object):
         lnProbabilityX = tf.reshape(reduce_logsumexp(numerator, 1), (tf.shape(data)[0], 1))
         return lnProbabilityX
 
+
     def FactorAnalysisMethod(self):
         ''' 
         Build Graph and execute in here
@@ -189,38 +200,32 @@ class FactorAnalysis(object):
         '''
         # Build Graph 
         print "trainShape", self.trainData.shape
-        self.saveGrayscaleImage(self.trainData[0], 8, 8, "temp")
         print "validShape", self.validData.shape
         print "testShape", self.testData.shape
-        sys.exit(0)
-        # Mean location matters a lot in convergence
-        clusterMean = tf.Variable(tf.truncated_normal([self.K, self.D], mean=-1, stddev=2.0)) # cluster centers
-        #clusterMean = tf.Variable(tf.zeros([self.K, self.D])) # cluster centers
-        # Initialize to [-1, 1]
-        # clusterStdDeviationConstraint = tf.Variable(tf.truncated_normal([1, self.K], mean=-0.69, stddev = 0.3)) # cluster constraint to prevent negative
-        #clusterStdDeviationConstraint = tf.Variable(tf.truncated_normal([1, self.K], mean=0, stddev = 0.5)) # cluster constraint to prevent negative
-        clusterStdDeviationConstraint = tf.Variable(tf.truncated_normal([1, self.K], mean=0, stddev=0.1))
-        #clusterStdDeviationConstraint = tf.Variable(tf.zeros([1, self.K]))
-        clusterVariance = tf.exp(clusterStdDeviationConstraint)
-        clusterStdDeviation = tf.sqrt(clusterVariance)
-        # Uniform intialization
-        clusterPriorConstraint = tf.Variable(tf.ones([1, self.K]))
-        #clusterPriorConstraint = tf.ones([1, self.K])
-        logClusterConstraint = logsoftmax(clusterPriorConstraint)
-        # clusterPrior = tf.divide(tf.exp(clusterPriorConstraint), tf.reduce_sum(tf.exp(clusterPriorConstraint)))
-        clusterPrior = tf.exp(logClusterConstraint)
-
+        self.saveGrayscaleImage(self.trainData[0], 8, 8, "temp0")
+        factorMean = tf.Variable(tf.truncated_normal([self.D]))
+        factorWeights = tf.Variable(tf.truncated_normal([self.D, self.K]))
+        factorStdDeviationConstraint = tf.Variable(tf.truncated_normal([self.D]))
+        factorTraceCoVariance = tf.exp(factorStdDeviationConstraint)
+        factorCovariance = tf.diag(factorStdDeviationConstraint)
         trainData = tf.placeholder(tf.float32, shape=[None, self.D], name="trainingData")
 
-        sumOfSquare = self.PairwiseDistances(trainData, clusterMean)
-        lnProbabilityXGivenZ = self.LnProbabilityXGivenZ(trainData, clusterMean, clusterVariance)
-        #lnProbabilityX = self.LnProbabilityX(trainData, clusterMean, clusterStdDeviation, clusterPrior)
-        lnProbabilityX = self.LnProbabilityX(trainData, clusterMean, clusterVariance, logClusterConstraint)
+        sumOfSquare = self.PairwiseDistances(trainData, factorMean)
+
+        # Determinant of covariance matrix
+        # log_det = 2.0 * tf.reduce_sum(tf.log(tf.diag_part(tf.cholesky(A))))
+
+        self.printTensor(sumOfSquare, trainData, "trainData")
+        sys.exit(0)
+
+        lnProbabilityXGivenZ = self.LnProbabilityXGivenZ(trainData, factorMean, factorVariance)
+        #lnProbabilityX = self.LnProbabilityX(trainData, factorMean, factorStdDeviation, factorPrior)
+        lnProbabilityX = self.LnProbabilityX(trainData, factorMean, factorVariance, logClusterConstraint)
         #loss = tf.negative(tf.reduce_sum(lnProbabilityX))
         loss = (tf.reduce_sum(-1.0 * lnProbabilityX))
         # This is needed to decide which assignment it is
-        #lnProbabilityZGivenX = self.LnProbabilityZGivenX(trainData, clusterMean, clusterStdDeviation, clusterPrior)
-        lnProbabilityZGivenX = self.LnProbabilityZGivenX(trainData, clusterMean, clusterVariance, logClusterConstraint)
+        #lnProbabilityZGivenX = self.LnProbabilityZGivenX(trainData, factorMean, factorStdDeviation, factorPrior)
+        lnProbabilityZGivenX = self.LnProbabilityZGivenX(trainData, factorMean, factorVariance, logClusterConstraint)
         probabilityZGivenX = tf.exp(lnProbabilityZGivenX)
         check = tf.reduce_sum(probabilityZGivenX, 1) # Check probabilities sum to 1
         # Assign classes based on maximum posterior probability for each data point
@@ -228,12 +233,12 @@ class FactorAnalysis(object):
         minAssignments = tf.argmax(lnProbabilityZGivenX, 1) # Prior contributes during assignment
 
         # ----------------------------------------------------------------------------------
-        #logLikelihoodDataGivenCluster = self.LnProbabilityZGivenX(trainData, clusterMean, clusterStdDeviation, clusterPrior)
+        #logLikelihoodDataGivenCluster = self.LnProbabilityZGivenX(trainData, factorMean, factorStdDeviation, factorPrior)
         validLoss = loss # initialization
         minValidAssignments = minAssignments #Initialization
         valid_data = tf.placeholder(tf.float32, shape=[None, self.D], name="validationData")
-        validLoss = tf.reduce_sum(-1.0 * self.LnProbabilityX(valid_data, clusterMean,clusterVariance,logClusterConstraint))
-        validLnProbabilityZGivenX = self.LnProbabilityZGivenX(valid_data, clusterMean, clusterVariance, logClusterConstraint)
+        validLoss = tf.reduce_sum(-1.0 * self.LnProbabilityX(valid_data, factorMean,factorVariance,logClusterConstraint))
+        validLnProbabilityZGivenX = self.LnProbabilityZGivenX(valid_data, factorMean, factorVariance, logClusterConstraint)
         minValidAssignments = tf.argmax(validLnProbabilityZGivenX, 1) # Prior contributes during assignment
 
         train = self.optimizer.minimize(loss)
@@ -257,7 +262,7 @@ class FactorAnalysis(object):
             step = 0
             while step*self.miniBatchSize < self.trainData.shape[0]:
                 feedDicts = {trainData: self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], valid_data: self.validData}
-                _, minAssignTrain, paramClusterMean, paramClusterPrior, paramClusterStdDeviation, zGivenX, checkZGivenX, errTrain, errValid, minAssignValid = sess.run([train, minAssignments, clusterMean, clusterPrior, clusterStdDeviation, lnProbabilityZGivenX, check, loss, validLoss, minValidAssignments], feed_dict = feedDicts)
+                _, minAssignTrain, paramClusterMean, paramClusterPrior, paramClusterStdDeviation, zGivenX, checkZGivenX, errTrain, errValid, minAssignValid = sess.run([train, minAssignments, factorMean, factorPrior, factorStdDeviation, lnProbabilityZGivenX, check, loss, validLoss, minValidAssignments], feed_dict = feedDicts)
                 xAxis.append(numUpdate)
                 yTrainErr.append(errTrain)
                 yValidErr.append(errValid)
@@ -271,12 +276,13 @@ class FactorAnalysis(object):
         feedDicts = {trainData: self.trainData}
         # No training, just gather data for valid assignments 
         feedDicts = {trainData: self.trainData, valid_data: self.validData}
-        minAssignTrain, paramClusterMean, paramClusterPrior, paramClusterStdDeviation, zGivenX, checkZGivenX, errTrain, errValid, minAssignValid = sess.run([minAssignments, clusterMean, clusterPrior, clusterStdDeviation, lnProbabilityZGivenX, check, loss, validLoss, minValidAssignments], feed_dict = feedDicts)
+        minAssignTrain, paramClusterMean, paramClusterPrior, paramClusterStdDeviation, zGivenX, checkZGivenX, errTrain, errValid, minAssignValid = sess.run([minAssignments, factorMean, factorPrior, factorStdDeviation, lnProbabilityZGivenX, check, loss, validLoss, minValidAssignments], feed_dict = feedDicts)
         # Count how many assigned to each class
         currTrainDataShuffle = self.trainData
-        self.printPlotResults(xAxis, yTrainErr, yValidErr, numUpdate, minAssignTrain, currTrainDataShuffle, paramClusterMean, paramClusterStdDeviation, paramClusterPrior, minAssignValid)
+        # TODO: Uncomment once ready
+        # self.printPlotResults(xAxis, yTrainErr, yValidErr, numUpdate, minAssignTrain, currTrainDataShuffle, paramClusterMean, paramClusterStdDeviation, paramClusterPrior, minAssignValid)
 
-def executeFactorAnalysis(questionTitle, K, dataType, numEpoch, learningRate):
+def executeFactorAnalysis(questionTitle, K, numEpoch, learningRate):
     """
     Re-loads the data and re-randomize it with same seed anytime to ensure replicable results
     """
@@ -321,17 +327,15 @@ if __name__ == "__main__":
     questionTitle = "3.1.2"
     numEpoch = 200
     learningRate = 0.1
-    dataType = "mnist"
-    diffK = [1, 2, 3, 4, 5]
-    diffK = [3] # TEMP DEBUG
-    # for K in diffK:
-    K = 3
-    if True:
-        executeFactorAnalysis(questionTitle, K, dataType, numEpoch, learningRate)
+    K = 4
+    executeFactorAnalysis(questionTitle, K, numEpoch, learningRate)
     # '''
     
     '''
     questionTitle = "3.1.3"
+    diffK = [1, 2, 3, 4, 5]
+    # for K in diffK:
+        executeFactorAnalysis(questionTitle, K, dataType, numEpoch, learningRate)
     # TODO:
     # '''
 
