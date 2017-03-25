@@ -27,17 +27,16 @@ class KMeans(object):
         figureCount = 0 # TODO: Make global
         import matplotlib.pyplot as plt
 
-        print "Lowest TrainLoss", np.min(yTrainErr)
-        print "Lowest ValidLoss", np.min(yValidErr)
+        print "K: ", self.K
+        print "Iter: ", numUpdate
+        print str(self.K) + "Lowest TrainLoss", np.min(yTrainErr)
+        print str(self.K) + "Lowest ValidLoss", np.min(yValidErr)
         # Count how many assigned to each class
         numTrainAssignEachClass = np.bincount(minAssignTrain)
         numValidAssignEachClass = np.bincount(minAssignValid)
-
-        print "K: ", self.K
-        print "Iter: ", numUpdate
+        print "Train Percentage Assignment To Classes:", percentageTrainAssignEachClass
         print "Train Assignments To Classes:", numTrainAssignEachClass
         percentageTrainAssignEachClass = numTrainAssignEachClass/float(sum(numTrainAssignEachClass))
-        print "Train Percentage Assignment To Classes:", percentageTrainAssignEachClass
 
         percentageValidAssignEachClass = percentageTrainAssignEachClass # Initialize
 
