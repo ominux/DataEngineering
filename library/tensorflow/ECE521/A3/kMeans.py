@@ -27,6 +27,8 @@ class KMeans(object):
         figureCount = 0 # TODO: Make global
         import matplotlib.pyplot as plt
 
+        print "Lowest TrainLoss", np.min(yTrainErr)
+        print "Lowest ValidLoss", np.min(yValidErr)
         # Count how many assigned to each class
         numTrainAssignEachClass = np.bincount(minAssignTrain)
         numValidAssignEachClass = np.bincount(minAssignValid)
@@ -158,7 +160,7 @@ class KMeans(object):
         if self.hasValid: 
             valid_data = tf.placeholder(tf.float32, shape=[None, self.D], name="validationData")
             validSumOfSquare = self.PairwiseDistances(valid_data, U)
-            validLoss = tf.reduce_sum(tf.reduce_min(validSumOfSquare))
+            validLoss = tf.reduce_sum(tf.reduce_min(validSumOfSquare, 1))
             minValidAssignments = tf.argmin(validSumOfSquare, 1)
 
         train = self.optimizer.minimize(loss)
@@ -193,7 +195,8 @@ class KMeans(object):
             currEpoch += 1
             if currEpoch%50 == 0:
                 logStdOut("e: " + str(currEpoch))
-        print "Center Values", centers
+        if self.dataType == "2D":
+            print "Center Values", centers
         self.printPlotResults(xAxis, yTrainErr, yValidErr, numUpdate, minAssignTrain, currTrainDataShuffle, centers, minAssignValid)
 
 def executeKMeans(questionTitle, K, dataType, hasValid):
