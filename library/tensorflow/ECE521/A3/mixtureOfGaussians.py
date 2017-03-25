@@ -28,7 +28,8 @@ class MixtureOfGaussians(object):
     def printPlotResults(self, xAxis, yTrainErr, yValidErr, numUpdate, minAssignTrain, currTrainData, clusterMean, clusterStdDeviation, clusterPrior,  minAssignValid):
         figureCount = 0 # TODO: Make global
         import matplotlib.pyplot as plt
-        print "mean", clusterMean
+        if self.dataType == "2D":
+            print "mean", clusterMean
         print "K: ", self.K
         print "Iter: ", numUpdate
         numTrainAssignEachClass = np.bincount(minAssignTrain)
@@ -46,8 +47,8 @@ class MixtureOfGaussians(object):
         print "prior Sum", np.sum(clusterPrior)
         print "stdDeviation", clusterStdDeviation
         print "stdDeviationShape", clusterStdDeviation.shape
-        print "Lowest TrainLoss", np.min(yTrainErr)
-        print "Lowest ValidLoss", np.min(yValidErr)
+        print str(self.K) + "Lowest TrainLoss", np.min(yTrainErr)
+        print str(self.K) + "Lowest ValidLoss", np.min(yValidErr)
 
         trainStr = "Train"
         validStr = "Valid"
@@ -179,31 +180,21 @@ class MixtureOfGaussians(object):
         # Build Graph 
         # Mean location matters a lot in convergence
         clusterMean = tf.Variable(tf.truncated_normal([self.K, self.D], mean=-1, stddev=2.0)) # cluster centers
-        #clusterMean = tf.Variable(tf.zeros([self.K, self.D])) # cluster centers
-        # Initialize to [-1, 1]
-        # clusterStdDeviationConstraint = tf.Variable(tf.truncated_normal([1, self.K], mean=-0.69, stddev = 0.3)) # cluster constraint to prevent negative
-        #clusterStdDeviationConstraint = tf.Variable(tf.truncated_normal([1, self.K], mean=0, stddev = 0.5)) # cluster constraint to prevent negative
         clusterStdDeviationConstraint = tf.Variable(tf.truncated_normal([1, self.K], mean=0, stddev=0.1))
-        #clusterStdDeviationConstraint = tf.Variable(tf.zeros([1, self.K]))
         clusterVariance = tf.exp(clusterStdDeviationConstraint)
         clusterStdDeviation = tf.sqrt(clusterVariance)
         # Uniform intialization
         clusterPriorConstraint = tf.Variable(tf.ones([1, self.K]))
-        #clusterPriorConstraint = tf.ones([1, self.K])
         logClusterConstraint = logsoftmax(clusterPriorConstraint)
-        # clusterPrior = tf.divide(tf.exp(clusterPriorConstraint), tf.reduce_sum(tf.exp(clusterPriorConstraint)))
         clusterPrior = tf.exp(logClusterConstraint)
 
         trainData = tf.placeholder(tf.float32, shape=[None, self.D], name="trainingData")
 
         sumOfSquare = self.PairwiseDistances(trainData, clusterMean)
         lnProbabilityXGivenZ = self.LnProbabilityXGivenZ(trainData, clusterMean, clusterVariance)
-        #lnProbabilityX = self.LnProbabilityX(trainData, clusterMean, clusterStdDeviation, clusterPrior)
         lnProbabilityX = self.LnProbabilityX(trainData, clusterMean, clusterVariance, logClusterConstraint)
-        #loss = tf.negative(tf.reduce_sum(lnProbabilityX))
         loss = (tf.reduce_sum(-1.0 * lnProbabilityX))
         # This is needed to decide which assignment it is
-        #lnProbabilityZGivenX = self.LnProbabilityZGivenX(trainData, clusterMean, clusterStdDeviation, clusterPrior)
         lnProbabilityZGivenX = self.LnProbabilityZGivenX(trainData, clusterMean, clusterVariance, logClusterConstraint)
         probabilityZGivenX = tf.exp(lnProbabilityZGivenX)
         check = tf.reduce_sum(probabilityZGivenX, 1) # Check probabilities sum to 1
@@ -308,8 +299,8 @@ def logElapsedTime(message):
     startTime = datetime.datetime.now()
 
 if __name__ == "__main__":
-    '''
     print "ECE521 Assignment 3: Unsupervised Learning: GaussianCluster"
+    '''
     # Gaussian Cluster Model
     questionTitle = "2.1.2" # Implemented function
     questionTitle = "2.1.3" # Implemented FUnction
