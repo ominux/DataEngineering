@@ -204,7 +204,6 @@ class MixtureOfGaussians(object):
 
         # ----------------------------------------------------------------------------------
         #logLikelihoodDataGivenCluster = self.LnProbabilityZGivenX(trainData, clusterMean, clusterStdDeviation, clusterPrior)
-        validLoss = loss # initialization
         minValidAssignments = minAssignments #Initialization
         if self.hasValid: 
             valid_data = tf.placeholder(tf.float32, shape=[None, self.D], name="validationData")

@@ -8,7 +8,7 @@ import sys
 import matplotlib.pyplot as plt
 
 class FactorAnalysis(object):
-    def __init__(self, questionTitle, K, trainData, trainTarget, validData, validTarget, testData, testTarget, numEpoch = 500, learningRate = 0.001): 
+    def __init__(self, questionTitle, K, trainData, trainTarget, validData, validTarget, testData, testTarget, numEpoch = 500, learningRate = 0.1): 
         """
         Constructor
         """
@@ -25,6 +25,11 @@ class FactorAnalysis(object):
         self.miniBatchSize = self.trainData.shape[0] # miniBatchSize is entire data size
         self.questionTitle = questionTitle
         self.optimizer = tf.train.AdamOptimizer(learning_rate = self.learningRate, beta1=0.9, beta2=0.99, epsilon=1e-5)
+        self.saveGrayscaleImage(self.trainData[0], 8, 8, "1")
+        self.saveGrayscaleImage(self.trainData[1], 8, 8, "2")
+        self.saveGrayscaleImage(self.trainData[2], 8, 8, "3")
+        self.saveGrayscaleImage(self.trainData[10], 8, 8, "4")
+        self.saveGrayscaleImage(self.trainData[20], 8, 8, "5")
         # Execute Factor Analysis
         self.FactorAnalysisMethod()
 
@@ -38,10 +43,10 @@ class FactorAnalysis(object):
         # Draw each figures (8, 8)
         currImage = image[:]
         currImage = np.reshape(currImage, (width,height))
-        plt.imshow(currImage, interpolation="nearest", cmap="gray")
+        plt.imshow(currImage,cmap="gray")
         plt.savefig(str(imageName) + ".png")
 
-    def printTensor(self, tensorToPrint, trainData, message=""):
+    def printTensor(self, tensorToPrint, trainData, validData, message=""):
         init = tf.global_variables_initializer()
         sess = tf.InteractiveSession()
         sess.run(init)
@@ -52,7 +57,7 @@ class FactorAnalysis(object):
         plt.close()
         plt.clf()
 
-    def printPlotResults(self, xAxis, yTrainErr, yValidErr, numUpdate, currTrainDataShuffle, factorMean, factorCovariance, factorWeights):
+    def printPlotResults(self, xAxis, yTrainErr, yValidErr, yTestErr, numUpdate, currTrainDataShuffle, factorMean, factorCovariance, factorWeights):
         figureCount = 0 # TODO: Make global
         import matplotlib.pyplot as plt
         print "mean", factorMean
@@ -64,13 +69,16 @@ class FactorAnalysis(object):
         print "CoVarianceShape", factorCovariance.shape
         print "Lowest TrainLoss", np.min(yTrainErr)
         print "Lowest ValidLoss", np.min(yValidErr)
+        print "Lowest TestLoss", np.min(yTestErr)
 
         trainStr = "Train"
         validStr = "Valid"
+        testStr = "Test"
         typeLossStr = "Loss"
         typeScatterStr = "Assignments"
         trainLossStr = trainStr + typeLossStr
         validLossStr = validStr + typeLossStr
+        testLossStr = testStr + typeLossStr
         iterationStr = "Iteration"
         paramStr = "K" + str(self.K) + "Learn" + str(self.learningRate) + "NumEpoch" + str(self.numEpoch)
 
@@ -100,10 +108,25 @@ class FactorAnalysis(object):
         plt.close()
         plt.clf()
 
+        # Test Loss
+        figureCount = figureCount + 1
+        plt.figure(figureCount)
+        title = testStr + typeLossStr + paramStr
+        plt.title(title)
+        plt.xlabel(iterationStr)
+        plt.ylabel(typeLossStr)
+        plt.plot(np.array(xAxis), np.array(yTestErr), label = testLossStr)
+        plt.legend()
+        plt.savefig(self.questionTitle + title + ".png")
+        plt.close()
+        plt.clf()
         # Weight Images
         for i in xrange(self.K):
             imageTitle = self.questionTitle + "WeightDim" + str(i) + "K" + str(self.K) +  "NumEpoch" + str(self.numEpoch)
+            # print factorWeights
+            print factorWeights.shape
             self.saveGrayscaleImage(factorWeights[:, i], 8, 8, imageTitle)
+            self.saveGrayscaleImage(np.transpose(factorWeights)[i, :], 8, 8, imageTitle + "OTHER")
 
     def FactorAnalysisMethod(self):
         ''' 
@@ -112,31 +135,50 @@ class FactorAnalysis(object):
         Bad Coding Style but higher programmer productivity
         '''
         trainData = tf.placeholder(tf.float32, shape=[None, self.D], name="trainingData")
-        validData = tf.placeholder(tf.float32, shape=[None, self.D], name="validationData")
+        batchSize = tf.shape(trainData)[0] 
         # Build Graph 
         print "trainShape", self.trainData.shape
         print "validShape", self.validData.shape
         print "testShape", self.testData.shape
-        factorMean = tf.Variable(tf.truncated_normal([self.D]))
-        factorWeights = tf.Variable(tf.truncated_normal([self.D, self.K]))
-        factorStdDeviationConstraint = tf.Variable(tf.truncated_normal([self.D]))
-        factorTraceCoVariance = tf.exp(factorStdDeviationConstraint)
-        factorCovariance = tf.diag(factorTraceCoVariance) + tf.matmul(factorWeights, tf.transpose(factorWeights))
+        factorMean = tf.Variable(tf.random_normal([1, self.D]))
+        # Cholesky doesn't accept negative weights
+        #factorWeightsConstraint = tf.Variable(tf.random_normal([self.D, self.K]))
+        factorWeights = tf.Variable(tf.random_normal([self.D, self.K]))
+        factorStdDeviationConstraint = tf.Variable(tf.random_normal([self.D]))
+
+        #factorWeights = tf.exp(factorWeightsConstraint)
+        factorTraceCoVariance = tf.matrix_diag(tf.exp(factorStdDeviationConstraint))
+
+        factorCovariance = tf.add(factorTraceCoVariance, tf.matmul(factorWeights, tf.transpose(factorWeights)))
+        #factorTraceCoVariance = tf.exp(factorStdDeviationConstraint)
+        # factorCovariance = tf.add(tf.diag(factorTraceCoVariance), tf.matmul(factorWeights, tf.transpose(factorWeights)))
         factorCovarianceInv = tf.matrix_inverse(factorCovariance)
         logDeterminantCovariance = 2.0 * tf.reduce_sum(tf.log(tf.diag_part(tf.cholesky(factorCovariance))))
-
         # Train Loss
-        xDeductU = tf.subtract(trainData, factorMean)
-        xDeductUTranspose = tf.transpose(xDeductU)
-        total = tf.trace(tf.matmul(tf.matmul(xDeductU, factorCovarianceInv), xDeductUTranspose))
-        logProbability = -0.5 * (total + self.D * tf.log(2.0 * np.pi) + logDeterminantCovariance)
+        # xDeductUTranspose = tf.transpose(xDeductU, (0, 2, 1)) # B  * D * 1
+        # Could have used trace here, doesn't make a difference to your calculation
+        xDeductU = tf.subtract(trainData, factorMean) # B * D
+        total = tf.trace(tf.matmul(tf.matmul(xDeductU, factorCovarianceInv), tf.transpose(xDeductU)))
+            
+        '''
+        # METHOD 1
+        # TODO: FIXME THIS IS WRONG! MULTIPLYING BATCH SIZE DOESNT FIX THE PROBLEM
+        logProbability = tf.multiply(tf.cast(batchSize, tf.float32), (-self.D * tf.log(2.0 * np.pi) - logDeterminantCovariance))/2.0
+        logProbability = logProbability + (total/2.0)
         loss = tf.negative(logProbability)
+        '''
+        
+        #total = tf.reduce_sum(tf.multiply(tf.multiply(xDeductU, factorCovarianceInv), xDeductUTranspose))
 
-        validDeductU = tf.subtract(validData, factorMean)
-        validDeductUTranspose = tf.transpose(validDeductU)
-        validTotal = tf.trace(tf.matmul(tf.matmul(validDeductU, factorCovarianceInv), validDeductUTranspose))
-        validLogProbability = -0.5 * (validTotal + self.D * tf.log(2.0 * np.pi) + logDeterminantCovariance)
-        validLoss = tf.negative(validLogProbability)
+        # Calculate log probability for entire batch, [B]
+        # METHOD 2
+        #factorCovarianceInv = tf.add(tf.expand_dims(tf.matrix_inverse(factorCovariance), 0), tf.zeros((batchSize, 1, 1)))
+        xExpand= tf.expand_dims(xDeductU, 2) # B * D * 1
+        total = tf.reduce_sum(tf.multiply(tf.reduce_sum(tf.multiply(xExpand, factorCovarianceInv)), xDeductU), [1])
+        logProbability = (-self.D * tf.log(2.0 * np.pi) - total - logDeterminantCovariance)/2.0
+        totalLogProbability = tf.reduce_sum(logProbability) # sum over the entire batch
+        loss = tf.negative(totalLogProbability)
+        # '''
 
         train = self.optimizer.minimize(loss)
         # Session
@@ -150,30 +192,50 @@ class FactorAnalysis(object):
         xAxis = []
         yTrainErr = []
         yValidErr = []
+        yTestErr = []
         numUpdate = 0
         step = 0
         currTrainDataShuffle = self.trainData
+        feedDictV = {trainData: self.validData}
+        feedDictT = {trainData: self.testData}
         while currEpoch < self.numEpoch:
-            np.random.shuffle(self.trainData) # Shuffle Batches
+            #np.random.shuffle(self.trainData) # Shuffle Batches
             step = 0
             while step*self.miniBatchSize < self.trainData.shape[0]:
-                feedDicts = {trainData: self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize], validData: self.validData}
-                _, errTrain, errValid, paramFactorMean, paramFactorCovariance, paramFactorWeights = sess.run([train, loss, validLoss, factorMean, factorCovariance, factorWeights], feed_dict = feedDicts)
+                feedDicts = {trainData: self.trainData[step*self.miniBatchSize:(step+1)*self.miniBatchSize]}
+                _, errTrain = sess.run([train, loss], feed_dict = feedDicts)
+                # Calculate loss without training for validation
+                errValid = sess.run([loss], feed_dict = feedDictV)
+                errTest = sess.run([loss], feed_dict = feedDictT)
+                '''
+                kara, hahah, heheh, huhuh = sess.run([loss, haha, hehe, huhu], feed_dict = feedDicts)
+                logStdOut("NPPI: " + str(hahah))
+                logStdOut("logDetCov: " + str(heheh))
+                logStdOut("totalL: " + str(huhuh))
+                '''
                 xAxis.append(numUpdate)
                 yTrainErr.append(errTrain)
                 yValidErr.append(errValid)
+                yTestErr.append(errTest)
                 step += 1
                 numUpdate += 1
             currEpoch += 1
-
-            if currEpoch%100 == 0:
-                logStdOut("e: " + str(currEpoch))
-        # Calculate everything again without training
-        feedDicts = {trainData: self.trainData, validData: self.validData}
-        errTrain, errValid, paramFactorMean, paramFactorCovariance, paramFactorWeights = sess.run([loss, validLoss, factorMean, factorCovariance, factorWeights], feed_dict = feedDicts)
+            # if currEpoch%10 == 0:
+            logStdOut("e: " + str(currEpoch))
+        # Calculate everything again without training to ensure randomization is right
+        feedDictsFinal = {trainData: self.trainData}
+        errTrain, paramFactorMean, paramFactorCovariance, paramFactorWeights = sess.run([loss, factorMean, factorCovariance, factorWeights], feed_dict = feedDictsFinal)
         # Count how many assigned to each class
         currTrainDataShuffle = self.trainData
-        self.printPlotResults(xAxis, yTrainErr, yValidErr, numUpdate, currTrainDataShuffle, paramFactorMean, paramFactorCovariance, paramFactorWeights)
+        self.printPlotResults(xAxis, yTrainErr, yValidErr, yTestErr, numUpdate, currTrainDataShuffle, paramFactorMean, paramFactorCovariance, paramFactorWeights)
+
+def executePrincipleComponent(questionTitle, K, numEpoch, learningRate):
+    logStdOut(questionTitle)
+    print questionTitle
+
+    # Execute algorithm 
+    kObject = FactorAnalysis(questionTitle, K, trainData, trainTarget, validData, validTarget, testData, testTarget, numEpoch, learningRate)
+    logElapsedTime(questionTitle + "K" + str(K) + "NumEpoch" + str(numEpoch))
 
 def executeFactorAnalysis(questionTitle, K, numEpoch, learningRate):
     """
@@ -198,10 +260,10 @@ figureCount = 1 # To not overwrite existing pictures
 
 def logStdOut(message):
     # Temporary print to std out
-    # sys.stdout = sys.__stdout__ # TODO: Uncomment this
+    sys.stdout = sys.__stdout__ # TODO: Uncomment this
     print message
     # Continue editing same file
-    # sys.stdout = open("result" + questionTitle + ".txt", "a") #TODO: Uncomment this
+    sys.stdout = open("result" + questionTitle + ".txt", "a") #TODO: Uncomment this
 
 def logElapsedTime(message):
     ''' Logs the elapsedTime with a given message '''
@@ -217,8 +279,10 @@ def logElapsedTime(message):
 
 if __name__ == "__main__":
     print "ECE521 Assignment 3: Unsupervised Learning: Factor Analysis"
+    #'''
     questionTitle = "3.1.2"
     numEpoch = 250
+    numEpoch = 200
     learningRate = 0.1
     K = 4
     executeFactorAnalysis(questionTitle, K, numEpoch, learningRate)
@@ -226,9 +290,12 @@ if __name__ == "__main__":
     
     '''
     questionTitle = "3.1.3"
+    numEpoch = 250
+    learningRate = 0.1
     diffK = [1, 2, 3, 4, 5]
-    # for K in diffK:
-        executeFactorAnalysis(questionTitle, K, numEpoch, learningRate)
+    diffK = [3]
+    for K in diffK:
+        executePrincipleComponent(questionTitle, K, numEpoch, learningRate)
     # TODO:
     # '''
 
