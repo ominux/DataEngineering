@@ -30,7 +30,7 @@ def PairwiseDistances(X, Z):
     X = tf.reshape(X, [B, 1, N])
     Z = tf.reshape(Z, [1, C, N])
     # The code below automatically does broadcasting
-    D = tf.reduce_sum(tf.square(tf.sub(X, Z)), 2)
+    D = tf.reduce_sum(tf.square(tf.subtract(X, Z)), 2)
     return D
 
 # 1.3 Making Predictions
@@ -49,7 +49,7 @@ def ChooseNearestNeighbours(D, K):
         indices are the index of the location of these squared distances
     """
     # Take topK of negative distances since it is the closest data.
-    topK, indices = tf.nn.top_k(tf.neg(D), K)
+    topK, indices = tf.nn.top_k(tf.negative(D), K)
     return topK, indices
 
 # 1.3.2 Prediction
@@ -75,7 +75,7 @@ def PredictKnn(trainData , testData, trainTarget,  testTarget, K):
     trainTargetSelectedAveraged = tf.reduce_mean(tf.gather(trainTarget, indices), 1)
     # Calculate the loss from the actual values
     # Divide by 2.0 since it's average over 2M instead of M where M = number of training data.
-    loss = tf.reduce_mean(tf.square(tf.sub(trainTargetSelectedAveraged, testTarget)))/2.0
+    loss = tf.reduce_mean(tf.square(tf.subtract(trainTargetSelectedAveraged, testTarget)))/2.0
     return loss
 
 # Plot the prediction function for x = [0, 11] on training data.
@@ -297,12 +297,12 @@ if __name__ == "__main__":
 
 
         # Convert to tensors from numpy
-        trainData = tf.pack(trainData)
-        validData = tf.pack(validData)
-        testData = tf.pack(testData)
-        trainTarget = tf.pack(trainTarget)
-        validtarget = tf.pack(validTarget)
-        testTarget = tf.pack(testTarget)
+        trainData = tf.stack(trainData)
+        validData = tf.stack(validData)
+        testData = tf.stack(testData)
+        trainTarget = tf.stack(trainTarget)
+        validtarget = tf.stack(validTarget)
+        testTarget = tf.stack(testTarget)
         trainMseLoss = PredictKnn(trainData, trainData, trainTarget, trainTarget, K)
         validationMseLoss = PredictKnn(trainData, validData, trainTarget, validTarget, K)
         testMseLoss = PredictKnn(trainData, testData, trainTarget, testTarget, K)
@@ -320,12 +320,12 @@ if __name__ == "__main__":
         '''
         # Plot the prediction for the x below
         x = np.linspace(0.0, 11.0, num=1000)[:, np.newaxis]
-        xTensor = tf.pack(x)
+        xTensor = tf.stack(x)
         predictedValuesKnn = PredictedValues(xTensor, trainData, trainTarget, K)
         predictedValuesSoft = PredictedValuesSoftDecision(testData, trainData, trainTarget)
         predictedValuesGaussian = PredictedValuesGaussianProcesses(testData, trainData, trainTarget)
-        lossSoft = tf.reduce_mean(tf.square(tf.sub(predictedValuesSoft, testTarget)))/2.0
-        lossGaussian = tf.reduce_mean(tf.square(tf.sub(predictedValuesGaussian, testTarget)))/2.0
+        lossSoft = tf.reduce_mean(tf.square(tf.subtract(predictedValuesSoft, testTarget)))/2.0
+        lossGaussian = tf.reduce_mean(tf.square(tf.subtract(predictedValuesGaussian, testTarget)))/2.0
         import matplotlib.pyplot as plt
         plt.figure(0)
         init = tf.global_variables_initializer()
