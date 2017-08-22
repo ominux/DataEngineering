@@ -7,5 +7,5 @@ setup(name='dataset',
       author='Soon Chee Loong',
       author_email='cheeloong.soon@mail.utoronto.ca',
       license='MIT',
-      packages=['dataset'],
+      packages=['dataset', 'algorithms'],
       zip_safe=False)
