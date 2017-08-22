@@ -13,11 +13,11 @@ print("Importing... Cifar100")
 (xTrain, yTrain), (xTest, yTest) = dataset.getCifar100()
 print("Importing... imdb")
 (xTrain, yTrain), (xTest, yTest) = dataset.getImdb()
+print("Importing... wikipedia")
+wikipediaSentences = dataset.getWikipedia()
 
 '''
 # Below takes way too long
-print("Importing... wikipedia")
-wikipediaSentences = dataset.getWikipedia()
 print("Importing... text8")
 text8Sentences = dataset.getText8()
 '''

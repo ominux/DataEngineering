@@ -34,8 +34,7 @@ class Dataset(object):
 
     def getWikipedia(self):
         wikipediaFilePath = 'downloadedDataset/enwiki-latest-pages-articles.xml.bz2'
-        wiki = WikiCorpus(wikipediaFilePath),
-                lemmatize=False, dictionary={}) 
+        wiki = WikiCorpus(wikipediaFilePath, lemmatize=False, dictionary={}) 
         # May take hours
-        wikipediaSentences = list(wiki.get_texts())
+        wikipediaSentences = wiki.get_texts()
         return wikipediaSentences
