@@ -1,11 +1,13 @@
 # The purpose of this class is to enable easy collection of datasets into train, validation, and test sets. 
 # Below are the datasets currently supported by this class. 
 # Images
+# - MNIST
 # - Cifar-10
 # - Cifar-100
 # Text
 # - Wikipedia sentences
 # - Wikipedia words 
+# - IMDB
 
 # Below are the list of public datasets and their short descriptions
 # Below are TODO
