@@ -1,6 +1,6 @@
 from setuptools import setup
 
-setup(name='dataset',
+setup(name='DataEngineering',
       version='0.1',
       description='Loading data from popular datasets for Machine Learning Research',
       url='http://github.com/scheeloong/DataEngineering/',
