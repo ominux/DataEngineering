@@ -22,6 +22,11 @@ rm cifar-100-python.tar.gz
 # Result: Folder
 # cifar-100-python
 #------------------------------------------------------------------------------------------------
+# text8, A subset of wikipedia
+http://mattmahoney.net/dc/text8.zip
+unzip text8.zip
+rm text8.zip
+#------------------------------------------------------------------------------------------------
 # A subset of wikipedia, first billion characters from Wikipedia, 300MB
 wget http://mattmahoney.net/dc/enwik9.zip 
 # Unzip to get the xml file dumped by Wikipedia 
