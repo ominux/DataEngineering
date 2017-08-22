@@ -9,14 +9,14 @@ cp processWikipedia.pl ./downloadedDataset/.
 cd downloadedDataset
 #------------------------------------------------------------------------------------------------
 # CIFAR 10 data
-wget https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
+wget -N https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
 tar -xvzf cifar-10-python.tar.gz
 rm cifar-10-python.tar.gz
 # Result: Folder
 # cifar-10-batches-py
 #------------------------
 # CIFAR 100 data
-wget https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz
+wget -N https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz
 tar -xvzf cifar-100-python.tar.gz
 rm cifar-100-python.tar.gz
 # Result: Folder
@@ -28,7 +28,7 @@ unzip text8.zip
 rm text8.zip
 #------------------------------------------------------------------------------------------------
 # A subset of wikipedia, first billion characters from Wikipedia, 300MB
-wget http://mattmahoney.net/dc/enwik9.zip 
+wget -N http://mattmahoney.net/dc/enwik9.zip 
 # Unzip to get the xml file dumped by Wikipedia 
 unzip enwik9.zip
 rm enwik9.zip
@@ -40,7 +40,7 @@ rm enwik9
 # ./enwik9Data.txt
 #------------------------------------------------------------------------------------------------
 # Gets a billion words that is already cleaned, 1.7GB
-wget http://www.statmt.org/lm-benchmark/1-billion-word-language-modeling-benchmark-r13output.tar.gz
+wget -N http://www.statmt.org/lm-benchmark/1-billion-word-language-modeling-benchmark-r13output.tar.gz
 tar -xvzf 1-billion-word-language-modeling-benchmark-r13output.tar.gz
 rm 1-billion-word-language-modeling-benchmark-r13output.tar.gz
 # Result: 
@@ -50,7 +50,7 @@ rm 1-billion-word-language-modeling-benchmark-r13output.tar.gz
 # UMBC WebBase corpus of 3B English words, 13.2GB
 # http://ebiquity.umbc.edu/blogger/2013/05/01/umbc-webbase-corpus-of-3b-english-words/
 # High quality english paragraph consisting of 3 Billion words. 
-wget http://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2
+wget -N http://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2
 # unzip it, however, note libraries like gensim can work directly with .bz2 files
 bzip2 -dk enwiki-latest-pages-articles.xml.bz2
 # Result:
