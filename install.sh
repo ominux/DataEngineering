@@ -1,2 +1,2 @@
 sudo pip install . --upgrade
-# pip install . --upgrade
+python testImport.py

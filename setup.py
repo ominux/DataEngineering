@@ -7,5 +7,5 @@ setup(name='DataEngineering',
       author='Soon Chee Loong',
       author_email='cheeloong.soon@mail.utoronto.ca',
       license='MIT',
-      packages=find_packages()
+      packages=find_packages(),
       zip_safe=False)
