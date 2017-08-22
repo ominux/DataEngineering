@@ -51,10 +51,10 @@ F-score = 2*(precision*recall)/(precision+recall)
   - Number of weights, hidden layers
 - D3.js
 
-## Library
-- Tutorials on how to work with a particular library 
-###  Tensorflow
-
+## Models
+- Code to retrieve various trained models:
+- word2vec trained on wikipedia
+- ResNet50 trained on ImageNet
 
 ## Installation Instructions
 ```bash
