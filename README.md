@@ -54,3 +54,9 @@ F-score = 2*(precision*recall)/(precision+recall)
 ## Library
 - Tutorials on how to work with a particular library 
 ###  Tensorflow
+
+
+## Installation Instructions
+```bash
+bash install.sh
+```
