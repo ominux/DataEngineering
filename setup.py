@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(name='DataEngineering',
       version='0.1',
@@ -7,5 +7,5 @@ setup(name='DataEngineering',
       author='Soon Chee Loong',
       author_email='cheeloong.soon@mail.utoronto.ca',
       license='MIT',
-      packages=['dataset', 'algorithms'],
+      packages=find_packages()
       zip_safe=False)
