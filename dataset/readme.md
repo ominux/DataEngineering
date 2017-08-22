@@ -1,5 +1,14 @@
-# Below are the list of public datasets and their short descriptions
+# The purpose of this class is to enable easy collection of datasets into train, validation, and test sets. 
+# Below are the datasets currently supported by this class. 
+# Images
+# - Cifar-10
+# - Cifar-100
+# Text
+# - Wikipedia sentences
+# - Wikipedia words 
 
+# Below are the list of public datasets and their short descriptions
+# Below are TODO
 https://en.wikipedia.org/wiki/List_of_datasets_for_machine_learning_research
 https://archive.ics.uci.edu/ml/datasets.html
 https://www.kaggle.com/datasets
