@@ -2,11 +2,11 @@
 # Preprocessing
 #------------------------------------------------------------------------------------------------
 # Save everything in a folder called downloadedDataset
-mkdir downloadedDataset
+mkdir -p ~/downloadedDataset
 # Copy all the useful scripts
-cp processWikipedia.pl ./downloadedDataset/.
+cp processWikipedia.pl ~/downloadedDataset/.
 # Move to that directory
-cd downloadedDataset
+cd ~/downloadedDataset
 #------------------------------------------------------------------------------------------------
 # CIFAR 10 data
 wget -N https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
