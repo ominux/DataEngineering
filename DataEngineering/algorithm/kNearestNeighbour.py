@@ -47,4 +47,6 @@ class KNearestNeighbour(object):
         """
         Calculates the accuracy of the given testData. 
         """
-        # TODO:
+        prediction = self.predict(testData, k)
+        accuracy = np.sum(prediction == testLabel)/testLabel.size
+        return accuracy
