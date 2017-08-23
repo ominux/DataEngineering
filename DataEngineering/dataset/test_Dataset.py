@@ -9,7 +9,6 @@ from DataEngineering.algorithm import KNearestNeighbour
 class TestDataset(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        print("TestImports")
         self.dataset = Dataset()
 
     def testImportMnist(self):
@@ -32,7 +31,7 @@ class TestDataset(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        print("Finished testing imports")
+        pass # no operation
 
 if __name__ == "__main__":
     unittest.main()

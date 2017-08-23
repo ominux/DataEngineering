@@ -9,7 +9,9 @@ sudo pip install . --upgrade
 # But this will mess up your original __init__.py to libraries.
 # Thus, put test files within same directory as source files
 # Also requires all test file names to start with test_*.py or test*.py
-nosetests -vv
+# nosetests will find files from current directory inwards
+# therefore, run it within a specific directory if you only wanna test files in that directory
+nosetests -vv --nocapture 
 #-------------------------------
 # Remove temporary files
 find . -name '*.pyc' -delete
