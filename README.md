@@ -1,13 +1,21 @@
 # DataEngineering
 My personal repository for working with data. 
 
-## Scraping - Collection and Storing - Scraping data from the web.
+## Algorithms
+- Code for the various machine learning algorithms
+
+## Dataset
+- Code to retrieved various popular datasets.
     - Downloading into compressed
     - Uncompress files
-
 - Save into disk with wanted format
     - Load the files into memory in a format wanted (numImage, width, height)
     - Store as pickle files to limit amount of in memory used.
+
+## Models
+- Code to retrieve various trained models:
+- word2vec trained on wikipedia
+- ResNet50 trained on ImageNet
 
 ## Cleaning
 - Load from Disk and display to ensure data is fine
@@ -39,9 +47,6 @@ precision = (truePositive)/(truePositive + falsePositive)
 recall = (truePositive)/(truePositive + falseNegative)
 F-score = 2*(precision*recall)/(precision+recall)
 
-## Algorithms
-- Code for the various machine learning algorithms
-
 ## Visualization
 - Display output from algorithm and accuracy.
 - Visualize data and errors.
@@ -50,11 +55,6 @@ F-score = 2*(precision*recall)/(precision+recall)
   - Size of training data
   - Number of weights, hidden layers
 - D3.js
-
-## Models
-- Code to retrieve various trained models:
-- word2vec trained on wikipedia
-- ResNet50 trained on ImageNet
 
 ## Installation Instructions
 ```bash
