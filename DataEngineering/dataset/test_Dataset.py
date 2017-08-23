@@ -27,10 +27,12 @@ class TestDataset(unittest.TestCase):
     def testImportText8(self):
         text8Sentences = self.dataset.getText8()
 
+    def testImportImdb(self):
+        (xTrain, yTrain), (xTest, yTest) = self.dataset.getImdb()
+
     @classmethod
     def tearDownClass(self):
         print("Finished testing imports")
 
-#(xTrain, yTrain), (xTest, yTest) = self.dataset.getImdb()
 if __name__ == "__main__":
     unittest.main()
