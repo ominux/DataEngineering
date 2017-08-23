@@ -7,6 +7,7 @@ else:
 import zipfile
 import tarfile
 
+from sklearn.datasets import fetch_lfw_people
 from keras.datasets import cifar10
 from keras.datasets import cifar100
 from keras.datasets import imdb
@@ -29,13 +30,15 @@ class Dataset(object):
         (x_train, y_train), (x_test, y_test) = cifar100.load_data()
         return (x_train, y_train), (x_test, y_test)
 
-    def getImdb(self):
-        (x_train, y_train), (x_test, y_test) = imdb.load_data()
-        return (x_train, y_train), (x_test, y_test)
-
     def getMnist(self):
         (x_train, y_train), (x_test, y_test) = mnist.load_data()
         return (x_train, y_train), (x_test, y_test)
+
+    def getLfw(self):
+        lfwData = fetch_lfw_people(min_faces_per_person=70, resize=0.4)
+        xTrain = lfwData['images']
+        yTrain = lfwData['target']
+        return (xTrain, yTrain)
 
     def getText8(self):
         text8URL = ("http://mattmahoney.net/dc/text8.zip")
@@ -51,6 +54,11 @@ class Dataset(object):
         wiki = WikiCorpus(wikipediaFilePath, lemmatize=False, dictionary={}) 
         wikipediaSentences = wiki.get_texts()
         return wikipediaSentences
+
+    def getImdb(self):
+        (x_train, y_train), (x_test, y_test) = imdb.load_data()
+        return (x_train, y_train), (x_test, y_test)
+
 
     def downloadFileIfDoesNotExist(self, downloadUrl, downloadedFileName):
         """

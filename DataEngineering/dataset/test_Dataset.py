@@ -20,6 +20,9 @@ class TestDataset(unittest.TestCase):
     def testImportCifar100(self):
         (xTrain, yTrain), (xTest, yTest) = self.dataset.getCifar100()
 
+    def testImportLfw(self):
+        (xTrain, yTrain) = self.dataset.getLfw()
+
     def testImportWikipedia(self):
         wikipediaSentences = self.dataset.getWikipedia()
 

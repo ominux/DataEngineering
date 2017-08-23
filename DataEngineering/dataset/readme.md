@@ -4,6 +4,7 @@
 # - MNIST
 # - Cifar-10
 # - Cifar-100
+# - LFW
 # Text
 # - Wikipedia sentences
 # - Wikipedia words 
