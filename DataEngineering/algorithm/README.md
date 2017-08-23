@@ -1,5 +1,9 @@
 # Algorithms
 
+# All will be implemented with purely numpy. 
+# I can have tensorflow & keras implementations for future but will
+# ensure that they are inherited properly for re-usability.
+
 ## Deep Learning
   - Neural Network
   - Convolutional Neural Networks
