@@ -3,10 +3,8 @@ This class implements kNearestNeighbour.
 Assumes testData have shapes
 (numTest, dataSize)
 which must be consistent with
-trainData with shape
-(numTrain, dataSize)
-"""
-
+trainData with shape (numTrain, dataSize)
+""" 
 import numpy as np
 
 class KNearestNeighbour(object):
@@ -29,3 +27,24 @@ class KNearestNeighbour(object):
                 + np.reshape(trainDataSumSqr, (1, -1))
                 + trainMulTest)
         return distanceMatrix
+    
+    def predict(self, testData, k=1):
+        """
+        Gets the prediction of the given testData
+        k is the number of instances to look at
+        """
+        distanceMatrix = self.computeDistanceMatrix(testData)
+        closestIndices = np.argsort(distanceMatrix, axis=1)
+        closestKIndices = closestIndices[:, :k]
+        closestKLabels = self.trainLabel[closestKIndices]
+        # NearestNeighbour only makes sense if using mode since labels may not be ordered
+        from scipy.stats import mode
+        majorityLabel, majorityCount = mode(closestKLabels, axis=1)
+        majorityLabel = np.reshape(majorityLabel, (majorityLabel.size))
+        return majorityLabel
+
+    def accuracy(self, testData, testLabel, k):
+        """
+        Calculates the accuracy of the given testData. 
+        """
+        # TODO:
