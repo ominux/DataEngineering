@@ -1,5 +1,6 @@
 # DataEngineering
 My personal repository for working with data. 
+Basically, my implementation of a small subset of tensorflow + keras + scikit-learn.
 
 ## Algorithms
 - Code for the various machine learning algorithms
